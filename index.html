@@ -105,7 +105,7 @@
     .patient-name-slot { font-size: 13px; font-weight: 600; color: #0f172a; line-height: 1.3; word-break: break-word; }
     .bed-empty-tag { font-size: 12px; color: #94a3b8; font-style: italic; }
 
-    /* FORM NHẬP BỆNH NHÂN LÂM SÀNG */
+    /* FORM NHẬP BỆNH NHÂN LÂM SÀNG (ĐÚNG THEO BẢN VẼ) */
     .record-container {
       background: white;
       border-radius: 16px;
@@ -115,7 +115,7 @@
     }
     .record-header {
       display: grid;
-      grid-template-columns: 1fr 120px;
+      grid-template-columns: 1fr 140px;
       border-bottom: 2px solid #cbd5e1;
       background: #f8fafc;
     }
@@ -124,7 +124,7 @@
       border-right: 2px solid #cbd5e1;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
     .record-header-left input {
       border: none;
@@ -142,21 +142,31 @@
       justify-content: center;
       font-size: 11px;
       color: #64748b;
+      background: #ffffff;
     }
     .record-header-right input {
-      border: none;
-      background: transparent;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      border-radius: 6px;
+      padding: 4px 6px;
       font-size: 12px;
       font-weight: 600;
       color: #1e293b;
       outline: none;
       width: 100%;
+      margin-top: 3px;
     }
+    .record-header-right input:focus {
+      border-color: var(--primary);
+      background: #ffffff;
+    }
+
+    /* CÁC DÒNG 2 CỘT */
     .record-row {
       display: grid;
       grid-template-columns: 105px 1fr;
       border-bottom: 2px solid #cbd5e1;
-      min-height: 70px;
+      min-height: 75px;
     }
     .row-label {
       padding: 12px 8px;
@@ -176,14 +186,16 @@
     .row-input textarea {
       width: 100%;
       height: 100%;
-      min-height: 54px;
+      min-height: 60px;
       border: none;
       outline: none;
       font-size: 14px;
-      resize: none;
+      resize: vertical;
       background: transparent;
       color: #1e293b;
     }
+
+    /* NÚT XÁC NHẬN GÓC DƯỚI */
     .submit-area {
       padding: 16px;
       display: flex;
@@ -195,13 +207,14 @@
       color: white;
       border: 2px solid #0369a1;
       border-radius: 14px;
-      padding: 14px 28px;
+      padding: 14px 30px;
       font-size: 16px;
       font-weight: 700;
       cursor: pointer;
     }
+    .btn-confirm:active { transform: scale(0.97); }
 
-    /* ===== GIAO DIỆN TÓM TẮT BỆNH NHÂN (THEO ĐÚNG BẢN VẼ MỚI) ===== */
+    /* GIAO DIỆN TÓM TẮT BỆNH NHÂN */
     .summary-page {
       background: #e2e8f0;
       min-height: 82vh;
@@ -256,7 +269,7 @@
     }
 
     .field-block {
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
     .field-title {
       font-size: 15px;
@@ -270,16 +283,16 @@
       min-height: 24px;
       white-space: pre-wrap;
       padding-left: 2px;
+      line-height: 1.4;
     }
 
-    /* NÚT KẾT THÚC ĐIỀU TRỊ GÓC DƯỚI BÊN PHẢI */
     .finish-area {
       display: flex;
       justify-content: flex-end;
-      margin-top: 30px;
+      margin-top: 24px;
     }
     .btn-finish-treatment {
-      background: transparent;
+      background: #f8fafc;
       border: 2px solid #334155;
       color: #1e293b;
       border-radius: 12px;
@@ -287,13 +300,9 @@
       font-size: 15px;
       font-weight: 700;
       cursor: pointer;
-      background: #f8fafc;
     }
-    .btn-finish-treatment:active {
-      background: #cbd5e1;
-    }
+    .btn-finish-treatment:active { background: #cbd5e1; }
 
-    /* DANH SÁCH CHỌN BỆNH NHÂN TRONG TÓM TẮT */
     .patient-picker-card {
       background: white;
       border-radius: 12px;
@@ -308,7 +317,7 @@
 
 <div class="container">
 
-  <!-- ==================== TRANG ĐẦU TIÊN ==================== -->
+  <!-- ==================== TẦNG 1: TRANG ĐẦU TIÊN ==================== -->
   <div id="homeView">
     <div class="top-bar">
       <button class="btn-top" onclick="showView('profileView')">👨‍⚕️ Giới thiệu cá nhân</button>
@@ -327,7 +336,7 @@
     </div>
   </div>
 
-  <!-- ==================== MỤC QUẢN LÝ ==================== -->
+  <!-- ==================== TẦNG 2: MỤC QUẢN LÝ ==================== -->
   <div id="manageMenuView" class="view-section">
     <div class="top-bar">
       <button class="btn-top" onclick="showView('homeView')">⬅️ Quản lý</button>
@@ -345,7 +354,7 @@
     </div>
   </div>
 
-  <!-- ==================== SƠ ĐỒ GIƯỜNG (PHẦN NHẬP) ==================== -->
+  <!-- ==================== TẦNG 3: SƠ ĐỒ GIƯỜNG (PHẦN NHẬP) ==================== -->
   <div id="bedGridView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('manageMenuView')">⬅️ Quay lại</button>
@@ -360,7 +369,7 @@
     <div class="grid-room-2" id="room819"></div>
   </div>
 
-  <!-- ==================== FORM NHẬP / CẬP NHẬT DIỄN BIẾN ==================== -->
+  <!-- ==================== TẦNG 4: FORM NHẬP THÔNG TIN (ĐÚNG THEO BẢN VẼ) ==================== -->
   <div id="patientFormView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('bedGridView')">⬅️ Sơ đồ phòng</button>
@@ -369,6 +378,7 @@
     </div>
 
     <div class="record-container">
+      <!-- DÒNG ĐẦU: TIÊU ĐỀ + NGÀY GIỜ (CHO PHÉP SỬA TAY) -->
       <div class="record-header">
         <div class="record-header-left">
           <span style="font-size:13px; color:#64748b; white-space:nowrap;" id="crumbPrefix">Nhập &gt;</span>
@@ -376,40 +386,51 @@
         </div>
         <div class="record-header-right">
           <span>Ngày giờ:</span>
-          <input type="text" id="recordDateTime" readonly>
+          <!-- ĐÃ BỎ READONLY: BẠN CÓ THỂ SỬA NGÀY GIỜ BẰNG TAY -->
+          <input type="text" id="recordDateTime" placeholder="20:30 07/09">
         </div>
       </div>
 
+      <!-- DÒNG 1: CHẨN ĐOÁN -->
       <div class="record-row">
         <div class="row-label">Chẩn đoán</div>
-        <div class="row-input"><textarea id="recordDiagnosis" placeholder="Bệnh..."></textarea></div>
+        <div class="row-input">
+          <textarea id="recordDiagnosis" placeholder="Bệnh..."></textarea>
+        </div>
       </div>
 
+      <!-- DÒNG 2: THEO DÕI -->
       <div class="record-row">
         <div class="row-label">Theo dõi</div>
-        <div class="row-input"><textarea id="recordTracking" placeholder="Diễn tiến, triệu chứng..."></textarea></div>
+        <div class="row-input">
+          <textarea id="recordTracking" placeholder="Diễn tiến, triệu chứng..."></textarea>
+        </div>
       </div>
 
+      <!-- DÒNG 3: XÉT NGHIỆM -->
       <div class="record-row">
         <div class="row-label">Xét nghiệm</div>
-        <div class="row-input"><textarea id="recordTests" placeholder="Công thức máu, cận lâm sàng..."></textarea></div>
+        <div class="row-input">
+          <textarea id="recordTests" placeholder="Công thức máu, cận lâm sàng..."></textarea>
+        </div>
       </div>
 
+      <!-- DÒNG 4: HÌNH ẢNH (NHẬP CHỮ TAY CÁC KẾT QUẢ CẬN LÂM SÀNG HÌNH ẢNH) -->
       <div class="record-row" style="border-bottom:none;">
         <div class="row-label">Hình ảnh</div>
         <div class="row-input">
-          <input type="file" id="recordImageInput" accept="image/*" onchange="handleImagePick(event)">
-          <img id="imagePreview" style="max-width:90px; max-height:80px; display:none; border-radius:6px; margin-left:8px;">
+          <textarea id="recordImagingText" placeholder="Nhập kết quả X-quang, Siêu âm, CT, MRI..."></textarea>
         </div>
       </div>
 
+      <!-- NÚT XÁC NHẬN GÓC DƯỚI BÊN PHẢI -->
       <div class="submit-area">
         <button type="button" class="btn-confirm" onclick="saveRecord()">Xác nhận</button>
       </div>
     </div>
   </div>
 
-  <!-- ==================== DANH SÁCH CHỌN BỆNH NHÂN ĐỂ XEM TÓM TẮT ==================== -->
+  <!-- ==================== DANH SÁCH CHỌN BỆNH NHÂN (TÓM TẮT) ==================== -->
   <div id="summarySelectView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('manageMenuView')">⬅️ Quản lý</button>
@@ -419,7 +440,7 @@
     <div id="summarySelectList"></div>
   </div>
 
-  <!-- ==================== VIEW TÓM TẮT BỆNH NHÂN (ĐÚNG THEO BẢN VẼ MỚI) ==================== -->
+  <!-- ==================== VIEW TÓM TẮT BỆNH NHÂN CHI TIẾT ==================== -->
   <div id="summaryDetailView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('summarySelectView')">⬅️ Chọn ca khác</button>
@@ -431,11 +452,11 @@
       <div>
         <div class="summary-title-main" id="summaryPatientName">Tóm tắt bệnh nhân</div>
 
-        <!-- THANH CHỌN NGÀY 1, 2... -->
+        <!-- HÀNG NÚT NGÀY: 1, 2... -->
         <div class="day-selector-row">
           <span class="day-label">Ngày</span>
           <div id="daysList" style="display:flex; gap:8px; align-items:center;"></div>
-          <button class="btn-add-day" onclick="addNewDayToPatient()">+ Thêm ngày mới</button>
+          <button class="btn-add-day" onclick="addNewDayToPatient()">+ Thêm ngày</button>
         </div>
 
         <!-- CHẨN ĐOÁN -->
@@ -459,11 +480,11 @@
         <!-- HÌNH ẢNH -->
         <div class="field-block">
           <div class="field-title">Hình ảnh:</div>
-          <div id="viewImageContainer" style="margin-top:6px;"></div>
+          <div class="field-content" id="viewImaging">...</div>
         </div>
       </div>
 
-      <!-- NÚT KẾT THÚC ĐIỀU TRỊ Ở GÓC PHẢI DƯỚI -->
+      <!-- NÚT KẾT THÚC ĐIỀU TRỊ -->
       <div class="finish-area">
         <button class="btn-finish-treatment" onclick="finishTreatment()">Kết thúc điều trị</button>
       </div>
@@ -498,8 +519,8 @@
 </div>
 
 <script>
-  let patients = JSON.parse(localStorage.getItem('bs_patients_room_v3')) || [];
-  let currentEditing = { room: null, bed: null, id: null, imageData: '' };
+  let patients = JSON.parse(localStorage.getItem('bs_patients_room_v4')) || [];
+  let currentEditing = { room: null, bed: null, id: null };
   let viewingPatientId = null;
   let activeDayIndex = 0;
 
@@ -508,6 +529,15 @@
     '817': [1, 2],
     '819': [1, 2]
   };
+
+  function getCurrentDateTimeFormatted() {
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const MM = String(d.getMonth() + 1).padStart(2, '0');
+    return `${hh}:${mm} ${dd}-${MM}`;
+  }
 
   function showView(viewId) {
     ['homeView', 'manageMenuView', 'bedGridView', 'patientFormView', 'summarySelectView', 'summaryDetailView', 'dischargedView', 'profileView'].forEach(v => {
@@ -525,87 +555,56 @@
   function openPatientForm(room, bed) {
     currentEditing.room = String(room);
     currentEditing.bed = String(bed);
-    currentEditing.imageData = '';
 
     const existing = getPatientInBed(room, bed);
-    const nowStr = new Date().toLocaleString('vi-VN', { hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit' });
+    const defaultTime = getCurrentDateTimeFormatted();
 
     document.getElementById('crumbPrefix').textContent = `Nhập > ${bed}.`;
-    document.getElementById('recordDateTime').value = nowStr;
-    document.getElementById('recordImageInput').value = '';
-    const imgPrev = document.getElementById('imagePreview');
-    imgPrev.style.display = 'none';
 
     if (existing) {
       currentEditing.id = existing.id;
-      // Lấy diễn tiến ngày gần nhất để xem/sửa
       const latestDay = existing.days[existing.days.length - 1] || {};
       document.getElementById('recordName').value = existing.name;
+      document.getElementById('recordDateTime').value = latestDay.dateTime || defaultTime;
       document.getElementById('recordDiagnosis').value = latestDay.diag || existing.initialDiag || '';
       document.getElementById('recordTracking').value = latestDay.tracking || '';
       document.getElementById('recordTests').value = latestDay.tests || '';
-      if (latestDay.image) {
-        imgPrev.src = latestDay.image;
-        imgPrev.style.display = 'block';
-        currentEditing.imageData = latestDay.image;
-      }
+      document.getElementById('recordImagingText').value = latestDay.imaging || '';
     } else {
       currentEditing.id = null;
       document.getElementById('recordName').value = '';
+      document.getElementById('recordDateTime').value = defaultTime;
       document.getElementById('recordDiagnosis').value = '';
       document.getElementById('recordTracking').value = '';
       document.getElementById('recordTests').value = '';
+      document.getElementById('recordImagingText').value = '';
     }
 
     showView('patientFormView');
-  }
-
-  function handleImagePick(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(evt) {
-      const img = new Image();
-      img.onload = function() {
-        const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 700;
-        let w = img.width, h = img.height;
-        if (w > MAX_WIDTH) { h *= MAX_WIDTH / w; w = MAX_WIDTH; }
-        canvas.width = w; canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, w, h);
-        currentEditing.imageData = canvas.toDataURL('image/jpeg', 0.7);
-        const prev = document.getElementById('imagePreview');
-        prev.src = currentEditing.imageData;
-        prev.style.display = 'block';
-      };
-      img.src = evt.target.result;
-    };
-    reader.readAsDataURL(file);
   }
 
   function saveRecord() {
     const name = document.getElementById('recordName').value.trim();
     if (!name) return alert("Vui lòng nhập tên bệnh nhân!");
 
+    const dateTime = document.getElementById('recordDateTime').value.trim() || getCurrentDateTimeFormatted();
     const diag = document.getElementById('recordDiagnosis').value.trim();
     const tracking = document.getElementById('recordTracking').value.trim();
     const tests = document.getElementById('recordTests').value.trim();
-    const dateTime = document.getElementById('recordDateTime').value;
+    const imaging = document.getElementById('recordImagingText').value.trim();
 
     const dayRecord = {
       dateTime: dateTime,
       diag: diag,
       tracking: tracking,
       tests: tests,
-      image: currentEditing.imageData
+      imaging: imaging
     };
 
     if (currentEditing.id) {
       const p = patients.find(x => x.id === currentEditing.id);
       if (p) {
         p.name = name;
-        // Cập nhật ngày cuối cùng hoặc thêm mới
         p.days[p.days.length - 1] = dayRecord;
       }
     } else {
@@ -622,11 +621,10 @@
     }
 
     saveAndSync();
-    alert("Đã xác nhận thành công!");
+    alert("Đã xác nhận lưu thông tin!");
     showView('bedGridView');
   }
 
-  // Mở danh sách chọn bệnh nhân để xem Tóm tắt
   function openSummaryPicker() {
     const activePatients = patients.filter(p => p.status === 'active');
     const container = document.getElementById('summarySelectList');
@@ -637,20 +635,19 @@
       container.innerHTML = activePatients.map(p => `
         <div class="patient-picker-card" onclick="loadPatientSummary(${p.id})">
           <div style="font-weight:bold; font-size:16px; color:#0284c7;">${p.name}</div>
-          <div style="font-size:13px; color:#64748b; margin-top:4px;">📍 Phòng ${p.room} - Giường ${p.bed} | Số ngày theo dõi: ${p.days.length}</div>
+          <div style="font-size:13px; color:#64748b; margin-top:4px;">📍 Phòng ${p.room} - Giường ${p.bed} | Số ngày điều trị: ${p.days.length} ngày</div>
         </div>
       `).join('');
     }
     showView('summarySelectView');
   }
 
-  // Hiển thị màn hình Tóm tắt chi tiết (đúng theo bản vẽ)
   function loadPatientSummary(id) {
     viewingPatientId = id;
     const p = patients.find(x => x.id === id);
     if (!p) return;
 
-    activeDayIndex = p.days.length - 1; // Mặc định mở ngày mới nhất
+    activeDayIndex = p.days.length - 1;
     renderSummaryDetail();
     showView('summaryDetailView');
   }
@@ -662,24 +659,16 @@
     document.getElementById('summaryBedLabel').textContent = `P.${p.room} - Giường ${p.bed}`;
     document.getElementById('summaryPatientName').textContent = `Tóm tắt bệnh nhân: ${p.name}`;
 
-    // Render danh sách ngày 1, 2...
     const daysContainer = document.getElementById('daysList');
     daysContainer.innerHTML = p.days.map((d, index) => `
       <button class="day-btn ${index === activeDayIndex ? 'active' : ''}" onclick="switchDay(${index})">${index + 1}</button>
     `).join('');
 
-    // Hiển thị dữ liệu của ngày đang chọn
     const dayData = p.days[activeDayIndex] || {};
     document.getElementById('viewDiag').textContent = dayData.diag || '(Chưa ghi)';
     document.getElementById('viewTracking').textContent = dayData.tracking || '(Chưa có theo dõi)';
     document.getElementById('viewTests').textContent = dayData.tests || '(Chưa có xét nghiệm)';
-
-    const imgBox = document.getElementById('viewImageContainer');
-    if (dayData.image) {
-      imgBox.innerHTML = `<img src="${dayData.image}" style="max-width:100%; border-radius:10px; border:1px solid #cbd5e1;">`;
-    } else {
-      imgBox.innerHTML = '<span style="font-size:13px; color:#94a3b8; font-style:italic;">Không có hình ảnh</span>';
-    }
+    document.getElementById('viewImaging').textContent = dayData.imaging || '(Chưa có kết quả chẩn đoán hình ảnh)';
   }
 
   function switchDay(index) {
@@ -687,18 +676,17 @@
     renderSummaryDetail();
   }
 
-  // Thêm ngày theo dõi mới (Ngày 2, Ngày 3...)
   function addNewDayToPatient() {
     const p = patients.find(x => x.id === viewingPatientId);
     if (!p) return;
 
     const lastDay = p.days[p.days.length - 1] || {};
     const newDay = {
-      dateTime: new Date().toLocaleString('vi-VN', { hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit' }),
+      dateTime: getCurrentDateTimeFormatted(),
       diag: lastDay.diag || '',
       tracking: '',
       tests: '',
-      image: ''
+      imaging: ''
     };
 
     p.days.push(newDay);
@@ -706,37 +694,35 @@
     saveAndSync();
     renderSummaryDetail();
 
-    // Mở form để nhập ngay dữ liệu cho ngày mới
+    // Mở luôn form nhập để bác sĩ cập nhật cho ngày mới
     currentEditing.room = p.room;
     currentEditing.bed = p.bed;
     currentEditing.id = p.id;
-    currentEditing.imageData = '';
     document.getElementById('crumbPrefix').textContent = `Nhập > ${p.bed}.`;
     document.getElementById('recordName').value = p.name;
     document.getElementById('recordDateTime').value = newDay.dateTime;
     document.getElementById('recordDiagnosis').value = newDay.diag;
     document.getElementById('recordTracking').value = '';
     document.getElementById('recordTests').value = '';
-    document.getElementById('imagePreview').style.display = 'none';
+    document.getElementById('recordImagingText').value = '';
     showView('patientFormView');
   }
 
-  // Nút Kết thúc điều trị
   function finishTreatment() {
-    if (confirm("Xác nhận kết thúc điều trị và cho bệnh nhân này xuất viện?")) {
+    if (confirm("Xác nhận kết thúc điều trị và cho bệnh nhân này ra viện?")) {
       const p = patients.find(x => x.id === viewingPatientId);
       if (p) {
         p.status = 'discharged';
-        p.dateOut = new Date().toLocaleDateString('vi-VN');
+        p.dateOut = getCurrentDateTimeFormatted();
         saveAndSync();
-        alert("Bệnh nhân đã được chuyển sang danh sách Ra viện!");
+        alert("Bệnh nhân đã ra viện thành công!");
         showView('manageMenuView');
       }
     }
   }
 
   function saveAndSync() {
-    localStorage.setItem('bs_patients_room_v3', JSON.stringify(patients));
+    localStorage.setItem('bs_patients_room_v4', JSON.stringify(patients));
     renderDashboardCounts();
   }
 
@@ -748,7 +734,7 @@
     document.getElementById('homeDischargedCount').textContent = `${dischargedList.length} Đã ra viện`;
     document.getElementById('summaryCountTag').textContent = `${activeList.length} Bệnh nhân`;
 
-    // Sơ đồ giường
+    // Render Sơ đồ giường
     ['825', '817', '819'].forEach(room => {
       const box = document.getElementById(`room${room}`);
       if (!box) return;
@@ -772,7 +758,7 @@
       }).join('');
     });
 
-    // Danh sách ra viện
+    // Render Ra viện
     const disContainer = document.getElementById('dischargedListContainer');
     if (disContainer) {
       disContainer.innerHTML = dischargedList.length === 0 ? '<p style="text-align:center; color:#94a3b8; padding:20px;">Chưa có hồ sơ ra viện.</p>' : dischargedList.map(p => `
@@ -787,7 +773,7 @@
     }
   }
 
-  // Khởi chạy khi load trang
+  // Khởi động giao diện ban đầu
   renderDashboardCounts();
 </script>
 </body>

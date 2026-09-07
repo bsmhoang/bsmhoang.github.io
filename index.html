@@ -14,11 +14,11 @@
       --border: #cbd5e1;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-    body { background: var(--bg); color: var(--text); min-height: 100vh; padding: 10px 6px; }
-    .container { max-width: 950px; margin: 0 auto; width: 100%; }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; padding: 8px; }
+    .container { max-width: 600px; margin: 0 auto; width: 100%; }
 
     /* NÚT TRÊN CÙNG */
-    .top-bar { display: flex; justify-content: flex-start; margin-bottom: 14px; }
+    .top-bar { display: flex; justify-content: flex-start; margin-bottom: 12px; }
     .btn-top {
       background: white;
       border: 1px solid var(--border);
@@ -64,7 +64,7 @@
 
     /* VIEW CON */
     .view-section { display: none; }
-    .view-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .view-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-shrink: 0; }
     .btn-back { background: #e2e8f0; border: none; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
 
     /* SƠ ĐỒ PHÒNG GIƯỜNG */
@@ -102,25 +102,35 @@
     .patient-name-slot { font-size: 13px; font-weight: 600; line-height: 1.25; word-break: break-word; }
     .bed-empty-tag { font-size: 11px; color: #94a3b8; font-style: italic; }
 
-    /* ===== KHUNG TÓM TẮT BỆNH ÁN: TIÊU ĐỀ CỐ ĐỊNH, CHỈ CUỘN NỘI DUNG ===== */
-    .summary-page-container {
+    /* ========================================================
+       CẤU TRÚC THEO DÕI BỆNH ÁN CỐ ĐỊNH KHUNG, CHỈ CUỘN NỘI DUNG
+       ======================================================== */
+    .summary-app-window {
       background: white;
-      border: 1.5px solid var(--border);
-      border-radius: 16px;
-      padding: 12px 8px 16px 8px;
+      border: 2px solid var(--border);
+      border-radius: 18px;
+      height: calc(100vh - 75px); /* Khóa trọn vẹn màn hình điện thoại */
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
       box-shadow: 0 4px 15px rgba(0,0,0,0.03);
     }
-    
+
+    /* 1. Header cố định phía trên */
+    .summary-fixed-header {
+      flex-shrink: 0;
+      padding: 12px 14px 8px 14px;
+      background: white;
+      border-bottom: 1px solid #e2e8f0;
+    }
     .summary-top-info {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-bottom: 10px;
-      border-bottom: 1.5px solid #e2e8f0;
       margin-bottom: 10px;
     }
     .btn-add-day-pill {
-      background: #e0f2fe;
+      background: #ffffff;
       border: 1.5px solid #0284c7;
       color: #0284c7;
       padding: 6px 14px;
@@ -132,77 +142,80 @@
       align-items: center;
       gap: 4px;
     }
-    .btn-add-day-pill:active { background: #bae6fd; }
+    .btn-add-day-pill:active { background: #e0f2fe; }
 
-    /* BẢNG MA TRẬN LIỀN MẠCH: CỘT TRÁI CỐ ĐỊNH */
-    .timeline-scroll-wrapper {
+    /* Danh sách nút Ngày trượt ngang nhẹ nhàng ở phần Header */
+    .day-tab-scroll {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       overflow-x: auto;
+      padding-bottom: 4px;
       -webkit-overflow-scrolling: touch;
-      border: 1.5px solid var(--border);
-      border-radius: 12px;
-      background: #ffffff;
-      width: 100%;
     }
-    .timeline-table {
-      border-collapse: collapse;
-      width: max-content;
-      min-width: 100%;
-    }
-    .timeline-table th, .timeline-table td {
-      border: 1px solid var(--border);
-      padding: 10px 12px;
-      vertical-align: top;
-      font-size: 13.5px;
-    }
-    
-    /* Cột tiêu đề mục cố định bên trái (Sticky Header Left) */
-    .col-label-sticky {
-      position: sticky;
-      left: 0;
+    .day-tab-btn {
       background: #f1f5f9;
-      z-index: 3;
-      width: 95px;
-      min-width: 95px;
-      max-width: 95px;
-      font-weight: 700;
-      color: #1e293b;
-      box-shadow: 2px 0 5px rgba(0,0,0,0.04);
-      text-align: center;
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: 12px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #334155;
+      white-space: nowrap;
+      cursor: pointer;
+      flex-shrink: 0;
     }
-    th.col-label-sticky {
-      background: #e2e8f0;
-      z-index: 4;
-    }
-
-    /* Các cột ngày cuộn ngang rộng rãi */
-    .day-header-cell {
+    .day-tab-btn.active {
       background: #0284c7;
       color: white;
-      text-align: center;
-      min-width: 250px;
-      width: 250px;
-      padding: 8px 12px;
+      border-color: #0284c7;
     }
-    .day-content-cell {
+
+    /* 2. Phần nội dung cuộn ở giữa (CHỈ CUỘN DUY NHẤT VÙNG NÀY) */
+    .summary-scrollable-body {
+      flex-grow: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 12px 14px;
+    }
+
+    /* Các ô thẻ đúng theo thiết kế bản vẽ */
+    .section-block-box {
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 12px;
       background: #ffffff;
-      min-width: 250px;
-      width: 250px;
-      white-space: pre-wrap;
-      line-height: 1.5;
+      overflow: hidden;
+    }
+    .section-block-tag {
+      display: inline-block;
+      background: #f1f5f9;
+      border-right: 1.5px solid var(--border);
+      border-bottom: 1.5px solid var(--border);
+      padding: 4px 12px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #1e293b;
+      border-bottom-right-radius: 8px;
+    }
+    .section-block-body {
+      padding: 10px 12px;
+      font-size: 14px;
       color: #0f172a;
+      line-height: 1.5;
+      min-height: 54px;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
 
-    /* Chiều dài ô để đọc văn bản dài thoải mái */
-    tr.row-diag td { min-height: 60px; }
-    tr.row-tracking td { min-height: 120px; }
-    tr.row-tests td { min-height: 100px; }
-    tr.row-imaging td { min-height: 100px; }
-
-    /* NÚT KẾT THÚC ĐIỀU TRỊ */
-    .finish-area {
+    /* 3. Footer cố định phía dưới */
+    .summary-fixed-footer {
+      flex-shrink: 0;
+      padding: 10px 14px;
+      background: white;
+      border-top: 1px solid #e2e8f0;
       display: flex;
       justify-content: flex-end;
-      margin-top: 14px;
     }
     .btn-finish-treatment {
       background: #ffffff;
@@ -353,65 +366,67 @@
     <div class="grid-room-2" id="room819"></div>
   </div>
 
-  <!-- ==================== TẦNG 3: BẢNG TÓM TẮT: CỘT TIÊU ĐỀ BÊN TRÁI CỐ ĐỊNH ==================== -->
+  <!-- ==================== TẦNG 3: VIEW TÓM TẮT ĐÚNG THEO ẢNH 6296.JPG ==================== -->
   <div id="summaryFullView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('roomGridView')">⬅️ Sơ đồ phòng</button>
-      <h3 style="font-size:15px;" id="summaryBedBadge">P.825 - Giường 3</h3>
+      <h3 style="font-size:15px;" id="summaryBedBadge">Phòng 825 - Giường 3</h3>
       <div style="width:40px;"></div>
     </div>
 
-    <div class="summary-page-container">
-      <div class="summary-top-info">
-        <div>
-          <div style="font-size:11px; color:#64748b;">Bệnh nhân:</div>
-          <h2 id="summaryPatientTitle" style="font-size:18px; color:#0284c7; margin-top:2px;">Nguyễn Văn A</h2>
+    <!-- KHUNG TỔNG THỂ KHÓA CỐ ĐỊNH TRÊN MÀN HÌNH -->
+    <div class="summary-app-window">
+      
+      <!-- 1. Header cố định phía trên -->
+      <div class="summary-fixed-header">
+        <div class="summary-top-info">
+          <div>
+            <div style="font-size:11px; color:#64748b;">Hồ sơ bệnh nhân:</div>
+            <h2 id="summaryPatientTitle" style="font-size:18px; color:#0284c7; margin-top:2px;">Nguyễn Văn A</h2>
+          </div>
+          <button class="btn-add-day-pill" onclick="handleAddNewDayClick()">➕ Thêm ngày mới</button>
         </div>
-        <button class="btn-add-day-pill" onclick="handleAddNewDayClick()">➕ Thêm ngày mới</button>
+
+        <!-- Thanh danh sách Ngày chọn 1 chạm -->
+        <div class="day-tab-scroll" id="dayTabsContainer"></div>
       </div>
 
-      <div style="font-size:11.5px; color:#64748b; margin-bottom:8px; display:flex; align-items:center; gap:4px;">
-        👉 <i>Tiêu đề bên trái giữ nguyên, cuộn ngang để xem các ngày:</i>
+      <!-- 2. Phần nội dung cuộn ở giữa (CHỈ CUỘN KHỐI NÀY) -->
+      <div class="summary-scrollable-body">
+        <!-- KHUNG 1: CHẨN ĐOÁN -->
+        <div class="section-block-box">
+          <div class="section-block-tag">Chẩn đoán</div>
+          <div class="section-block-body" id="viewDiag">...</div>
+        </div>
+
+        <!-- KHUNG 2: THEO DÕI -->
+        <div class="section-block-box">
+          <div class="section-block-tag">Theo dõi</div>
+          <div class="section-block-body" id="viewTracking">...</div>
+        </div>
+
+        <!-- KHUNG 3: XÉT NGHIỆM -->
+        <div class="section-block-box">
+          <div class="section-block-tag">Xét nghiệm</div>
+          <div class="section-block-body" id="viewTests">...</div>
+        </div>
+
+        <!-- KHUNG 4: HÌNH ẢNH -->
+        <div class="section-block-box">
+          <div class="section-block-tag">Hình ảnh</div>
+          <div class="section-block-body" id="viewImaging">...</div>
+        </div>
       </div>
 
-      <!-- VÙNG BẢNG LIỀN MẠCH, KHÔNG NẾP NỐI RỜI RẠC -->
-      <div class="timeline-scroll-wrapper">
-        <table class="timeline-table">
-          <thead>
-            <tr id="headerRow">
-              <th class="col-label-sticky">Mục</th>
-              <!-- Cột Ngày 1, Ngày 2... render tại đây -->
-            </tr>
-          </thead>
-          <tbody>
-            <tr class="row-diag" id="rowDiag">
-              <td class="col-label-sticky">Chẩn đoán</td>
-              <!-- Nội dung chẩn đoán từng ngày -->
-            </tr>
-            <tr class="row-tracking" id="rowTracking">
-              <td class="col-label-sticky">Theo dõi</td>
-              <!-- Nội dung theo dõi từng ngày -->
-            </tr>
-            <tr class="row-tests" id="rowTests">
-              <td class="col-label-sticky">Xét nghiệm</td>
-              <!-- Nội dung xét nghiệm từng ngày -->
-            </tr>
-            <tr class="row-imaging" id="rowImaging">
-              <td class="col-label-sticky">Hình ảnh</td>
-              <!-- Nội dung hình ảnh từng ngày -->
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- NÚT KẾT THÚC ĐIỀU TRỊ -->
-      <div class="finish-area">
+      <!-- 3. Footer cố định phía dưới -->
+      <div class="summary-fixed-footer">
         <button class="btn-finish-treatment" onclick="finishCurrentTreatment()">Kết thúc điều trị</button>
       </div>
+
     </div>
   </div>
 
-  <!-- ==================== FORM NHẬP / THÊM NGÀY ==================== -->
+  <!-- ==================== FORM NHẬP THÔNG TIN / THÊM NGÀY ==================== -->
   <div id="patientFormView" class="view-section">
     <div class="view-header">
       <button class="btn-back" id="btnBackFromForm" onclick="handleBackFromForm()">⬅️ Quay lại</button>
@@ -478,16 +493,17 @@
       <div style="width:64px; height:64px; background:#0284c7; color:white; border-radius:50%; margin:0 auto 10px; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:bold;">BS</div>
       <h2>Bác sĩ Minh Hoàng</h2>
       <p style="color:#0284c7; font-weight:600; font-size:14px; margin-top:2px;">Bác sĩ Điều trị</p>
-      <p style="color:#64748b; font-size:13px; margin-top:8px; line-height:1.5;">Hệ thống sơ đồ buồng bệnh & bảng theo dõi diễn tiến lâm sàng.</p>
+      <p style="color:#64748b; font-size:13px; margin-top:8px; line-height:1.5;">Hệ thống sơ đồ phòng bệnh & theo dõi diễn biến lâm sàng tối ưu hiển thị.</p>
     </div>
   </div>
 
 </div>
 
 <script>
-  let patients = JSON.parse(localStorage.getItem('bs_patients_scroll_v2')) || [];
+  let patients = JSON.parse(localStorage.getItem('bs_patients_scroll_v3')) || [];
   let currentEditing = { room: null, bed: null, id: null, isNewDay: false };
   let currentViewingPatientId = null;
+  let currentDayIndex = 0;
 
   const roomConfigs = {
     '825': [3, 2, 1, 4, 5, 6],
@@ -528,6 +544,7 @@
   function handleBedClick(room, bed) {
     const existing = getPatientInBed(room, bed);
     if (existing) {
+      currentDayIndex = existing.entries.length - 1; // Mở ngày mới nhất
       openSummaryView(existing.id);
     } else {
       currentEditing = { room: String(room), bed: String(bed), id: null, isNewDay: false };
@@ -598,6 +615,7 @@
         p.entries.sort((a, b) => a.timestamp - b.timestamp);
         saveAndSync();
         alert("Đã thêm ngày mới thành công!");
+        currentDayIndex = p.entries.length - 1;
         openSummaryView(p.id);
         return;
       }
@@ -614,12 +632,12 @@
       patients.unshift(newP);
       saveAndSync();
       alert("Đã tiếp nhận bệnh nhân thành công!");
+      currentDayIndex = 0;
       openSummaryView(newP.id);
       return;
     }
   }
 
-  // Mở bảng ma trận: Tiêu đề bên trái cố định, cuộn ngang các ngày
   function openSummaryView(id) {
     currentViewingPatientId = id;
     const p = patients.find(x => x.id === id);
@@ -630,33 +648,36 @@
     document.getElementById('summaryBedBadge').textContent = `Phòng ${p.room} - Giường ${p.bed}`;
     document.getElementById('summaryPatientTitle').textContent = `${p.name}`;
 
-    const hRow = document.getElementById('headerRow');
-    const rDiag = document.getElementById('rowDiag');
-    const rTrack = document.getElementById('rowTracking');
-    const rTests = document.getElementById('rowTests');
-    const rImg = document.getElementById('rowImaging');
-
-    // Khởi tạo lại cột tiêu đề cố định bên trái
-    hRow.innerHTML = '<th class="col-label-sticky">Mục</th>';
-    rDiag.innerHTML = '<td class="col-label-sticky">Chẩn đoán</td>';
-    rTrack.innerHTML = '<td class="col-label-sticky">Theo dõi</td>';
-    rTests.innerHTML = '<td class="col-label-sticky">Xét nghiệm</td>';
-    rImg.innerHTML = '<td class="col-label-sticky">Hình ảnh</td>';
-
-    // Đổ các cột ngày trải dài sang ngang
-    p.entries.forEach((entry, idx) => {
-      hRow.innerHTML += `
-        <th class="day-header-cell">
-          Ngày ${idx + 1}
-          <div style="font-size:11px; font-weight:normal; opacity:0.92; margin-top:2px;">(${formatDisplayTime(entry.isoTime)})</div>
-        </th>`;
-      rDiag.innerHTML += `<td class="day-content-cell">${entry.diag || '—'}</td>`;
-      rTrack.innerHTML += `<td class="day-content-cell">${entry.tracking || '—'}</td>`;
-      rTests.innerHTML += `<td class="day-content-cell">${entry.tests || '—'}</td>`;
-      rImg.innerHTML += `<td class="day-content-cell">${entry.imaging || '—'}</td>`;
-    });
-
+    renderDayTabsAndContent();
     showView('summaryFullView');
+  }
+
+  function renderDayTabsAndContent() {
+    const p = patients.find(x => x.id === currentViewingPatientId);
+    if (!p) return;
+
+    if (currentDayIndex >= p.entries.length) currentDayIndex = p.entries.length - 1;
+    if (currentDayIndex < 0) currentDayIndex = 0;
+
+    // Render các nút ngày
+    const tabsBox = document.getElementById('dayTabsContainer');
+    tabsBox.innerHTML = p.entries.map((item, idx) => `
+      <button class="day-tab-btn ${idx === currentDayIndex ? 'active' : ''}" onclick="selectDayIndex(${idx})">
+        Ngày ${idx + 1} (${formatDisplayTime(item.isoTime)})
+      </button>
+    `).join('');
+
+    // Đổ nội dung vào các ô cuộn
+    const currentEntry = p.entries[currentDayIndex] || {};
+    document.getElementById('viewDiag').textContent = currentEntry.diag || '—';
+    document.getElementById('viewTracking').textContent = currentEntry.tracking || '—';
+    document.getElementById('viewTests').textContent = currentEntry.tests || '—';
+    document.getElementById('viewImaging').textContent = currentEntry.imaging || '—';
+  }
+
+  function selectDayIndex(idx) {
+    currentDayIndex = idx;
+    renderDayTabsAndContent();
   }
 
   function finishCurrentTreatment() {
@@ -673,7 +694,7 @@
   }
 
   function saveAndSync() {
-    localStorage.setItem('bs_patients_scroll_v2', JSON.stringify(patients));
+    localStorage.setItem('bs_patients_scroll_v3', JSON.stringify(patients));
     renderDashboardCounts();
   }
 

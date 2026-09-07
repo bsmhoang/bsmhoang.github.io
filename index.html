@@ -4,6 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Bác Sĩ Minh Hoàng - Quản Lý Bệnh Nhân</title>
+  
+  <!-- Cấu hình ứng dụng Web (PWA) -->
+  <meta name="theme-color" content="#0284c7">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="BS Minh Hoàng">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230284c7'/><path d='M40 20h20v20h20v20H60v20H40V60H20V40h20z' fill='white'/></svg>">
+
   <style>
     :root {
       --primary: #0284c7;
@@ -42,7 +51,7 @@
       width: 100%; 
     }
 
-    /* THANH TRẠNG THÁI ĐỒNG BỘ ONLINE */
+    /* THANH TRẠNG THÁI ĐỒNG BỘ */
     .sync-status-bar {
       font-size: 11.5px;
       font-weight: 600;
@@ -53,10 +62,8 @@
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      margin-left: auto;
     }
 
-    /* NÚT ĐIỀU HƯỚNG TRÊN CÙNG */
     .top-bar { 
       display: flex; 
       align-items: center;
@@ -88,7 +95,7 @@
       text-align: center;
       cursor: pointer;
       box-shadow: 0 4px 14px rgba(0,0,0,0.03);
-      transition: transform 0.15s ease, background 0.15s;
+      transition: transform 0.15s ease;
     }
     .big-btn:active { transform: scale(0.98); }
     .big-btn h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
@@ -216,7 +223,6 @@
       flex-direction: column;
       justify-content: center;
       cursor: pointer;
-      transition: background 0.1s;
     }
     .bed-slot.occupied { background: #e0f2fe; }
     .bed-num { font-size: 12px; font-weight: 700; color: var(--primary); margin-bottom: 2px; }
@@ -224,7 +230,9 @@
     .patient-name-slot { font-size: 13.5px; font-weight: 700; line-height: 1.25; word-break: break-word; color: #0f172a; }
     .bed-empty-tag { font-size: 11px; color: #94a3b8; font-style: italic; }
 
-    /* HỒ SƠ BỆNH ÁN CỐ ĐỊNH KHUNG */
+    /* ========================================================
+       CẤU TRÚC HỒ SƠ: SỬA TRIỆT ĐỂ LỖI BỊ ÉP Ô & KHÔNG CUỘN ĐƯỢC
+       ======================================================== */
     .summary-app-window {
       background: white;
       border: 1.5px solid var(--border);
@@ -312,34 +320,41 @@
       box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
     }
 
+    /* KHUNG VUỐT NGANG GIỮA CÁC NGÀY */
     .summary-scrollable-body {
       flex-grow: 1;
+      height: 100%;
       overflow-x: auto;
-      overflow-y: auto;
+      overflow-y: hidden;
       -webkit-overflow-scrolling: touch;
       scroll-snap-type: x mandatory;
       display: flex;
-      padding: 12px 14px;
-      gap: 16px;
       scrollbar-width: none;
     }
     .summary-scrollable-body::-webkit-scrollbar { display: none; }
 
+    /* MỖI NGÀY TỰ DO CUỘN DỌC (KHÔNG BAO GIỜ BỊ ÉP DẸP NỘI DUNG) */
     .day-slide-page {
       width: 100%;
       min-width: 100%;
+      height: 100%;
       flex-shrink: 0;
       scroll-snap-align: start;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       display: flex;
       flex-direction: column;
       gap: 12px;
+      padding: 12px 14px 20px 14px;
     }
 
+    /* CÁC Ô KHỐI NỔI BO TRÒN */
     .section-block-box {
       border: 1.5px solid var(--border);
       border-radius: var(--radius-md);
       background: #ffffff;
       overflow: hidden;
+      flex-shrink: 0;
       box-shadow: 0 2px 6px rgba(0,0,0,0.02);
     }
     .section-block-tag {
@@ -358,7 +373,7 @@
       font-size: 14.5px;
       color: #0f172a;
       line-height: 1.55;
-      min-height: 52px;
+      min-height: 48px;
       white-space: pre-wrap;
       word-break: break-word;
     }
@@ -637,6 +652,7 @@
         <div class="day-tab-scroll" id="dayTabsContainer"></div>
       </div>
 
+      <!-- VÙNG CUỘN ĐỒNG BỘ 2 CHIỀU HOÀN HẢO -->
       <div class="summary-scrollable-body" id="syncSlideBody" onscroll="handleBodyScroll()"></div>
 
       <div class="summary-fixed-footer">
@@ -728,9 +744,7 @@
 </div>
 
 <script>
-  // =========================================================================
-  // DÁN LINK GOOGLE APPS SCRIPT CỦA BẠN VÀO DƯỚI ĐÂY:
-  // =========================================================================
+  // LINK GOOGLE APPS SCRIPT CHÍNH XÁC CỦA BẠN:
   const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxVVVoEdjNY5fsWGuJegc9EHAcrzTFaty4VEhMeyo5HsKdT-U89s9SlT7R-zdaXuMayzw/exec";
 
   const defaultRooms = [
@@ -764,15 +778,11 @@
     }
   }
 
-  // Tải dữ liệu online từ Google Sheets
   async function loadDataFromCloud() {
-    if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === "YOUR_GOOGLE_SCRIPT_URL_HERE") {
-      updateSyncUI('error', 'Chưa gắn URL Sheets');
-      return;
-    }
-    updateSyncUI('syncing', 'Đang nạp dữ liệu...');
+    if (!GOOGLE_SCRIPT_URL) return;
+    updateSyncUI('syncing', 'Đang nạp...');
     try {
-      const res = await fetch(GOOGLE_SCRIPT_URL);
+      const res = await fetch(GOOGLE_SCRIPT_URL, { method: 'GET', redirect: 'follow' });
       const data = await res.json();
       if (data && data.patients && data.rooms) {
         patients = data.patients;
@@ -782,7 +792,7 @@
         updateSyncUI('success', 'Đã đồng bộ');
         renderDashboardCounts();
       } else {
-        updateSyncUI('success', 'Trực tuyến');
+        updateSyncUI('success', 'Đã đồng bộ');
       }
     } catch (e) {
       console.warn("Lỗi tải đám mây:", e);
@@ -790,21 +800,20 @@
     }
   }
 
-  // Đẩy dữ liệu lên Google Sheets
   async function syncDataToCloud() {
     localStorage.setItem('bs_patients_scroll_v3', JSON.stringify(patients));
     localStorage.setItem('bs_room_configs_v1', JSON.stringify(roomList));
     renderDashboardCounts();
 
-    if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === "YOUR_GOOGLE_SCRIPT_URL_HERE") return;
+    if (!GOOGLE_SCRIPT_URL) return;
 
-    updateSyncUI('syncing', 'Đang lưu lên Sheet...');
+    updateSyncUI('syncing', 'Đang lưu...');
     try {
       const payload = JSON.stringify({ patients, rooms: roomList });
       await fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain' },
         body: payload
       });
       updateSyncUI('success', 'Đã lưu lên Sheet');
@@ -1064,7 +1073,7 @@
     }
   }
 
-  /* VIEW TÓM TẮT & ĐỒNG BỘ CUỘN */
+  /* VIEW TÓM TẮT */
   function openSummaryView(id) {
     currentViewingPatientId = id;
     const p = patients.find(x => x.id === id);
@@ -1141,7 +1150,7 @@
     const scrollLeft = bodyBox.scrollLeft;
     const newIndex = Math.round(scrollLeft / width);
 
-    if (newIndex !== currentActiveIndex && newIndex >= 0) {
+    if (newIndex !== currentActiveIndex && newIndex >= 0 && newIndex < (patients.find(x => x.id === currentViewingPatientId)?.entries.length || 0)) {
       currentActiveIndex = newIndex;
       updateActiveTabUI(newIndex);
     }
@@ -1384,7 +1393,7 @@
     }
   }
 
-  // Khởi động: Tải dữ liệu online từ Google Sheets
+  // Khởi chạy hệ thống và đồng bộ online
   renderDashboardCounts();
   loadDataFromCloud();
 </script>

@@ -14,8 +14,8 @@
       --border: #cbd5e1;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-    body { background: var(--bg); color: var(--text); min-height: 100vh; padding: 10px 8px; }
-    .container { max-width: 900px; margin: 0 auto; width: 100%; }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; padding: 10px 6px; }
+    .container { max-width: 950px; margin: 0 auto; width: 100%; }
 
     /* NÚT TRÊN CÙNG */
     .top-bar { display: flex; justify-content: flex-start; margin-bottom: 14px; }
@@ -102,12 +102,12 @@
     .patient-name-slot { font-size: 13px; font-weight: 600; line-height: 1.25; word-break: break-word; }
     .bed-empty-tag { font-size: 11px; color: #94a3b8; font-style: italic; }
 
-    /* ===== GIAO DIỆN TÓM TẮT CUỘN NGANG TOÀN BỘ CÁC NGÀY ===== */
+    /* ===== KHUNG TÓM TẮT BỆNH ÁN: TIÊU ĐỀ CỐ ĐỊNH, CHỈ CUỘN NỘI DUNG ===== */
     .summary-page-container {
       background: white;
-      border: 2px solid var(--border);
+      border: 1.5px solid var(--border);
       border-radius: 16px;
-      padding: 12px 10px 16px 10px;
+      padding: 12px 8px 16px 8px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.03);
     }
     
@@ -117,7 +117,7 @@
       align-items: center;
       padding-bottom: 10px;
       border-bottom: 1.5px solid #e2e8f0;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
     .btn-add-day-pill {
       background: #e0f2fe;
@@ -134,71 +134,69 @@
     }
     .btn-add-day-pill:active { background: #bae6fd; }
 
-    /* VÙNG CUỘN THEO CHIỀU NGANG */
-    .horizontal-days-track {
-      display: flex;
-      gap: 14px;
+    /* BẢNG MA TRẬN LIỀN MẠCH: CỘT TRÁI CỐ ĐỊNH */
+    .timeline-scroll-wrapper {
       overflow-x: auto;
-      padding-bottom: 12px;
       -webkit-overflow-scrolling: touch;
-      scroll-snap-type: x proximity;
-    }
-
-    /* MỖI CỘT NGÀY: LÀ MỘT KHỐI RỘNG VÀ ĐẦY ĐỦ CÁC Ô THEO BẢN VẼ */
-    .day-column-card {
-      min-width: 300px;
-      max-width: 320px;
-      width: 85vw;
-      flex-shrink: 0;
-      background: #f8fafc;
       border: 1.5px solid var(--border);
-      border-radius: 14px;
-      padding: 10px;
-      scroll-snap-align: start;
-    }
-
-    /* TIÊU ĐỀ MỐC NGÀY / GIỜ */
-    .day-col-badge {
-      background: #0284c7;
-      color: white;
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 700;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    /* CÁC KHỐI BĂNG NGANG (ĐÚNG PHÔNG & THIẾT KẾ BẢN VẼ) */
-    .section-block-box {
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      margin-bottom: 10px;
+      border-radius: 12px;
       background: #ffffff;
-      overflow: hidden;
+      width: 100%;
     }
-    .section-block-tag {
-      display: inline-block;
+    .timeline-table {
+      border-collapse: collapse;
+      width: max-content;
+      min-width: 100%;
+    }
+    .timeline-table th, .timeline-table td {
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      vertical-align: top;
+      font-size: 13.5px;
+    }
+    
+    /* Cột tiêu đề mục cố định bên trái (Sticky Header Left) */
+    .col-label-sticky {
+      position: sticky;
+      left: 0;
       background: #f1f5f9;
-      border-right: 1.5px solid var(--border);
-      border-bottom: 1.5px solid var(--border);
-      padding: 4px 10px;
-      font-size: 12px;
+      z-index: 3;
+      width: 95px;
+      min-width: 95px;
+      max-width: 95px;
       font-weight: 700;
       color: #1e293b;
-      border-bottom-right-radius: 8px;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.04);
+      text-align: center;
     }
-    .section-block-body {
-      padding: 8px 10px;
-      font-size: 13.5px;
-      color: #0f172a;
-      line-height: 1.5;
-      min-height: 48px;
+    th.col-label-sticky {
+      background: #e2e8f0;
+      z-index: 4;
+    }
+
+    /* Các cột ngày cuộn ngang rộng rãi */
+    .day-header-cell {
+      background: #0284c7;
+      color: white;
+      text-align: center;
+      min-width: 250px;
+      width: 250px;
+      padding: 8px 12px;
+    }
+    .day-content-cell {
+      background: #ffffff;
+      min-width: 250px;
+      width: 250px;
       white-space: pre-wrap;
-      word-break: break-word;
+      line-height: 1.5;
+      color: #0f172a;
     }
+
+    /* Chiều dài ô để đọc văn bản dài thoải mái */
+    tr.row-diag td { min-height: 60px; }
+    tr.row-tracking td { min-height: 120px; }
+    tr.row-tests td { min-height: 100px; }
+    tr.row-imaging td { min-height: 100px; }
 
     /* NÚT KẾT THÚC ĐIỀU TRỊ */
     .finish-area {
@@ -355,7 +353,7 @@
     <div class="grid-room-2" id="room819"></div>
   </div>
 
-  <!-- ==================== TẦNG 3: TÓM TẮT DẠNG CỘT CUỘN THEO CHIỀU NGANG ==================== -->
+  <!-- ==================== TẦNG 3: BẢNG TÓM TẮT: CỘT TIÊU ĐỀ BÊN TRÁI CỐ ĐỊNH ==================== -->
   <div id="summaryFullView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('roomGridView')">⬅️ Sơ đồ phòng</button>
@@ -372,13 +370,38 @@
         <button class="btn-add-day-pill" onclick="handleAddNewDayClick()">➕ Thêm ngày mới</button>
       </div>
 
-      <div style="font-size:11px; color:#64748b; margin-bottom:8px; display:flex; align-items:center; gap:4px;">
-        👉 <i>Vuốt ngang sang phải để xem các ngày tiếp theo:</i>
+      <div style="font-size:11.5px; color:#64748b; margin-bottom:8px; display:flex; align-items:center; gap:4px;">
+        👉 <i>Tiêu đề bên trái giữ nguyên, cuộn ngang để xem các ngày:</i>
       </div>
 
-      <!-- VÙNG CUỘN NGANG CÁC NGÀY -->
-      <div class="horizontal-days-track" id="horizontalDaysTrack">
-        <!-- Mỗi ngày là 1 cột thẻ hiển thị đầy đủ Chẩn đoán, Theo dõi, Xét nghiệm, Hình ảnh -->
+      <!-- VÙNG BẢNG LIỀN MẠCH, KHÔNG NẾP NỐI RỜI RẠC -->
+      <div class="timeline-scroll-wrapper">
+        <table class="timeline-table">
+          <thead>
+            <tr id="headerRow">
+              <th class="col-label-sticky">Mục</th>
+              <!-- Cột Ngày 1, Ngày 2... render tại đây -->
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="row-diag" id="rowDiag">
+              <td class="col-label-sticky">Chẩn đoán</td>
+              <!-- Nội dung chẩn đoán từng ngày -->
+            </tr>
+            <tr class="row-tracking" id="rowTracking">
+              <td class="col-label-sticky">Theo dõi</td>
+              <!-- Nội dung theo dõi từng ngày -->
+            </tr>
+            <tr class="row-tests" id="rowTests">
+              <td class="col-label-sticky">Xét nghiệm</td>
+              <!-- Nội dung xét nghiệm từng ngày -->
+            </tr>
+            <tr class="row-imaging" id="rowImaging">
+              <td class="col-label-sticky">Hình ảnh</td>
+              <!-- Nội dung hình ảnh từng ngày -->
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       <!-- NÚT KẾT THÚC ĐIỀU TRỊ -->
@@ -455,14 +478,14 @@
       <div style="width:64px; height:64px; background:#0284c7; color:white; border-radius:50%; margin:0 auto 10px; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:bold;">BS</div>
       <h2>Bác sĩ Minh Hoàng</h2>
       <p style="color:#0284c7; font-weight:600; font-size:14px; margin-top:2px;">Bác sĩ Điều trị</p>
-      <p style="color:#64748b; font-size:13px; margin-top:8px; line-height:1.5;">Hệ thống sơ đồ phòng bệnh & theo dõi diễn biến lâm sàng tối ưu hiển thị.</p>
+      <p style="color:#64748b; font-size:13px; margin-top:8px; line-height:1.5;">Hệ thống sơ đồ buồng bệnh & bảng theo dõi diễn tiến lâm sàng.</p>
     </div>
   </div>
 
 </div>
 
 <script>
-  let patients = JSON.parse(localStorage.getItem('bs_patients_scroll_v1')) || [];
+  let patients = JSON.parse(localStorage.getItem('bs_patients_scroll_v2')) || [];
   let currentEditing = { room: null, bed: null, id: null, isNewDay: false };
   let currentViewingPatientId = null;
 
@@ -596,7 +619,7 @@
     }
   }
 
-  // Mở giao diện tóm tắt cuộn ngang tất cả các ngày
+  // Mở bảng ma trận: Tiêu đề bên trái cố định, cuộn ngang các ngày
   function openSummaryView(id) {
     currentViewingPatientId = id;
     const p = patients.find(x => x.id === id);
@@ -607,40 +630,31 @@
     document.getElementById('summaryBedBadge').textContent = `Phòng ${p.room} - Giường ${p.bed}`;
     document.getElementById('summaryPatientTitle').textContent = `${p.name}`;
 
-    const track = document.getElementById('horizontalDaysTrack');
-    track.innerHTML = p.entries.map((entry, idx) => `
-      <div class="day-column-card">
-        <!-- TIÊU ĐỀ MỐC NGÀY -->
-        <div class="day-col-badge">
-          <span>Ngày ${idx + 1}</span>
-          <span style="font-size:11px; font-weight:normal; opacity:0.95;">(${formatDisplayTime(entry.isoTime)})</span>
-        </div>
+    const hRow = document.getElementById('headerRow');
+    const rDiag = document.getElementById('rowDiag');
+    const rTrack = document.getElementById('rowTracking');
+    const rTests = document.getElementById('rowTests');
+    const rImg = document.getElementById('rowImaging');
 
-        <!-- KHUNG CHẨN ĐOÁN -->
-        <div class="section-block-box">
-          <div class="section-block-tag">Chẩn đoán</div>
-          <div class="section-block-body">${entry.diag || '—'}</div>
-        </div>
+    // Khởi tạo lại cột tiêu đề cố định bên trái
+    hRow.innerHTML = '<th class="col-label-sticky">Mục</th>';
+    rDiag.innerHTML = '<td class="col-label-sticky">Chẩn đoán</td>';
+    rTrack.innerHTML = '<td class="col-label-sticky">Theo dõi</td>';
+    rTests.innerHTML = '<td class="col-label-sticky">Xét nghiệm</td>';
+    rImg.innerHTML = '<td class="col-label-sticky">Hình ảnh</td>';
 
-        <!-- KHUNG THEO DÕI -->
-        <div class="section-block-box">
-          <div class="section-block-tag">Theo dõi</div>
-          <div class="section-block-body">${entry.tracking || '—'}</div>
-        </div>
-
-        <!-- KHUNG XÉT NGHIỆM -->
-        <div class="section-block-box">
-          <div class="section-block-tag">Xét nghiệm</div>
-          <div class="section-block-body">${entry.tests || '—'}</div>
-        </div>
-
-        <!-- KHUNG HÌNH ẢNH -->
-        <div class="section-block-box" style="margin-bottom:0;">
-          <div class="section-block-tag">Hình ảnh</div>
-          <div class="section-block-body">${entry.imaging || '—'}</div>
-        </div>
-      </div>
-    `).join('');
+    // Đổ các cột ngày trải dài sang ngang
+    p.entries.forEach((entry, idx) => {
+      hRow.innerHTML += `
+        <th class="day-header-cell">
+          Ngày ${idx + 1}
+          <div style="font-size:11px; font-weight:normal; opacity:0.92; margin-top:2px;">(${formatDisplayTime(entry.isoTime)})</div>
+        </th>`;
+      rDiag.innerHTML += `<td class="day-content-cell">${entry.diag || '—'}</td>`;
+      rTrack.innerHTML += `<td class="day-content-cell">${entry.tracking || '—'}</td>`;
+      rTests.innerHTML += `<td class="day-content-cell">${entry.tests || '—'}</td>`;
+      rImg.innerHTML += `<td class="day-content-cell">${entry.imaging || '—'}</td>`;
+    });
 
     showView('summaryFullView');
   }
@@ -659,7 +673,7 @@
   }
 
   function saveAndSync() {
-    localStorage.setItem('bs_patients_scroll_v1', JSON.stringify(patients));
+    localStorage.setItem('bs_patients_scroll_v2', JSON.stringify(patients));
     renderDashboardCounts();
   }
 

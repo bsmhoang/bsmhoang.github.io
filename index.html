@@ -2,28 +2,57 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Bác Sĩ Minh Hoàng - Quản Lý Bệnh Nhân</title>
   <style>
     :root {
       --primary: #0284c7;
       --primary-hover: #0369a1;
-      --bg: #f8fafc;
+      --primary-light: #e0f2fe;
+      --bg: #f1f5f9;
       --card-bg: #ffffff;
-      --text: #0f172a;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
       --border: #cbd5e1;
+      --border-light: #e2e8f0;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-    body { background: var(--bg); color: var(--text); min-height: 100vh; padding: 8px; }
-    .container { max-width: 600px; margin: 0 auto; width: 100%; }
+    
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      font-family: 'Google Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    body { 
+      background: var(--bg); 
+      color: var(--text-main); 
+      min-height: 100vh; 
+      padding: 10px 8px;
+      letter-spacing: -0.01em;
+    }
+    
+    .container { 
+      max-width: 580px; 
+      margin: 0 auto; 
+      width: 100%; 
+    }
 
-    /* NÚT TRÊN CÙNG */
-    .top-bar { display: flex; justify-content: flex-start; margin-bottom: 12px; }
+    /* NÚT ĐIỀU HƯỚNG TRÊN CÙNG */
+    .top-bar { 
+      display: flex; 
+      justify-content: flex-start; 
+      margin-bottom: 12px; 
+    }
     .btn-top {
-      background: white;
+      background: var(--card-bg);
       border: 1px solid var(--border);
-      padding: 7px 14px;
-      border-radius: 20px;
+      padding: 8px 16px;
+      border-radius: 24px;
       font-size: 13px;
       font-weight: 600;
       color: #334155;
@@ -31,43 +60,58 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
     }
 
-    /* TRANG ĐẦU TIÊN */
-    .btn-menu-list { display: flex; flex-direction: column; gap: 16px; margin-top: 10px; }
+    /* MENU CHÍNH */
+    .btn-menu-list { display: flex; flex-direction: column; gap: 14px; margin-top: 8px; }
     .big-btn {
       background: var(--card-bg);
       border: 2px solid var(--border);
-      border-radius: 20px;
-      padding: 32px 16px;
+      border-radius: var(--radius-lg);
+      padding: 30px 16px;
       text-align: center;
       cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-      transition: all 0.2s;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.03);
+      transition: transform 0.15s ease, background 0.15s;
     }
     .big-btn:active { transform: scale(0.98); }
-    .big-btn h2 { font-size: 21px; margin-bottom: 4px; }
-    .big-btn p { font-size: 13px; color: #64748b; }
+    .big-btn h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+    .big-btn p { font-size: 13px; color: var(--text-muted); }
     .count-tag {
       display: inline-block;
       margin-top: 8px;
-      padding: 4px 12px;
-      border-radius: 10px;
+      padding: 5px 14px;
+      border-radius: 20px;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 700;
     }
-    .btn-blue { border-color: #7dd3fc; background: #f0f9ff; }
+    .btn-blue { border-color: #7dd3fc; background: #f8fafc; }
     .btn-blue .count-tag { background: #bae6fd; color: #0369a1; }
-    .btn-green { border-color: #86efac; background: #f0fdf4; }
+    .btn-green { border-color: #86efac; background: #f8fafc; }
     .btn-green .count-tag { background: #bbf7d0; color: #15803d; }
 
     /* VIEW CON */
     .view-section { display: none; }
-    .view-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-shrink: 0; }
-    .btn-back { background: #e2e8f0; border: none; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .view-header { 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      margin-bottom: 12px; 
+      flex-shrink: 0; 
+    }
+    .btn-back { 
+      background: #e2e8f0; 
+      border: none; 
+      padding: 7px 15px; 
+      border-radius: var(--radius-sm); 
+      font-size: 13px; 
+      font-weight: 600; 
+      color: #334155;
+      cursor: pointer; 
+    }
 
-    /* SƠ ĐỒ PHÒNG GIƯỜNG */
+    /* QUẢN LÝ PHÒNG & GIƯỜNG */
     .room-header-bar {
       display: flex;
       justify-content: space-between;
@@ -75,7 +119,7 @@
       margin: 16px 2px 8px 2px;
     }
     .room-title-name {
-      font-size: 15.5px;
+      font-size: 16px;
       font-weight: 700;
       color: #1e293b;
       display: flex;
@@ -87,20 +131,21 @@
       border: none;
       cursor: pointer;
       font-size: 13px;
-      color: #0284c7;
+      color: var(--primary);
       padding: 2px 4px;
+      font-weight: 600;
     }
     .room-control-buttons {
       display: flex;
-      gap: 4px;
+      gap: 5px;
       align-items: center;
     }
     .btn-bed-ctrl {
       background: white;
       border: 1px solid var(--border);
-      font-size: 11px;
+      font-size: 11.5px;
       font-weight: 600;
-      padding: 4px 6px;
+      padding: 5px 8px;
       border-radius: 6px;
       cursor: pointer;
       color: #334155;
@@ -110,25 +155,24 @@
       background: #fef2f2;
       border: 1px solid #fca5a5;
       color: #dc2626;
-      font-size: 11px;
+      font-size: 11.5px;
       font-weight: 600;
-      padding: 4px 6px;
+      padding: 5px 8px;
       border-radius: 6px;
       cursor: pointer;
     }
 
     .btn-add-room-global {
       background: white;
-      border: 1.5px dashed #0284c7;
-      color: #0284c7;
+      border: 1.5px dashed var(--primary);
+      color: var(--primary);
       width: 100%;
-      padding: 12px;
-      border-radius: 12px;
+      padding: 13px;
+      border-radius: var(--radius-md);
       font-size: 14px;
       font-weight: 700;
       cursor: pointer;
-      margin-top: 20px;
-      margin-bottom: 20px;
+      margin: 20px 0;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -138,51 +182,49 @@
     .grid-room-dynamic {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 1px;
+      gap: 1.5px;
       background: var(--border);
-      border: 1px solid var(--border);
-      border-radius: 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
       overflow: hidden;
       margin-bottom: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
     }
     .grid-room-dynamic.col-2 {
       grid-template-columns: repeat(2, 1fr);
     }
     .bed-slot {
-      background: #f1f5f9;
-      min-height: 72px;
+      background: #ffffff;
+      min-height: 76px;
       padding: 8px 6px;
       display: flex;
       flex-direction: column;
       justify-content: center;
       cursor: pointer;
+      transition: background 0.1s;
     }
     .bed-slot.occupied { background: #e0f2fe; }
-    .bed-num { font-size: 12px; font-weight: 700; color: #0284c7; margin-bottom: 2px; }
-    .bed-slot:not(.occupied) .bed-num { color: #64748b; }
-    .patient-name-slot { font-size: 13px; font-weight: 600; line-height: 1.25; word-break: break-word; }
+    .bed-num { font-size: 12px; font-weight: 700; color: var(--primary); margin-bottom: 2px; }
+    .bed-slot:not(.occupied) .bed-num { color: #94a3b8; }
+    .patient-name-slot { font-size: 13.5px; font-weight: 700; line-height: 1.25; word-break: break-word; color: #0f172a; }
     .bed-empty-tag { font-size: 11px; color: #94a3b8; font-style: italic; }
 
-    /* ========================================================
-       CẤU TRÚC HỒ SƠ: KHUNG NỔI, CUỘN ĐỒNG BỘ CẢ NGÀY VÀ CÁC MỤC
-       ======================================================== */
+    /* HỒ SƠ BỆNH ÁN CỐ ĐỊNH KHUNG */
     .summary-app-window {
       background: white;
-      border: 2px solid var(--border);
-      border-radius: 18px;
-      height: calc(100vh - 75px);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      height: calc(100vh - 78px);
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.04);
     }
-
-    /* 1. Header cố định phía trên */
     .summary-fixed-header {
       flex-shrink: 0;
       padding: 12px 14px 8px 14px;
       background: white;
-      border-bottom: 1px solid #e2e8f0;
+      border-bottom: 1px solid var(--border-light);
     }
     .summary-top-info {
       display: flex;
@@ -191,21 +233,19 @@
       margin-bottom: 10px;
     }
     .btn-add-day-pill {
-      background: #ffffff;
-      border: 1.5px solid #0284c7;
-      color: #0284c7;
+      background: var(--primary-light);
+      border: 1.5px solid var(--primary);
+      color: var(--primary);
       padding: 6px 14px;
       border-radius: 20px;
-      font-size: 12px;
+      font-size: 12.5px;
       font-weight: 700;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 4px;
     }
-    .btn-add-day-pill:active { background: #e0f2fe; }
 
-    /* Thanh chọn ngày (trượt theo nội dung bên dưới) */
     .day-tab-scroll {
       display: flex;
       align-items: center;
@@ -216,7 +256,6 @@
       scrollbar-width: none;
     }
     .day-tab-scroll::-webkit-scrollbar { display: none; }
-    
     .day-tab-btn {
       background: #f1f5f9;
       border: 1px solid var(--border);
@@ -228,16 +267,15 @@
       white-space: nowrap;
       cursor: pointer;
       flex-shrink: 0;
-      transition: all 0.2s;
+      transition: all 0.15s;
     }
     .day-tab-btn.active {
-      background: #0284c7;
+      background: var(--primary);
       color: white;
-      border-color: #0284c7;
+      border-color: var(--primary);
       box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
     }
 
-    /* 2. Phần nội dung cuộn ngang đồng bộ với các ngày */
     .summary-scrollable-body {
       flex-grow: 1;
       overflow-x: auto;
@@ -251,7 +289,6 @@
     }
     .summary-scrollable-body::-webkit-scrollbar { display: none; }
 
-    /* Mỗi ngày là 1 trang (page) vừa vặn 100% khung hiển thị */
     .day-slide-page {
       width: 100%;
       min-width: 100%;
@@ -262,17 +299,16 @@
       gap: 12px;
     }
 
-    /* Các khối hộp nổi bo tròn theo phong cách ảnh 6296 */
     .section-block-box {
       border: 1.5px solid var(--border);
-      border-radius: 14px;
+      border-radius: var(--radius-md);
       background: #ffffff;
       overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
     }
     .section-block-tag {
       display: inline-block;
-      background: #f1f5f9;
+      background: #f8fafc;
       border-right: 1.5px solid var(--border);
       border-bottom: 1.5px solid var(--border);
       padding: 5px 14px;
@@ -283,20 +319,19 @@
     }
     .section-block-body {
       padding: 10px 14px;
-      font-size: 14px;
+      font-size: 14.5px;
       color: #0f172a;
       line-height: 1.55;
-      min-height: 54px;
+      min-height: 52px;
       white-space: pre-wrap;
       word-break: break-word;
     }
 
-    /* 3. Footer cố định phía dưới */
     .summary-fixed-footer {
       flex-shrink: 0;
       padding: 10px 14px;
       background: white;
-      border-top: 1px solid #e2e8f0;
+      border-top: 1px solid var(--border-light);
       display: flex;
       justify-content: flex-end;
     }
@@ -304,21 +339,20 @@
       background: #ffffff;
       border: 2px solid #334155;
       color: #1e293b;
-      border-radius: 12px;
+      border-radius: var(--radius-md);
       padding: 10px 20px;
       font-size: 14px;
       font-weight: 700;
       cursor: pointer;
     }
-    .btn-finish-treatment:active { background: #e2e8f0; }
 
-    /* FORM NHẬP / THÊM NGÀY */
+    /* FORM NHẬP / CẬP NHẬT */
     .record-container {
       background: white;
-      border-radius: 14px;
+      border-radius: var(--radius-lg);
       border: 1.5px solid var(--border);
       overflow: hidden;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
     }
     .record-header {
       display: grid;
@@ -337,8 +371,8 @@
       border: none;
       background: transparent;
       font-size: 15px;
-      font-weight: bold;
-      color: #0284c7;
+      font-weight: 700;
+      color: var(--primary);
       outline: none;
       width: 100%;
     }
@@ -348,7 +382,7 @@
       flex-direction: column;
       justify-content: center;
       font-size: 11px;
-      color: #64748b;
+      color: var(--text-muted);
       background: #ffffff;
     }
     .record-header-right input[type="datetime-local"] {
@@ -371,7 +405,7 @@
     .row-label {
       padding: 10px 6px;
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 700;
       color: #334155;
       border-right: 1.5px solid var(--border);
       display: flex;
@@ -379,7 +413,7 @@
       background: #f8fafc;
     }
     .row-input {
-      padding: 6px 10px;
+      padding: 8px 10px;
       display: flex;
       align-items: center;
     }
@@ -388,7 +422,7 @@
       min-height: 60px;
       border: none;
       outline: none;
-      font-size: 14px;
+      font-size: 14.5px;
       resize: vertical;
       background: transparent;
       color: #1e293b;
@@ -400,20 +434,52 @@
       background: #f8fafc;
     }
     .btn-confirm {
-      background: #0284c7;
+      background: var(--primary);
       color: white;
       border: none;
-      border-radius: 12px;
+      border-radius: var(--radius-md);
       padding: 12px 28px;
       font-size: 15px;
       font-weight: 700;
       cursor: pointer;
     }
 
-    /* GIAO DIỆN RA VIỆN */
+    /* MỤC RA VIỆN & XUẤT TOÀN BỘ PDF */
+    .discharged-header-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      background: #ffffff;
+      padding: 12px 14px;
+      border-radius: var(--radius-md);
+      border: 1.5px solid var(--border);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+    .discharged-total-text {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #334155;
+    }
+    .btn-export-all-pdf {
+      background: #dc2626;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25);
+    }
+    .btn-export-all-pdf:active { background: #b91c1c; }
+
     .discharged-card {
       background: white;
-      border-radius: 14px;
+      border-radius: var(--radius-md);
       padding: 14px 16px;
       margin-bottom: 12px;
       border: 1.5px solid var(--border);
@@ -452,7 +518,7 @@
 
 <div class="container">
 
-  <!-- ==================== TRANG ĐẦU TIÊN ==================== -->
+  <!-- TRANG CHỦ -->
   <div id="homeView">
     <div class="top-bar">
       <button class="btn-top" onclick="showView('profileView')">👨‍⚕️ Giới thiệu cá nhân</button>
@@ -471,11 +537,11 @@
     </div>
   </div>
 
-  <!-- ==================== SƠ ĐỒ PHÒNG ==================== -->
+  <!-- SƠ ĐỒ PHÒNG -->
   <div id="roomGridView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('homeView')">⬅️ Trang chủ</button>
-      <h3 style="font-size:15px;">Sơ đồ phòng bệnh</h3>
+      <h3 style="font-size:15px; font-weight:700;">Sơ đồ phòng bệnh</h3>
       <div style="width:40px;"></div>
     </div>
 
@@ -486,42 +552,39 @@
     </button>
   </div>
 
-  <!-- ==================== VIEW TÓM TẮT: CUỘN ĐỒNG BỘ NGÀY VÀ CÁC KHỐI ==================== -->
+  <!-- VIEW TÓM TẮT -->
   <div id="summaryFullView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('roomGridView')">⬅️ Sơ đồ phòng</button>
-      <h3 style="font-size:15px;" id="summaryBedBadge">Phòng - Giường</h3>
+      <h3 style="font-size:15px; font-weight:700;" id="summaryBedBadge">Phòng - Giường</h3>
       <div style="width:40px;"></div>
     </div>
 
     <div class="summary-app-window">
-      <!-- 1. Header cố định phía trên: Tên bệnh nhân & Thanh nút chọn ngày -->
       <div class="summary-fixed-header">
         <div class="summary-top-info">
           <div>
             <div style="font-size:11px; color:#64748b;">Hồ sơ bệnh nhân:</div>
-            <h2 id="summaryPatientTitle" style="font-size:18px; color:#0284c7; margin-top:2px;">...</h2>
+            <h2 id="summaryPatientTitle" style="font-size:18px; color:var(--primary); margin-top:2px;">...</h2>
           </div>
           <button class="btn-add-day-pill" onclick="handleAddNewDayClick()">➕ Thêm ngày mới</button>
         </div>
         <div class="day-tab-scroll" id="dayTabsContainer"></div>
       </div>
 
-      <!-- 2. Phần duy nhất cuộn: Chứa các khối nổi Chẩn đoán, Theo dõi... trượt ngang theo từng ngày -->
       <div class="summary-scrollable-body" id="syncSlideBody" onscroll="handleBodyScroll()"></div>
 
-      <!-- 3. Footer cố định phía dưới -->
       <div class="summary-fixed-footer">
         <button class="btn-finish-treatment" onclick="finishCurrentTreatment()">Kết thúc điều trị</button>
       </div>
     </div>
   </div>
 
-  <!-- ==================== FORM NHẬP / THÊM NGÀY ==================== -->
+  <!-- FORM NHẬP / THÊM NGÀY -->
   <div id="patientFormView" class="view-section">
     <div class="view-header">
       <button class="btn-back" id="btnBackFromForm" onclick="handleBackFromForm()">⬅️ Quay lại</button>
-      <h3 style="font-size:15px;" id="formViewTitle">Nhập thông tin bệnh nhân</h3>
+      <h3 style="font-size:15px; font-weight:700;" id="formViewTitle">Nhập thông tin bệnh nhân</h3>
       <div style="width:40px;"></div>
     </div>
 
@@ -563,27 +626,36 @@
     </div>
   </div>
 
-  <!-- ==================== DANH SÁCH RA VIỆN ==================== -->
+  <!-- DANH SÁCH RA VIỆN (KÈM NÚT XUẤT TOÀN BỘ FILE PDF) -->
   <div id="dischargedView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('homeView')">⬅️ Trang chủ</button>
-      <h3 style="font-size:15px;">Danh Sách Ra Viện</h3>
+      <h3 style="font-size:15px; font-weight:700;">Danh Sách Ra Viện</h3>
       <div style="width:40px;"></div>
     </div>
+
+    <!-- KHỐI TỔNG QUAN & XUẤT TOÀN BỘ -->
+    <div class="discharged-header-actions">
+      <div class="discharged-total-text" id="dischargedSummaryText">Tổng: 0 hồ sơ</div>
+      <button class="btn-export-all-pdf" onclick="exportAllPatientsPDF()">
+        📑 Xuất toàn bộ hồ sơ (PDF)
+      </button>
+    </div>
+
     <div id="dischargedListContainer"></div>
   </div>
 
-  <!-- ==================== GIỚI THIỆU CÁ NHÂN ==================== -->
+  <!-- GIỚI THIỆU CÁ NHÂN -->
   <div id="profileView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('homeView')">⬅️ Trang chủ</button>
-      <h3 style="font-size:15px;">Hồ Sơ Bác Sĩ</h3>
+      <h3 style="font-size:15px; font-weight:700;">Hồ Sơ Bác Sĩ</h3>
       <div style="width:40px;"></div>
     </div>
-    <div style="background:white; border-radius:16px; padding:24px 16px; text-align:center; border:1px solid var(--border);">
-      <div style="width:64px; height:64px; background:#0284c7; color:white; border-radius:50%; margin:0 auto 10px; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:bold;">BS</div>
-      <h2>Bác sĩ Minh Hoàng</h2>
-      <p style="color:#0284c7; font-weight:600; font-size:14px; margin-top:2px;">Bác sĩ Điều trị</p>
+    <div style="background:white; border-radius:var(--radius-lg); padding:28px 16px; text-align:center; border:1px solid var(--border); box-shadow:0 4px 12px rgba(0,0,0,0.02);">
+      <div style="width:64px; height:64px; background:var(--primary); color:white; border-radius:50%; margin:0 auto 10px; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:bold;">BS</div>
+      <h2 style="font-size:18px;">Bác sĩ Minh Hoàng</h2>
+      <p style="color:var(--primary); font-weight:700; font-size:14px; margin-top:2px;">Bác sĩ Điều trị</p>
       <p style="color:#64748b; font-size:13px; margin-top:8px; line-height:1.5;">Hệ thống sơ đồ buồng bệnh & theo dõi lâm sàng thông minh.</p>
     </div>
   </div>
@@ -809,7 +881,7 @@
     }
   }
 
-  /* MỞ VIEW TÓM TẮT & ĐỒNG BỘ CUỘN */
+  /* VIEW TÓM TẮT & ĐỒNG BỘ CUỘN */
   function openSummaryView(id) {
     currentViewingPatientId = id;
     const p = patients.find(x => x.id === id);
@@ -820,32 +892,23 @@
     document.getElementById('summaryBedBadge').textContent = `${p.room} - Giường ${p.bed}`;
     document.getElementById('summaryPatientTitle').textContent = `${p.name}`;
 
-    // 1. Render thanh nút chọn ngày
     renderDayTabs(p);
 
-    // 2. Render các trang nội dung khối nổi tương ứng
     const bodyBox = document.getElementById('syncSlideBody');
     bodyBox.innerHTML = p.entries.map((entry, idx) => `
       <div class="day-slide-page" id="dayPage_${idx}">
-        <!-- Khối Chẩn đoán nổi -->
         <div class="section-block-box">
           <div class="section-block-tag">Chẩn đoán</div>
           <div class="section-block-body">${entry.diag || '—'}</div>
         </div>
-
-        <!-- Khối Theo dõi nổi -->
         <div class="section-block-box">
           <div class="section-block-tag">Theo dõi</div>
           <div class="section-block-body">${entry.tracking || '—'}</div>
         </div>
-
-        <!-- Khối Xét nghiệm nổi -->
         <div class="section-block-box">
           <div class="section-block-tag">Xét nghiệm</div>
           <div class="section-block-body">${entry.tests || '—'}</div>
         </div>
-
-        <!-- Khối Hình ảnh nổi -->
         <div class="section-block-box">
           <div class="section-block-tag">Hình ảnh</div>
           <div class="section-block-body">${entry.imaging || '—'}</div>
@@ -855,7 +918,6 @@
 
     showView('summaryFullView');
 
-    // Cuộn đến ngày đang chọn
     setTimeout(() => {
       scrollToDay(currentActiveIndex, false);
     }, 100);
@@ -870,7 +932,6 @@
     `).join('');
   }
 
-  // Khi bấm nút ngày -> Cuộn nội dung đến ngày đó
   function scrollToDay(idx, smooth) {
     const bodyBox = document.getElementById('syncSlideBody');
     const targetPage = document.getElementById(`dayPage_${idx}`);
@@ -888,7 +949,6 @@
     setTimeout(() => { isProgrammaticScroll = false; }, 350);
   }
 
-  // Khi vuốt ngón tay cuộn nội dung các khối -> Đồng bộ thanh ngày phía trên
   function handleBodyScroll() {
     if (isProgrammaticScroll) return;
     const bodyBox = document.getElementById('syncSlideBody');
@@ -908,7 +968,6 @@
     document.querySelectorAll('.day-tab-btn').forEach((btn, i) => {
       btn.classList.toggle('active', i === idx);
     });
-    // Tự cuộn thanh ngày để luôn thấy nút ngày đang xem
     const activeBtn = document.getElementById(`tabBtn_${idx}`);
     if (activeBtn) {
       activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
@@ -928,6 +987,10 @@
     }
   }
 
+  /* ========================================================
+     XUẤT FILE PDF LẺ & XUẤT TOÀN BỘ FILE PDF
+     ======================================================== */
+  // 1. Xuất lẻ 1 bệnh nhân
   function exportPatientPDF(patientId) {
     const p = patients.find(x => x.id === patientId);
     if (!p) return;
@@ -941,13 +1004,13 @@
     let daysHtml = '';
     p.entries.forEach((entry, idx) => {
       daysHtml += `
-        <div style="margin-bottom: 20px; page-break-inside: avoid; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; background: #fafafa;">
-          <div style="font-weight: bold; color: #0284c7; font-size: 15px; border-bottom: 1px solid #cbd5e1; padding-bottom: 6px; margin-bottom: 10px;">
+        <div style="margin-bottom: 16px; page-break-inside: avoid; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; background: #fafafa;">
+          <div style="font-weight: bold; color: #0284c7; font-size: 14px; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 8px;">
             Ngày ${idx + 1} (${formatDisplayTime(entry.isoTime)})
           </div>
-          <div style="margin-bottom: 8px;"><strong>Chẩn đoán:</strong> ${entry.diag || '—'}</div>
-          <div style="margin-bottom: 8px; white-space: pre-wrap;"><strong>Theo dõi / Diễn tiến:</strong>\n${entry.tracking || '—'}</div>
-          <div style="margin-bottom: 8px; white-space: pre-wrap;"><strong>Xét nghiệm:</strong>\n${entry.tests || '—'}</div>
+          <div style="margin-bottom: 6px;"><strong>Chẩn đoán:</strong> ${entry.diag || '—'}</div>
+          <div style="margin-bottom: 6px; white-space: pre-wrap;"><strong>Theo dõi / Diễn tiến:</strong>\n${entry.tracking || '—'}</div>
+          <div style="margin-bottom: 6px; white-space: pre-wrap;"><strong>Xét nghiệm:</strong>\n${entry.tests || '—'}</div>
           <div style="white-space: pre-wrap;"><strong>Hình ảnh:</strong>\n${entry.imaging || '—'}</div>
         </div>
       `;
@@ -960,16 +1023,16 @@
         <meta charset="UTF-8">
         <title>Bệnh Án Ra Viện - ${p.name}</title>
         <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 25px; color: #1e293b; line-height: 1.5; font-size: 14px; }
-          .header-title { text-align: center; border-bottom: 2px solid #0284c7; padding-bottom: 12px; margin-bottom: 20px; }
-          .meta-box { margin-bottom: 20px; background: #f1f5f9; padding: 12px 16px; border-radius: 8px; }
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 25px; color: #1e293b; line-height: 1.5; font-size: 13.5px; }
+          .header-title { text-align: center; border-bottom: 2px solid #0284c7; padding-bottom: 10px; margin-bottom: 16px; }
+          .meta-box { margin-bottom: 16px; background: #f1f5f9; padding: 12px 16px; border-radius: 8px; }
           @media print { body { padding: 0; } }
         </style>
       </head>
       <body>
         <div class="header-title">
-          <h2 style="margin: 0 0 6px 0; color: #0284c7;">HỒ SƠ BỆNH ÁN TÓM TẮT RA VIỆN</h2>
-          <div style="font-size: 13px; color: #64748b;">Bác Sĩ Minh Hoàng - Hệ Thống Quản Lý Lâm Sàng</div>
+          <h2 style="margin: 0 0 4px 0; color: #0284c7;">HỒ SƠ BỆNH ÁN TÓM TẮT RA VIỆN</h2>
+          <div style="font-size: 12px; color: #64748b;">Bác Sĩ Minh Hoàng - Hệ Thống Quản Lý Lâm Sàng</div>
         </div>
         <div class="meta-box">
           <p><strong>Họ và tên bệnh nhân:</strong> ${p.name}</p>
@@ -977,8 +1040,86 @@
           <p><strong>Thời gian ra viện:</strong> ${p.dateOut || 'Chưa rõ'}</p>
           <p><strong>Tổng số ngày/mốc theo dõi:</strong> ${p.entries.length} ngày</p>
         </div>
-        <h3 style="color: #334155; margin-bottom: 12px; border-left: 4px solid #0284c7; padding-left: 8px;">Diễn Tiến Chi Tiết Từng Ngày:</h3>
+        <h3 style="color: #334155; margin-bottom: 10px; border-left: 4px solid #0284c7; padding-left: 8px;">Diễn Tiến Chi Tiết Từng Ngày:</h3>
         ${daysHtml}
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(docContent);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => { printWindow.print(); }, 400);
+  }
+
+  // 2. Xuất toàn bộ danh sách bệnh nhân đã ra viện vào 1 file PDF tổng
+  function exportAllPatientsPDF() {
+    const dischargedList = patients.filter(p => p.status === 'discharged');
+    if (dischargedList.length === 0) {
+      alert("Hiện tại chưa có bệnh nhân nào trong danh sách ra viện!");
+      return;
+    }
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert("Vui lòng cho phép mở cửa sổ bật lên (Pop-up) để xuất PDF!");
+      return;
+    }
+
+    let allPatientsHtml = '';
+    dischargedList.forEach((p, pIndex) => {
+      let daysHtml = '';
+      p.entries.forEach((entry, idx) => {
+        daysHtml += `
+          <div style="margin-bottom: 12px; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; background: #fafafa;">
+            <div style="font-weight: bold; color: #0284c7; font-size: 13px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px; margin-bottom: 6px;">
+              Ngày ${idx + 1} (${formatDisplayTime(entry.isoTime)})
+            </div>
+            <div style="margin-bottom: 4px;"><strong>Chẩn đoán:</strong> ${entry.diag || '—'}</div>
+            <div style="margin-bottom: 4px; white-space: pre-wrap;"><strong>Theo dõi / Diễn tiến:</strong>\n${entry.tracking || '—'}</div>
+            <div style="margin-bottom: 4px; white-space: pre-wrap;"><strong>Xét nghiệm:</strong>\n${entry.tests || '—'}</div>
+            <div style="white-space: pre-wrap;"><strong>Hình ảnh:</strong>\n${entry.imaging || '—'}</div>
+          </div>
+        `;
+      });
+
+      allPatientsHtml += `
+        <div style="page-break-after: always; margin-bottom: 30px; border-bottom: 2px dashed #94a3b8; padding-bottom: 20px;">
+          <div style="background: #f1f5f9; padding: 10px 14px; border-radius: 6px; margin-bottom: 12px; border-left: 5px solid #0284c7;">
+            <h3 style="margin: 0 0 4px 0; color: #0f172a;">${pIndex + 1}. Bệnh nhân: ${p.name}</h3>
+            <div style="font-size: 12px; color: #475569;">
+              📍 Phòng: ${p.room} - Giường: ${p.bed} | 📅 Ra viện: ${p.dateOut || '—'} | Tổng: ${p.entries.length} ngày theo dõi
+            </div>
+          </div>
+          <div style="padding-left: 6px;">
+            ${daysHtml}
+          </div>
+        </div>
+      `;
+    });
+
+    const docContent = `
+      <!DOCTYPE html>
+      <html lang="vi">
+      <head>
+        <meta charset="UTF-8">
+        <title>Tổng Hợp Hồ Sơ Bệnh Nhân Ra Viện</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 25px; color: #1e293b; line-height: 1.5; font-size: 13px; }
+          .header-title { text-align: center; border-bottom: 2px solid #0284c7; padding-bottom: 12px; margin-bottom: 20px; }
+          @media print { 
+            body { padding: 0; }
+            div { page-break-inside: avoid; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header-title">
+          <h2 style="margin: 0 0 4px 0; color: #0284c7;">BÁO CÁO TỔNG HỢP BỆNH NHÂN ĐÃ RA VIỆN</h2>
+          <div style="font-size: 13px; color: #64748b;">Bác Sĩ Minh Hoàng - Hệ Thống Quản Lý Lâm Sàng</div>
+          <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Tổng số ca bệnh: ${dischargedList.length} ca | Ngày xuất báo cáo: ${formatDisplayTime(new Date().toISOString())}</div>
+        </div>
+        ${allPatientsHtml}
       </body>
       </html>
     `;
@@ -1029,7 +1170,7 @@
             <div class="room-control-buttons">
               <button class="btn-bed-ctrl" onclick="addBedToRoom('${r.id}')">+ Giường</button>
               <button class="btn-bed-ctrl" onclick="removeBedFromRoom('${r.id}')">- Giường</button>
-              <button class="btn-del-room" onclick="deleteRoom('${r.id}')">🗑️ Xóa phòng</button>
+              <button class="btn-del-room" onclick="deleteRoom('${r.id}')">🗑️ Xóa</button>
             </div>
           </div>
           <div class="grid-room-dynamic ${colClass}">${bedHtml || '<p style="padding:10px;text-align:center;grid-column:1/-1;color:#94a3b8;background:#fff;">Chưa có giường nào.</p>'}</div>
@@ -1038,6 +1179,7 @@
     }).join('');
   }
 
+  /* ĐẾM CHUẨN XÁC THEO SỐ GIƯỜNG CÓ BỆNH NHÂN TRÊN MÀN HÌNH */
   function renderDashboardCounts() {
     let actualActiveBedsCount = 0;
     roomList.forEach(r => {
@@ -1053,11 +1195,14 @@
     document.getElementById('homeActiveCount').textContent = `${actualActiveBedsCount} Đang điều trị`;
     document.getElementById('homeDischargedCount').textContent = `${dischargedList.length} Đã ra viện`;
 
+    const summaryText = document.getElementById('dischargedSummaryText');
+    if (summaryText) summaryText.textContent = `Tổng: ${dischargedList.length} hồ sơ`;
+
     renderRoomsGrid();
 
     const disContainer = document.getElementById('dischargedListContainer');
     if (disContainer) {
-      disContainer.innerHTML = dischargedList.length === 0 ? '<p style="text-align:center; color:#94a3b8; padding:20px;">Chưa có hồ sơ ra viện.</p>' : dischargedList.map(p => `
+      disContainer.innerHTML = dischargedList.length === 0 ? '<p style="text-align:center; color:#94a3b8; padding:24px;">Chưa có hồ sơ ra viện.</p>' : dischargedList.map(p => `
         <div class="discharged-card">
           <div class="discharged-name">${p.name}</div>
           <div class="discharged-date-row">

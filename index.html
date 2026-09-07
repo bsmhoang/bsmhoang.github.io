@@ -37,7 +37,7 @@
       -webkit-tap-highlight-color: transparent;
     }
     
-    /* CUỘN DỌC TỰ NHIÊN TOÀN TRANG WEB */
+    /* CUỘN DỌC TOÀN BỘ TRANG WEB TỰ NHIÊN */
     body { 
       background: var(--bg); 
       color: var(--text-main); 
@@ -233,9 +233,9 @@
     .bed-empty-tag { font-size: 11px; color: #94a3b8; font-style: italic; }
 
     /* ========================================================
-       HỒ SƠ BỆNH ÁN: DẠNG TRANG MỞ TỰ NHIÊN (CUỘN CẢ TRANG WEB)
+       HỒ SƠ BỆNH ÁN & FORM NHẬP (DẠNG TRANG MỞ CUỘN TỰ NHIÊN)
        ======================================================== */
-    .summary-page-card {
+    .unified-page-card {
       background: white;
       border: 1.5px solid var(--border);
       border-radius: var(--radius-lg);
@@ -244,7 +244,7 @@
       margin-bottom: 20px;
     }
     
-    .summary-card-header {
+    .unified-card-header {
       padding: 14px 14px 10px 14px;
       background: white;
       border-bottom: 1px solid var(--border-light);
@@ -322,7 +322,7 @@
     }
 
     /* Thân danh sách 4 ô mở rộng theo chiều cao thực tế */
-    .summary-page-content {
+    .unified-page-content {
       padding: 14px;
       display: flex;
       flex-direction: column;
@@ -357,55 +357,7 @@
       word-break: break-word;
     }
 
-    /* Chân trang nằm ở đáy nội dung - Cuộn hết trang mới thấy */
-    .summary-card-footer {
-      padding: 14px;
-      background: #f8fafc;
-      border-top: 1px solid var(--border-light);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-    }
-    .btn-del-patient-active {
-      background: #fff;
-      border: 1.5px solid #fca5a5;
-      color: #dc2626;
-      border-radius: var(--radius-md);
-      padding: 10px 16px;
-      font-size: 13.5px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .btn-del-patient-active:active { background: #fee2e2; }
-
-    .btn-finish-treatment {
-      background: #ffffff;
-      border: 2px solid #334155;
-      color: #1e293b;
-      border-radius: var(--radius-md);
-      padding: 10px 20px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    /* ========================================================
-       FORM NHẬP LIỆU NỔI (CUỘN CẢ TRANG WEB)
-       ======================================================== */
-    .form-page-card {
-      background: white;
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius-lg);
-      box-shadow: 0 4px 16px rgba(0,0,0,0.04);
-      overflow: hidden;
-      margin-bottom: 20px;
-    }
-    .form-card-header {
-      padding: 14px;
-      background: white;
-      border-bottom: 1px solid var(--border-light);
-    }
+    /* Header của Form */
     .form-top-grid {
       display: grid;
       grid-template-columns: 1fr 140px;
@@ -450,53 +402,55 @@
       width: 100%;
     }
 
-    .form-page-content {
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .form-block-input-box {
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius-md);
-      background: #ffffff;
-      overflow: hidden;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
-    }
-    .form-block-tag {
-      display: inline-block;
-      background: #f8fafc;
-      border-right: 1.5px solid var(--border);
-      border-bottom: 1.5px solid var(--border);
-      padding: 5px 14px;
-      font-size: 12.5px;
-      font-weight: 700;
-      color: #1e293b;
-      border-bottom-right-radius: 10px;
-    }
+    /* Khối textarea của Form */
     .form-block-textarea-wrap {
       padding: 10px 14px;
     }
     .form-block-textarea-wrap textarea {
       width: 100%;
-      min-height: 85px;
+      min-height: 90px;
       border: none;
       outline: none;
       font-size: 14.5px;
-      line-height: 1.55;
+      line-height: 1.6;
       resize: vertical;
       background: transparent;
       color: #0f172a;
     }
 
-    .form-card-footer {
+    /* Chân trang nằm ở đáy toàn bộ nội dung */
+    .unified-card-footer {
       padding: 14px;
       background: #f8fafc;
       border-top: 1px solid var(--border-light);
       display: flex;
-      justify-content: flex-end;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
     }
+    .btn-del-patient-active {
+      background: #fff;
+      border: 1.5px solid #fca5a5;
+      color: #dc2626;
+      border-radius: var(--radius-md);
+      padding: 10px 16px;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-del-patient-active:active { background: #fee2e2; }
+
+    .btn-finish-treatment {
+      background: #ffffff;
+      border: 2px solid #334155;
+      color: #1e293b;
+      border-radius: var(--radius-md);
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
     .btn-confirm-submit {
       background: var(--primary);
       color: white;
@@ -630,7 +584,7 @@
     </button>
   </div>
 
-  <!-- ==================== VIEW HỒ SƠ BỆNH NHÂN (CUỘN CẢ TRANG WEB) ==================== -->
+  <!-- VIEW HỒ SƠ BỆNH NHÂN (CUỘN CẢ TRANG WEB) -->
   <div id="summaryFullView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('roomGridView')">⬅️ Sơ đồ phòng</button>
@@ -638,9 +592,8 @@
       <div style="width:40px;"></div>
     </div>
 
-    <div class="summary-page-card">
-      <!-- Đầu hồ sơ: Tên BN & Tabs Ngày -->
-      <div class="summary-card-header">
+    <div class="unified-page-card">
+      <div class="unified-card-header">
         <div class="summary-top-info">
           <div>
             <div style="font-size:11px; color:#64748b;">Hồ sơ bệnh nhân:</div>
@@ -654,20 +607,16 @@
         <div class="day-tab-scroll" id="dayTabsContainer"></div>
       </div>
 
-      <!-- Nội dung 4 ô: Tự do dài theo nội dung, cuộn toàn màn hình điện thoại -->
-      <div class="summary-page-content" id="singleDayDisplayBody">
-        <!-- Được tạo tự động bởi hàm renderCurrentDayView() -->
-      </div>
+      <div class="unified-page-content" id="singleDayDisplayBody"></div>
 
-      <!-- Chân thẻ: Nằm ở đáy toàn bộ nội dung, cuộn xuống dưới cùng sẽ thấy -->
-      <div class="summary-card-footer">
+      <div class="unified-card-footer">
         <button class="btn-del-patient-active" onclick="deleteActivePatient()">🗑️ Xóa ca bệnh</button>
         <button class="btn-finish-treatment" onclick="finishCurrentTreatment()">Kết thúc điều trị</button>
       </div>
     </div>
   </div>
 
-  <!-- ==================== FORM NHẬP / SỬA / THÊM NGÀY (CUỘN CẢ TRANG WEB) ==================== -->
+  <!-- FORM NHẬP / SỬA / THÊM NGÀY (CUỘN CẢ TRANG WEB TỰ NHIÊN) -->
   <div id="patientFormView" class="view-section">
     <div class="view-header">
       <button class="btn-back" id="btnBackFromForm" onclick="handleBackFromForm()">⬅️ Quay lại</button>
@@ -675,8 +624,8 @@
       <div style="width:40px;"></div>
     </div>
 
-    <div class="form-page-card">
-      <div class="form-card-header">
+    <div class="unified-page-card">
+      <div class="unified-card-header">
         <div class="form-top-grid">
           <div class="form-patient-name-box">
             <span id="crumbPrefix">Giường ></span>
@@ -689,37 +638,37 @@
         </div>
       </div>
 
-      <div class="form-page-content">
-        <div class="form-block-input-box">
-          <div class="form-block-tag">Chẩn đoán</div>
+      <div class="unified-page-content">
+        <div class="section-block-box">
+          <div class="section-block-tag">Chẩn đoán</div>
           <div class="form-block-textarea-wrap">
             <textarea id="recordDiagnosis" placeholder="Nhập mã bệnh, tên chẩn đoán..."></textarea>
           </div>
         </div>
 
-        <div class="form-block-input-box">
-          <div class="form-block-tag">Theo dõi</div>
+        <div class="section-block-box">
+          <div class="section-block-tag">Theo dõi</div>
           <div class="form-block-textarea-wrap">
             <textarea id="recordTracking" placeholder="Diễn tiến, triệu chứng, nước tiểu, sinh hiệu..."></textarea>
           </div>
         </div>
 
-        <div class="form-block-input-box">
-          <div class="form-block-tag">Xét nghiệm</div>
+        <div class="section-block-box">
+          <div class="section-block-tag">Xét nghiệm</div>
           <div class="form-block-textarea-wrap">
             <textarea id="recordTests" placeholder="Công thức máu, sinh hóa, cận lâm sàng..."></textarea>
           </div>
         </div>
 
-        <div class="form-block-input-box">
-          <div class="form-block-tag">Hình ảnh</div>
+        <div class="section-block-box">
+          <div class="section-block-tag">Hình ảnh</div>
           <div class="form-block-textarea-wrap">
             <textarea id="recordImagingText" placeholder="Kết quả X-quang, Siêu âm, CLVT, MRI..."></textarea>
           </div>
         </div>
       </div>
 
-      <div class="form-card-footer">
+      <div class="unified-card-footer" style="justify-content: flex-end;">
         <button type="button" class="btn-confirm-submit" onclick="saveRecord()">Xác nhận</button>
       </div>
     </div>
@@ -1090,9 +1039,7 @@
     }
   }
 
-  /* ========================================================
-     VIEW HỒ SƠ: CHUYỂN NGÀY BẰNG TAB & CUỘN DỌC TỰ NHIÊN
-     ======================================================== */
+  /* VIEW HỒ SƠ: CHỌN TAB NGÀY & NỘI DUNG CUỘN DỌC TỰ NHIÊN */
   function openSummaryView(id) {
     currentViewingPatientId = id;
     const p = patients.find(x => x.id === id);
@@ -1125,7 +1072,6 @@
     renderDayTabs(p);
     renderCurrentDayContent(p, idx);
 
-    // Cuộn nhẹ tab được chọn vào giữa màn hình
     const activeBtn = document.getElementById(`tabBtn_${idx}`);
     if (activeBtn) {
       activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
@@ -1383,7 +1329,7 @@
     }
   }
 
-  // Khởi chạy hệ thống và đồng bộ online
+  // Khởi chạy hệ thống và nạp dữ liệu online
   renderDashboardCounts();
   loadDataFromCloud();
 </script>

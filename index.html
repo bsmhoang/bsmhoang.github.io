@@ -16,9 +16,9 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     body { background: var(--bg); color: var(--text); min-height: 100vh; padding: 16px; }
-    .container { max-width: 560px; margin: 0 auto; }
+    .container { max-width: 580px; margin: 0 auto; }
 
-    /* NÚT ĐIỀU HƯỚNG GÓC TRÊN */
+    /* THANH NÚT TRÊN CÙNG */
     .top-bar { display: flex; justify-content: flex-start; margin-bottom: 24px; }
     .btn-top {
       background: white;
@@ -105,7 +105,7 @@
     .patient-name-slot { font-size: 13px; font-weight: 600; color: #0f172a; line-height: 1.3; word-break: break-word; }
     .bed-empty-tag { font-size: 12px; color: #94a3b8; font-style: italic; }
 
-    /* FORM NHẬP BỆNH NHÂN LÂM SÀNG (ĐÚNG THEO BẢN VẼ) */
+    /* FORM NHẬP BỆNH NHÂN */
     .record-container {
       background: white;
       border-radius: 16px;
@@ -156,12 +156,6 @@
       width: 100%;
       margin-top: 3px;
     }
-    .record-header-right input:focus {
-      border-color: var(--primary);
-      background: #ffffff;
-    }
-
-    /* CÁC DÒNG 2 CỘT */
     .record-row {
       display: grid;
       grid-template-columns: 105px 1fr;
@@ -194,8 +188,6 @@
       background: transparent;
       color: #1e293b;
     }
-
-    /* NÚT XÁC NHẬN GÓC DƯỚI */
     .submit-area {
       padding: 16px;
       display: flex;
@@ -212,105 +204,98 @@
       font-weight: 700;
       cursor: pointer;
     }
-    .btn-confirm:active { transform: scale(0.97); }
 
-    /* GIAO DIỆN TÓM TẮT BỆNH NHÂN */
-    .summary-page {
-      background: #e2e8f0;
-      min-height: 82vh;
-      border-radius: 18px;
-      padding: 20px 16px;
+    /* ===== GIAO DIỆN TÓM TẮT DÀN THEO CHIỀU NGANG ===== */
+    .summary-card-full {
+      background: white;
+      border-radius: 16px;
+      border: 2px solid #cbd5e1;
+      padding: 16px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.04);
+      margin-bottom: 20px;
+    }
+    .summary-header-box {
       display: flex;
-      flex-direction: column;
       justify-content: space-between;
-      border: 1px solid #cbd5e1;
-    }
-    .summary-title-main {
-      font-size: 17px;
-      font-weight: bold;
-      color: #1e293b;
-      margin-bottom: 16px;
-    }
-    .day-selector-row {
-      display: flex;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 22px;
-      flex-wrap: wrap;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #e2e8f0;
     }
-    .day-label {
-      font-size: 15px;
+    .btn-add-day-tag {
+      background: #e0f2fe;
+      border: 1px solid #7dd3fc;
+      color: #0369a1;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
       font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* VÙNG KÉO NGANG (HORIZONTAL SCROLL) */
+    .horizontal-scroll-container {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+    }
+    .timeline-table {
+      border-collapse: separate;
+      border-spacing: 0;
+      min-width: 100%;
+    }
+    .timeline-table th, .timeline-table td {
+      border: 1px solid #cbd5e1;
+      padding: 10px 12px;
+      vertical-align: top;
+      font-size: 13px;
+    }
+    /* Cột tiêu đề cố định bên trái */
+    .timeline-table th.col-header-sticky, .timeline-table td.col-header-sticky {
+      position: sticky;
+      left: 0;
+      background: #f1f5f9;
+      z-index: 2;
+      width: 110px;
+      min-width: 110px;
+      font-weight: 700;
       color: #334155;
     }
-    .day-btn {
-      background: transparent;
-      border: none;
-      font-size: 16px;
-      font-weight: bold;
-      color: #475569;
-      cursor: pointer;
-      padding: 4px 10px;
-      border-radius: 8px;
-    }
-    .day-btn.active {
+    /* Các cột ngày trải dài sang ngang */
+    .timeline-table th.day-col-header {
       background: #0284c7;
       color: white;
+      text-align: center;
+      min-width: 190px;
+      width: 190px;
     }
-    .btn-add-day {
-      background: white;
-      border: 1px dashed #0284c7;
-      color: #0284c7;
-      font-size: 12px;
-      padding: 4px 8px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-
-    .field-block {
-      margin-bottom: 18px;
-    }
-    .field-title {
-      font-size: 15px;
-      font-weight: 700;
-      color: #1e293b;
-      margin-bottom: 4px;
-    }
-    .field-content {
-      font-size: 14px;
-      color: #334155;
-      min-height: 24px;
+    .timeline-table td.day-cell {
+      background: #ffffff;
+      min-width: 190px;
+      width: 190px;
       white-space: pre-wrap;
-      padding-left: 2px;
-      line-height: 1.4;
+      line-height: 1.45;
+      color: #1e293b;
     }
 
     .finish-area {
       display: flex;
       justify-content: flex-end;
-      margin-top: 24px;
+      margin-top: 10px;
     }
     .btn-finish-treatment {
-      background: #f8fafc;
+      background: #ffffff;
       border: 2px solid #334155;
       color: #1e293b;
       border-radius: 12px;
-      padding: 12px 20px;
+      padding: 12px 22px;
       font-size: 15px;
       font-weight: 700;
       cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
     }
-    .btn-finish-treatment:active { background: #cbd5e1; }
-
-    .patient-picker-card {
-      background: white;
-      border-radius: 12px;
-      padding: 14px;
-      margin-bottom: 10px;
-      border: 1px solid #cbd5e1;
-      cursor: pointer;
-    }
+    .btn-finish-treatment:active { background: #e2e8f0; }
   </style>
 </head>
 <body>
@@ -342,43 +327,60 @@
       <button class="btn-top" onclick="showView('homeView')">⬅️ Quản lý</button>
     </div>
     <div class="btn-menu-list">
-      <div class="big-btn btn-blue" onclick="showView('bedGridView')">
+      <div class="big-btn btn-blue" onclick="openInputRoomGrid()">
         <h2>✍️ Nhập</h2>
-        <p>Phòng 825, 817, 819</p>
+        <p>Tiếp nhận ca mới / Cập nhật giường</p>
       </div>
-      <div class="big-btn btn-amber" onclick="openSummaryPicker()">
+      <div class="big-btn btn-amber" onclick="openSummaryRoomGrid()">
         <h2>📑 Tóm tắt Bệnh nhân</h2>
-        <p>Xem diễn tiến theo ngày & kết thúc điều trị</p>
+        <p>Sơ đồ phòng & bảng theo dõi diễn tiến kéo ngang</p>
         <span class="count-tag" id="summaryCountTag">0 Bệnh nhân</span>
       </div>
     </div>
   </div>
 
-  <!-- ==================== TẦNG 3: SƠ ĐỒ GIƯỜNG (PHẦN NHẬP) ==================== -->
-  <div id="bedGridView" class="view-section">
+  <!-- ==================== TẦNG 3A: SƠ ĐỒ PHÒNG CHO MỤC "NHẬP" ==================== -->
+  <div id="bedGridViewInput" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('manageMenuView')">⬅️ Quay lại</button>
       <h3 style="font-size:16px;">Nhập bệnh nhân</h3>
       <div style="width:50px;"></div>
     </div>
     <div class="room-title">Phòng 825</div>
-    <div class="grid-room-6" id="room825"></div>
+    <div class="grid-room-6" id="input_room825"></div>
     <div class="room-title">Phòng 817</div>
-    <div class="grid-room-2" id="room817"></div>
+    <div class="grid-room-2" id="input_room817"></div>
     <div class="room-title">Phòng 819</div>
-    <div class="grid-room-2" id="room819"></div>
+    <div class="grid-room-2" id="input_room819"></div>
   </div>
 
-  <!-- ==================== TẦNG 4: FORM NHẬP THÔNG TIN (ĐÚNG THEO BẢN VẼ) ==================== -->
+  <!-- ==================== TẦNG 3B: SƠ ĐỒ PHÒNG CHO MỤC "TÓM TẮT BỆNH NHÂN" ==================== -->
+  <div id="bedGridViewSummary" class="view-section">
+    <div class="view-header">
+      <button class="btn-back" onclick="showView('manageMenuView')">⬅️ Quay lại</button>
+      <h3 style="font-size:16px;">Tóm tắt - Chọn phòng & giường</h3>
+      <div style="width:50px;"></div>
+    </div>
+    <div style="background:#fef3c7; border:1px solid #fde68a; border-radius:10px; padding:10px 14px; font-size:13px; color:#92400e; margin-bottom:12px;">
+      👆 Chạm vào giường bệnh nhân có tên để mở bảng diễn tiến tóm tắt kéo ngang.
+    </div>
+    <div class="room-title">Phòng 825</div>
+    <div class="grid-room-6" id="summary_room825"></div>
+    <div class="room-title">Phòng 817</div>
+    <div class="grid-room-2" id="summary_room817"></div>
+    <div class="room-title">Phòng 819</div>
+    <div class="grid-room-2" id="summary_room819"></div>
+  </div>
+
+  <!-- ==================== FORM NHẬP THÔNG TIN ==================== -->
   <div id="patientFormView" class="view-section">
     <div class="view-header">
-      <button class="btn-back" onclick="showView('bedGridView')">⬅️ Sơ đồ phòng</button>
+      <button class="btn-back" onclick="showView('bedGridViewInput')">⬅️ Sơ đồ phòng</button>
       <h3 style="font-size:16px;">Phiếu nhập thông tin</h3>
       <div style="width:50px;"></div>
     </div>
 
     <div class="record-container">
-      <!-- DÒNG ĐẦU: TIÊU ĐỀ + NGÀY GIỜ (CHO PHÉP SỬA TAY) -->
       <div class="record-header">
         <div class="record-header-left">
           <span style="font-size:13px; color:#64748b; white-space:nowrap;" id="crumbPrefix">Nhập &gt;</span>
@@ -386,112 +388,96 @@
         </div>
         <div class="record-header-right">
           <span>Ngày giờ:</span>
-          <!-- ĐÃ BỎ READONLY: BẠN CÓ THỂ SỬA NGÀY GIỜ BẰNG TAY -->
           <input type="text" id="recordDateTime" placeholder="20:30 07/09">
         </div>
       </div>
 
-      <!-- DÒNG 1: CHẨN ĐOÁN -->
       <div class="record-row">
         <div class="row-label">Chẩn đoán</div>
-        <div class="row-input">
-          <textarea id="recordDiagnosis" placeholder="Bệnh..."></textarea>
-        </div>
+        <div class="row-input"><textarea id="recordDiagnosis" placeholder="Bệnh..."></textarea></div>
       </div>
 
-      <!-- DÒNG 2: THEO DÕI -->
       <div class="record-row">
         <div class="row-label">Theo dõi</div>
-        <div class="row-input">
-          <textarea id="recordTracking" placeholder="Diễn tiến, triệu chứng..."></textarea>
-        </div>
+        <div class="row-input"><textarea id="recordTracking" placeholder="Diễn tiến, triệu chứng..."></textarea></div>
       </div>
 
-      <!-- DÒNG 3: XÉT NGHIỆM -->
       <div class="record-row">
         <div class="row-label">Xét nghiệm</div>
-        <div class="row-input">
-          <textarea id="recordTests" placeholder="Công thức máu, cận lâm sàng..."></textarea>
-        </div>
+        <div class="row-input"><textarea id="recordTests" placeholder="Công thức máu, cận lâm sàng..."></textarea></div>
       </div>
 
-      <!-- DÒNG 4: HÌNH ẢNH (NHẬP CHỮ TAY CÁC KẾT QUẢ CẬN LÂM SÀNG HÌNH ẢNH) -->
       <div class="record-row" style="border-bottom:none;">
         <div class="row-label">Hình ảnh</div>
-        <div class="row-input">
-          <textarea id="recordImagingText" placeholder="Nhập kết quả X-quang, Siêu âm, CT, MRI..."></textarea>
-        </div>
+        <div class="row-input"><textarea id="recordImagingText" placeholder="Nhập kết quả X-quang, Siêu âm, CT, MRI..."></textarea></div>
       </div>
 
-      <!-- NÚT XÁC NHẬN GÓC DƯỚI BÊN PHẢI -->
       <div class="submit-area">
         <button type="button" class="btn-confirm" onclick="saveRecord()">Xác nhận</button>
       </div>
     </div>
   </div>
 
-  <!-- ==================== DANH SÁCH CHỌN BỆNH NHÂN (TÓM TẮT) ==================== -->
-  <div id="summarySelectView" class="view-section">
+  <!-- ==================== VIEW TÓM TẮT CHI TIẾT (BẢNG KÉO NGANG) ==================== -->
+  <div id="summaryHorizontalView" class="view-section">
     <div class="view-header">
-      <button class="btn-back" onclick="showView('manageMenuView')">⬅️ Quản lý</button>
-      <h3 style="font-size:16px;">Chọn bệnh nhân</h3>
-      <div style="width:50px;"></div>
-    </div>
-    <div id="summarySelectList"></div>
-  </div>
-
-  <!-- ==================== VIEW TÓM TẮT BỆNH NHÂN CHI TIẾT ==================== -->
-  <div id="summaryDetailView" class="view-section">
-    <div class="view-header">
-      <button class="btn-back" onclick="showView('summarySelectView')">⬅️ Chọn ca khác</button>
-      <h3 style="font-size:16px;" id="summaryBedLabel">P.825 - Giường 1</h3>
+      <button class="btn-back" onclick="showView('bedGridViewSummary')">⬅️ Sơ đồ tóm tắt</button>
+      <h3 style="font-size:16px;" id="summaryBedBadge">P.825 - G.1</h3>
       <div style="width:50px;"></div>
     </div>
 
-    <div class="summary-page">
-      <div>
-        <div class="summary-title-main" id="summaryPatientName">Tóm tắt bệnh nhân</div>
-
-        <!-- HÀNG NÚT NGÀY: 1, 2... -->
-        <div class="day-selector-row">
-          <span class="day-label">Ngày</span>
-          <div id="daysList" style="display:flex; gap:8px; align-items:center;"></div>
-          <button class="btn-add-day" onclick="addNewDayToPatient()">+ Thêm ngày</button>
+    <div class="summary-card-full">
+      <div class="summary-header-box">
+        <div>
+          <div style="font-size:12px; color:#64748b;">Tóm tắt bệnh án:</div>
+          <h2 id="summaryPatientTitle" style="font-size:18px; color:#0284c7;">Nguyễn Văn A</h2>
         </div>
-
-        <!-- CHẨN ĐOÁN -->
-        <div class="field-block">
-          <div class="field-title">Chẩn đoán:</div>
-          <div class="field-content" id="viewDiag">...</div>
-        </div>
-
-        <!-- THEO DÕI -->
-        <div class="field-block">
-          <div class="field-title">Theo dõi:</div>
-          <div class="field-content" id="viewTracking">...</div>
-        </div>
-
-        <!-- XÉT NGHIỆM -->
-        <div class="field-block">
-          <div class="field-title">Xét nghiệm:</div>
-          <div class="field-content" id="viewTests">...</div>
-        </div>
-
-        <!-- HÌNH ẢNH -->
-        <div class="field-block">
-          <div class="field-title">Hình ảnh:</div>
-          <div class="field-content" id="viewImaging">...</div>
-        </div>
+        <button class="btn-add-day-tag" onclick="addNewDayToCurrentSummary()">+ Thêm Ngày mới</button>
       </div>
 
-      <!-- NÚT KẾT THÚC ĐIỀU TRỊ -->
+      <!-- HƯỚNG DẪN VUỐT NGANG -->
+      <div style="font-size:11px; color:#64748b; margin-bottom:6px; display:flex; align-items:center; gap:4px;">
+        👉 <i>Vuốt ngang sang phải để xem các ngày tiếp theo:</i>
+      </div>
+
+      <!-- VÙNG BẢNG LIỆT KÊ THEO CHIỀU NGANG -->
+      <div class="horizontal-scroll-container">
+        <table class="timeline-table">
+          <thead>
+            <tr id="tableHeaderRow">
+              <th class="col-header-sticky">Mục</th>
+              <!-- Render các cột Ngày 1, Ngày 2... -->
+            </tr>
+          </thead>
+          <tbody>
+            <tr id="rowDiagnosis">
+              <td class="col-header-sticky">Chẩn đoán</td>
+              <!-- Nội dung chẩn đoán từng ngày -->
+            </tr>
+            <tr id="rowTracking">
+              <td class="col-header-sticky">Theo dõi</td>
+              <!-- Nội dung theo dõi từng ngày -->
+            </tr>
+            <tr id="rowTests">
+              <td class="col-header-sticky">Xét nghiệm</td>
+              <!-- Nội dung xét nghiệm từng ngày -->
+            </tr>
+            <tr id="rowImaging">
+              <td class="col-header-sticky">Hình ảnh</td>
+              <!-- Nội dung hình ảnh từng ngày -->
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- GÓC DƯỚI BÊN PHẢI: NÚT KẾT THÚC ĐIỀU TRỊ -->
       <div class="finish-area">
-        <button class="btn-finish-treatment" onclick="finishTreatment()">Kết thúc điều trị</button>
+        <button class="btn-finish-treatment" onclick="finishCurrentTreatment()">Kết thúc điều trị</button>
       </div>
     </div>
   </div>
 
-  <!-- ==================== DANH SÁCH RA VIỆN ==================== -->
+  <!-- ==================== RA VIỆN ==================== -->
   <div id="dischargedView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('homeView')">⬅️ Trang chủ</button>
@@ -512,17 +498,16 @@
       <div style="width:68px; height:68px; background:#0284c7; color:white; border-radius:50%; margin:0 auto 12px; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:bold;">BS</div>
       <h2>Bác sĩ Minh Hoàng</h2>
       <p style="color:#0284c7; font-weight:600; font-size:14px; margin-top:4px;">Bác sĩ Điều trị</p>
-      <p style="color:#64748b; font-size:14px; margin-top:10px; line-height:1.5;">Hệ thống theo dõi diễn biến bệnh án nội trú qua từng ngày.</p>
+      <p style="color:#64748b; font-size:14px; margin-top:10px; line-height:1.5;">Hệ thống sơ đồ phòng bệnh & theo dõi diễn biến bệnh án ngang.</p>
     </div>
   </div>
 
 </div>
 
 <script>
-  let patients = JSON.parse(localStorage.getItem('bs_patients_room_v4')) || [];
+  let patients = JSON.parse(localStorage.getItem('bs_patients_room_v5')) || [];
   let currentEditing = { room: null, bed: null, id: null };
-  let viewingPatientId = null;
-  let activeDayIndex = 0;
+  let currentSummaryPatientId = null;
 
   const roomConfigs = {
     '825': [3, 2, 1, 4, 5, 6],
@@ -540,7 +525,7 @@
   }
 
   function showView(viewId) {
-    ['homeView', 'manageMenuView', 'bedGridView', 'patientFormView', 'summarySelectView', 'summaryDetailView', 'dischargedView', 'profileView'].forEach(v => {
+    ['homeView', 'manageMenuView', 'bedGridViewInput', 'bedGridViewSummary', 'patientFormView', 'summaryHorizontalView', 'dischargedView', 'profileView'].forEach(v => {
       const el = document.getElementById(v);
       if (el) el.style.display = 'none';
     });
@@ -552,7 +537,18 @@
     return patients.find(p => p.status === 'active' && p.room === String(room) && p.bed === String(bed));
   }
 
-  function openPatientForm(room, bed) {
+  function openInputRoomGrid() {
+    showView('bedGridViewInput');
+    renderGrid('input');
+  }
+
+  function openSummaryRoomGrid() {
+    showView('bedGridViewSummary');
+    renderGrid('summary');
+  }
+
+  // Mở Form Nhập khi chọn giường ở mục "Nhập"
+  function handleBedClickInput(room, bed) {
     currentEditing.room = String(room);
     currentEditing.bed = String(bed);
 
@@ -581,6 +577,16 @@
     }
 
     showView('patientFormView');
+  }
+
+  // Mở Bảng Kéo Ngang khi chọn giường ở mục "Tóm tắt Bệnh nhân"
+  function handleBedClickSummary(room, bed) {
+    const existing = getPatientInBed(room, bed);
+    if (!existing) {
+      alert(`Giường ${bed} Phòng ${room} hiện đang trống!`);
+      return;
+    }
+    openSummaryTimeline(existing.id);
   }
 
   function saveRecord() {
@@ -622,79 +628,58 @@
 
     saveAndSync();
     alert("Đã xác nhận lưu thông tin!");
-    showView('bedGridView');
+    showView('bedGridViewInput');
   }
 
-  function openSummaryPicker() {
-    const activePatients = patients.filter(p => p.status === 'active');
-    const container = document.getElementById('summarySelectList');
-
-    if (activePatients.length === 0) {
-      container.innerHTML = '<p style="text-align:center; color:#94a3b8; padding:30px;">Hiện chưa có bệnh nhân nào trong buồng bệnh.</p>';
-    } else {
-      container.innerHTML = activePatients.map(p => `
-        <div class="patient-picker-card" onclick="loadPatientSummary(${p.id})">
-          <div style="font-weight:bold; font-size:16px; color:#0284c7;">${p.name}</div>
-          <div style="font-size:13px; color:#64748b; margin-top:4px;">📍 Phòng ${p.room} - Giường ${p.bed} | Số ngày điều trị: ${p.days.length} ngày</div>
-        </div>
-      `).join('');
-    }
-    showView('summarySelectView');
-  }
-
-  function loadPatientSummary(id) {
-    viewingPatientId = id;
+  // Hiển thị bảng kéo ngang đầy đủ các ngày
+  function openSummaryTimeline(id) {
+    currentSummaryPatientId = id;
     const p = patients.find(x => x.id === id);
     if (!p) return;
 
-    activeDayIndex = p.days.length - 1;
-    renderSummaryDetail();
-    showView('summaryDetailView');
+    document.getElementById('summaryBedBadge').textContent = `Phòng ${p.room} - Giường ${p.bed}`;
+    document.getElementById('summaryPatientTitle').textContent = `${p.name}`;
+
+    const thead = document.getElementById('tableHeaderRow');
+    const rDiag = document.getElementById('rowDiagnosis');
+    const rTrack = document.getElementById('rowTracking');
+    const rTests = document.getElementById('rowTests');
+    const rImg = document.getElementById('rowImaging');
+
+    thead.innerHTML = '<th class="col-header-sticky">Mục</th>';
+    rDiag.innerHTML = '<td class="col-header-sticky">Chẩn đoán</td>';
+    rTrack.innerHTML = '<td class="col-header-sticky">Theo dõi</td>';
+    rTests.innerHTML = '<td class="col-header-sticky">Xét nghiệm</td>';
+    rImg.innerHTML = '<td class="col-header-sticky">Hình ảnh</td>';
+
+    p.days.forEach((d, idx) => {
+      thead.innerHTML += `<th class="day-col-header">Ngày ${idx + 1}<div style="font-size:11px; font-weight:normal; opacity:0.9;">(${d.dateTime || ''})</div></th>`;
+      rDiag.innerHTML += `<td class="day-cell">${d.diag || '—'}</td>`;
+      rTrack.innerHTML += `<td class="day-cell">${d.tracking || '—'}</td>`;
+      rTests.innerHTML += `<td class="day-cell">${d.tests || '—'}</td>`;
+      rImg.innerHTML += `<td class="day-cell">${d.imaging || '—'}</td>`;
+    });
+
+    showView('summaryHorizontalView');
   }
 
-  function renderSummaryDetail() {
-    const p = patients.find(x => x.id === viewingPatientId);
+  function addNewDayToCurrentSummary() {
+    const p = patients.find(x => x.id === currentSummaryPatientId);
     if (!p) return;
 
-    document.getElementById('summaryBedLabel').textContent = `P.${p.room} - Giường ${p.bed}`;
-    document.getElementById('summaryPatientName').textContent = `Tóm tắt bệnh nhân: ${p.name}`;
-
-    const daysContainer = document.getElementById('daysList');
-    daysContainer.innerHTML = p.days.map((d, index) => `
-      <button class="day-btn ${index === activeDayIndex ? 'active' : ''}" onclick="switchDay(${index})">${index + 1}</button>
-    `).join('');
-
-    const dayData = p.days[activeDayIndex] || {};
-    document.getElementById('viewDiag').textContent = dayData.diag || '(Chưa ghi)';
-    document.getElementById('viewTracking').textContent = dayData.tracking || '(Chưa có theo dõi)';
-    document.getElementById('viewTests').textContent = dayData.tests || '(Chưa có xét nghiệm)';
-    document.getElementById('viewImaging').textContent = dayData.imaging || '(Chưa có kết quả chẩn đoán hình ảnh)';
-  }
-
-  function switchDay(index) {
-    activeDayIndex = index;
-    renderSummaryDetail();
-  }
-
-  function addNewDayToPatient() {
-    const p = patients.find(x => x.id === viewingPatientId);
-    if (!p) return;
-
-    const lastDay = p.days[p.days.length - 1] || {};
+    const last = p.days[p.days.length - 1] || {};
     const newDay = {
       dateTime: getCurrentDateTimeFormatted(),
-      diag: lastDay.diag || '',
+      diag: last.diag || '',
       tracking: '',
       tests: '',
       imaging: ''
     };
 
     p.days.push(newDay);
-    activeDayIndex = p.days.length - 1;
     saveAndSync();
-    renderSummaryDetail();
 
-    // Mở luôn form nhập để bác sĩ cập nhật cho ngày mới
+    // Mở form để nhập thông tin cho ngày vừa tạo
     currentEditing.room = p.room;
     currentEditing.bed = p.bed;
     currentEditing.id = p.id;
@@ -708,22 +693,50 @@
     showView('patientFormView');
   }
 
-  function finishTreatment() {
-    if (confirm("Xác nhận kết thúc điều trị và cho bệnh nhân này ra viện?")) {
-      const p = patients.find(x => x.id === viewingPatientId);
+  function finishCurrentTreatment() {
+    if (confirm("Xác nhận kết thúc điều trị và cho bệnh nhân này xuất viện?")) {
+      const p = patients.find(x => x.id === currentSummaryPatientId);
       if (p) {
         p.status = 'discharged';
         p.dateOut = getCurrentDateTimeFormatted();
         saveAndSync();
         alert("Bệnh nhân đã ra viện thành công!");
-        showView('manageMenuView');
+        showView('bedGridViewSummary');
       }
     }
   }
 
   function saveAndSync() {
-    localStorage.setItem('bs_patients_room_v4', JSON.stringify(patients));
+    localStorage.setItem('bs_patients_room_v5', JSON.stringify(patients));
     renderDashboardCounts();
+  }
+
+  // Render chung cho sơ đồ phòng của 2 mục (Nhập & Tóm tắt)
+  function renderGrid(type) {
+    ['825', '817', '819'].forEach(room => {
+      const box = document.getElementById(`${type}_room${room}`);
+      if (!box) return;
+      box.innerHTML = roomConfigs[room].map(bed => {
+        const p = getPatientInBed(room, bed);
+        const clickFn = type === 'input' ? `handleBedClickInput('${room}', '${bed}')` : `handleBedClickSummary('${room}', '${bed}')`;
+
+        if (p) {
+          return `
+            <div class="bed-slot occupied" onclick="${clickFn}">
+              <div class="bed-num">${bed}.</div>
+              <div class="patient-name-slot">${p.name}</div>
+            </div>
+          `;
+        } else {
+          return `
+            <div class="bed-slot" onclick="${clickFn}">
+              <div class="bed-num">${bed}.</div>
+              <div class="bed-empty-tag">+ Trống</div>
+            </div>
+          `;
+        }
+      }).join('');
+    });
   }
 
   function renderDashboardCounts() {
@@ -734,31 +747,9 @@
     document.getElementById('homeDischargedCount').textContent = `${dischargedList.length} Đã ra viện`;
     document.getElementById('summaryCountTag').textContent = `${activeList.length} Bệnh nhân`;
 
-    // Render Sơ đồ giường
-    ['825', '817', '819'].forEach(room => {
-      const box = document.getElementById(`room${room}`);
-      if (!box) return;
-      box.innerHTML = roomConfigs[room].map(bed => {
-        const p = getPatientInBed(room, bed);
-        if (p) {
-          return `
-            <div class="bed-slot occupied" onclick="openPatientForm('${room}', '${bed}')">
-              <div class="bed-num">${bed}.</div>
-              <div class="patient-name-slot">${p.name}</div>
-            </div>
-          `;
-        } else {
-          return `
-            <div class="bed-slot" onclick="openPatientForm('${room}', '${bed}')">
-              <div class="bed-num">${bed}.</div>
-              <div class="bed-empty-tag">+ Trống</div>
-            </div>
-          `;
-        }
-      }).join('');
-    });
+    renderGrid('input');
+    renderGrid('summary');
 
-    // Render Ra viện
     const disContainer = document.getElementById('dischargedListContainer');
     if (disContainer) {
       disContainer.innerHTML = dischargedList.length === 0 ? '<p style="text-align:center; color:#94a3b8; padding:20px;">Chưa có hồ sơ ra viện.</p>' : dischargedList.map(p => `
@@ -767,13 +758,12 @@
             <span>${p.name}</span>
             <span style="font-size:12px; color:#10b981;">Ra viện: ${p.dateOut || ''}</span>
           </div>
-          <div style="font-size:13px; color:#64748b; margin-top:4px;">Từng nằm: Phòng ${p.room} - Giường ${p.bed} | Tổng số ngày: ${p.days.length} ngày</div>
+          <div style="font-size:13px; color:#64748b; margin-top:4px;">Từng nằm: Phòng ${p.room} - Giường ${p.bed} | Số ngày nằm: ${p.days.length} ngày</div>
         </div>
       `).join('');
     }
   }
 
-  // Khởi động giao diện ban đầu
   renderDashboardCounts();
 </script>
 </body>

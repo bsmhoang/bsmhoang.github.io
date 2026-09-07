@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Bác Sĩ Minh Hoàng - Quản Lý Bệnh Nhân</title>
   
-  <!-- Cấu hình ứng dụng Web (PWA) -->
+  <!-- Cấu hình PWA -->
   <meta name="theme-color" content="#0284c7">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -133,7 +133,7 @@
       cursor: pointer; 
     }
 
-    /* QUẢN LÝ PHÒNG & GIƯỜNG */
+    /* SƠ ĐỒ PHÒNG GIƯỜNG */
     .room-header-bar {
       display: flex;
       justify-content: space-between;
@@ -230,9 +230,7 @@
     .patient-name-slot { font-size: 13.5px; font-weight: 700; line-height: 1.25; word-break: break-word; color: #0f172a; }
     .bed-empty-tag { font-size: 11px; color: #94a3b8; font-style: italic; }
 
-    /* ========================================================
-       CẤU TRÚC HỒ SƠ: SỬA TRIỆT ĐỂ LỖI BỊ ÉP Ô & KHÔNG CUỘN ĐƯỢC
-       ======================================================== */
+    /* CẤU TRÚC HỒ SƠ & VIEW TÓM TẮT */
     .summary-app-window {
       background: white;
       border: 1.5px solid var(--border);
@@ -320,7 +318,6 @@
       box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
     }
 
-    /* KHUNG VUỐT NGANG GIỮA CÁC NGÀY */
     .summary-scrollable-body {
       flex-grow: 1;
       height: 100%;
@@ -333,7 +330,6 @@
     }
     .summary-scrollable-body::-webkit-scrollbar { display: none; }
 
-    /* MỖI NGÀY TỰ DO CUỘN DỌC (KHÔNG BAO GIỜ BỊ ÉP DẸP NỘI DUNG) */
     .day-slide-page {
       width: 100%;
       min-width: 100%;
@@ -348,7 +344,6 @@
       padding: 12px 14px 20px 14px;
     }
 
-    /* CÁC Ô KHỐI NỔI BO TRÒN */
     .section-block-box {
       border: 1.5px solid var(--border);
       border-radius: var(--radius-md);
@@ -411,103 +406,134 @@
       cursor: pointer;
     }
 
-    /* FORM NHẬP / CẬP NHẬT */
-    .record-container {
+    /* ========================================================
+       FORM NHẬP LIỆU NỔI (ĐỒNG BỘ CHUẨN GIAO DIỆN HỒ SƠ)
+       ======================================================== */
+    .form-app-window {
       background: white;
-      border-radius: var(--radius-lg);
       border: 1.5px solid var(--border);
-      overflow: hidden;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-    }
-    .record-header {
-      display: grid;
-      grid-template-columns: 1fr 150px;
-      border-bottom: 1.5px solid var(--border);
-      background: #f8fafc;
-    }
-    .record-header-left {
-      padding: 10px 12px;
-      border-right: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      height: calc(100vh - 78px);
       display: flex;
-      align-items: center;
-      gap: 4px;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.04);
     }
-    .record-header-left input {
+    .form-fixed-header {
+      flex-shrink: 0;
+      padding: 12px 14px;
+      background: white;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .form-top-grid {
+      display: grid;
+      grid-template-columns: 1fr 140px;
+      gap: 10px;
+      align-items: center;
+    }
+    .form-patient-name-box {
+      display: flex;
+      flex-direction: column;
+    }
+    .form-patient-name-box span {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+    .form-patient-name-box input {
       border: none;
       background: transparent;
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 700;
       color: var(--primary);
       outline: none;
       width: 100%;
     }
-    .record-header-right {
-      padding: 6px 8px;
+    .form-time-box {
       display: flex;
       flex-direction: column;
-      justify-content: center;
+    }
+    .form-time-box span {
       font-size: 11px;
       color: var(--text-muted);
-      background: #ffffff;
+      margin-bottom: 2px;
     }
-    .record-header-right input[type="datetime-local"] {
+    .form-time-box input[type="datetime-local"] {
       border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 4px 2px;
+      border-radius: 8px;
+      padding: 5px 6px;
       font-size: 12px;
       color: #1e293b;
       outline: none;
-      width: 100%;
-      margin-top: 2px;
       background: #f8fafc;
+      width: 100%;
     }
-    .record-row {
-      display: grid;
-      grid-template-columns: 90px 1fr;
-      border-bottom: 1.5px solid var(--border);
-      min-height: 75px;
+
+    /* VÙNG CUỘN CỦA 4 KHỐI Ô NHẬP NỔI */
+    .form-scrollable-body {
+      flex-grow: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 12px 14px 20px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
-    .row-label {
-      padding: 10px 6px;
-      font-size: 13px;
-      font-weight: 700;
-      color: #334155;
+
+    .form-block-input-box {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      background: #ffffff;
+      overflow: hidden;
+      flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+    .form-block-tag {
+      display: inline-block;
+      background: #f8fafc;
       border-right: 1.5px solid var(--border);
-      display: flex;
-      align-items: center;
-      background: #f8fafc;
+      border-bottom: 1.5px solid var(--border);
+      padding: 5px 14px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #1e293b;
+      border-bottom-right-radius: 10px;
     }
-    .row-input {
-      padding: 8px 10px;
-      display: flex;
-      align-items: center;
+    .form-block-textarea-wrap {
+      padding: 8px 12px;
     }
-    .row-input textarea {
+    .form-block-textarea-wrap textarea {
       width: 100%;
-      min-height: 60px;
+      min-height: 80px;
       border: none;
       outline: none;
       font-size: 14.5px;
+      line-height: 1.55;
       resize: vertical;
       background: transparent;
-      color: #1e293b;
+      color: #0f172a;
     }
-    .submit-area {
-      padding: 12px 16px;
+
+    .form-fixed-footer {
+      flex-shrink: 0;
+      padding: 10px 14px;
+      background: white;
+      border-top: 1px solid var(--border-light);
       display: flex;
       justify-content: flex-end;
-      background: #f8fafc;
     }
-    .btn-confirm {
+    .btn-confirm-submit {
       background: var(--primary);
       color: white;
       border: none;
       border-radius: var(--radius-md);
-      padding: 12px 28px;
+      padding: 10px 28px;
       font-size: 15px;
       font-weight: 700;
       cursor: pointer;
+      box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
     }
+    .btn-confirm-submit:active { background: var(--primary-hover); }
 
     /* MỤC RA VIỆN */
     .discharged-header-actions {
@@ -652,7 +678,6 @@
         <div class="day-tab-scroll" id="dayTabsContainer"></div>
       </div>
 
-      <!-- VÙNG CUỘN ĐỒNG BỘ 2 CHIỀU HOÀN HẢO -->
       <div class="summary-scrollable-body" id="syncSlideBody" onscroll="handleBodyScroll()"></div>
 
       <div class="summary-fixed-footer">
@@ -662,7 +687,7 @@
     </div>
   </div>
 
-  <!-- FORM NHẬP / THÊM / SỬA NGÀY -->
+  <!-- ==================== FORM NHẬP / SỬA / THÊM NGÀY (THIẾT KẾ MỚI ĐỒNG BỘ) ==================== -->
   <div id="patientFormView" class="view-section">
     <div class="view-header">
       <button class="btn-back" id="btnBackFromForm" onclick="handleBackFromForm()">⬅️ Quay lại</button>
@@ -670,40 +695,59 @@
       <div style="width:40px;"></div>
     </div>
 
-    <div class="record-container">
-      <div class="record-header">
-        <div class="record-header-left">
-          <span style="font-size:12px; color:#64748b; white-space:nowrap;" id="crumbPrefix">Giường &gt;</span>
-          <input type="text" id="recordName" placeholder="Tên bệnh nhân...">
+    <div class="form-app-window">
+      <!-- Header cố định: Tên bệnh nhân & Thời gian -->
+      <div class="form-fixed-header">
+        <div class="form-top-grid">
+          <div class="form-patient-name-box">
+            <span id="crumbPrefix">Giường ></span>
+            <input type="text" id="recordName" placeholder="Nhập tên bệnh nhân...">
+          </div>
+          <div class="form-time-box">
+            <span>Thời gian:</span>
+            <input type="datetime-local" id="recordDateTimeInput">
+          </div>
         </div>
-        <div class="record-header-right">
-          <span>Thời gian:</span>
-          <input type="datetime-local" id="recordDateTimeInput">
+      </div>
+
+      <!-- Vùng cuộn: 4 ô dạng thẻ nổi chuẩn giao diện hồ sơ -->
+      <div class="form-scrollable-body">
+        <!-- Khối Chẩn đoán -->
+        <div class="form-block-input-box">
+          <div class="form-block-tag">Chẩn đoán</div>
+          <div class="form-block-textarea-wrap">
+            <textarea id="recordDiagnosis" placeholder="Nhập mã bệnh, tên chẩn đoán..."></textarea>
+          </div>
+        </div>
+
+        <!-- Khối Theo dõi -->
+        <div class="form-block-input-box">
+          <div class="form-block-tag">Theo dõi</div>
+          <div class="form-block-textarea-wrap">
+            <textarea id="recordTracking" placeholder="Diễn tiến, triệu chứng, nước tiểu, sinh hiệu..."></textarea>
+          </div>
+        </div>
+
+        <!-- Khối Xét nghiệm -->
+        <div class="form-block-input-box">
+          <div class="form-block-tag">Xét nghiệm</div>
+          <div class="form-block-textarea-wrap">
+            <textarea id="recordTests" placeholder="Công thức máu, sinh hóa, cận lâm sàng..."></textarea>
+          </div>
+        </div>
+
+        <!-- Khối Hình ảnh -->
+        <div class="form-block-input-box">
+          <div class="form-block-tag">Hình ảnh</div>
+          <div class="form-block-textarea-wrap">
+            <textarea id="recordImagingText" placeholder="Kết quả X-quang, Siêu âm, CLVT, MRI..."></textarea>
+          </div>
         </div>
       </div>
 
-      <div class="record-row">
-        <div class="row-label">Chẩn đoán</div>
-        <div class="row-input"><textarea id="recordDiagnosis" placeholder="Bệnh..."></textarea></div>
-      </div>
-
-      <div class="record-row">
-        <div class="row-label">Theo dõi</div>
-        <div class="row-input"><textarea id="recordTracking" placeholder="Diễn tiến, triệu chứng, nước tiểu, sinh hiệu..."></textarea></div>
-      </div>
-
-      <div class="record-row">
-        <div class="row-label">Xét nghiệm</div>
-        <div class="row-input"><textarea id="recordTests" placeholder="Công thức máu, sinh hóa máu, cận lâm sàng..."></textarea></div>
-      </div>
-
-      <div class="record-row" style="border-bottom:none;">
-        <div class="row-label">Hình ảnh</div>
-        <div class="row-input"><textarea id="recordImagingText" placeholder="Kết quả X-quang, Siêu âm, CLVT, MRI..."></textarea></div>
-      </div>
-
-      <div class="submit-area">
-        <button type="button" class="btn-confirm" onclick="saveRecord()">Xác nhận</button>
+      <!-- Footer cố định: Nút xác nhận -->
+      <div class="form-fixed-footer">
+        <button type="button" class="btn-confirm-submit" onclick="saveRecord()">Xác nhận</button>
       </div>
     </div>
   </div>

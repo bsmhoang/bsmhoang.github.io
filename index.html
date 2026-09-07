@@ -67,7 +67,7 @@
     .view-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-shrink: 0; }
     .btn-back { background: #e2e8f0; border: none; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
 
-    /* THANH QUẢN LÝ PHÒNG VÀ NÚT TÙY CHỈNH GIƯỜNG */
+    /* SƠ ĐỒ PHÒNG GIƯỜNG */
     .room-header-bar {
       display: flex;
       justify-content: space-between;
@@ -92,19 +92,31 @@
     }
     .room-control-buttons {
       display: flex;
-      gap: 5px;
+      gap: 4px;
+      align-items: center;
     }
     .btn-bed-ctrl {
       background: white;
       border: 1px solid var(--border);
-      font-size: 11.5px;
+      font-size: 11px;
       font-weight: 600;
-      padding: 4px 8px;
+      padding: 4px 6px;
       border-radius: 6px;
       cursor: pointer;
       color: #334155;
     }
     .btn-bed-ctrl:active { background: #e2e8f0; }
+    .btn-del-room {
+      background: #fef2f2;
+      border: 1px solid #fca5a5;
+      color: #dc2626;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 6px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
     .btn-add-room-global {
       background: white;
       border: 1.5px dashed #0284c7;
@@ -123,7 +135,6 @@
       gap: 6px;
     }
 
-    /* LƯỚI GIƯỜNG TỰ CO GIÃN THEO SỐ LƯỢNG */
     .grid-room-dynamic {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -152,7 +163,9 @@
     .patient-name-slot { font-size: 13px; font-weight: 600; line-height: 1.25; word-break: break-word; }
     .bed-empty-tag { font-size: 11px; color: #94a3b8; font-style: italic; }
 
-    /* CẤU TRÚC THEO DÕI BỆNH ÁN CỐ ĐỊNH KHUNG, CHỈ CUỘN NỘI DUNG */
+    /* ========================================================
+       CẤU TRÚC HỒ SƠ BỆNH ÁN: KHUNG CỐ ĐỊNH, CHỈ CUỘN CÁC NGÀY
+       ======================================================== */
     .summary-app-window {
       background: white;
       border: 2px solid var(--border);
@@ -163,17 +176,18 @@
       overflow: hidden;
       box-shadow: 0 4px 15px rgba(0,0,0,0.03);
     }
+
+    /* 1. Header cố định phía trên */
     .summary-fixed-header {
       flex-shrink: 0;
-      padding: 12px 14px 8px 14px;
+      padding: 12px 14px;
       background: white;
-      border-bottom: 1px solid #e2e8f0;
+      border-bottom: 1.5px solid #e2e8f0;
     }
     .summary-top-info {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
     }
     .btn-add-day-pill {
       background: #ffffff;
@@ -190,42 +204,44 @@
     }
     .btn-add-day-pill:active { background: #e0f2fe; }
 
-    .day-tab-scroll {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      overflow-x: auto;
-      padding-bottom: 4px;
-      -webkit-overflow-scrolling: touch;
-    }
-    .day-tab-btn {
-      background: #f1f5f9;
-      border: 1px solid var(--border);
-      padding: 6px 14px;
-      border-radius: 12px;
-      font-size: 12.5px;
-      font-weight: 600;
-      color: #334155;
-      white-space: nowrap;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-    .day-tab-btn.active {
-      background: #0284c7;
-      color: white;
-      border-color: #0284c7;
-    }
-
+    /* 2. Phần nội dung cuộn ngang liền mạch các ngày (CHỈ CUỘN DUY NHẤT VÙNG NÀY) */
     .summary-scrollable-body {
       flex-grow: 1;
+      overflow-x: auto;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding: 12px 14px;
+      padding: 12px;
+      display: flex;
+      gap: 12px;
     }
+
+    /* MỖI NGÀY LÀ MỘT CỘT LIỀN MẠCH */
+    .day-column-seamless {
+      width: 285px;
+      min-width: 285px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* Nhãn mốc Ngày 1, Ngày 2... trên đầu mỗi cột */
+    .day-badge-header {
+      background: #0284c7;
+      color: white;
+      padding: 7px 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Các ô thẻ Chẩn đoán, Theo dõi, Xét nghiệm, Hình ảnh */
     .section-block-box {
       border: 1.5px solid var(--border);
       border-radius: 12px;
-      margin-bottom: 12px;
       background: #ffffff;
       overflow: hidden;
     }
@@ -234,22 +250,23 @@
       background: #f1f5f9;
       border-right: 1.5px solid var(--border);
       border-bottom: 1.5px solid var(--border);
-      padding: 4px 12px;
-      font-size: 12.5px;
+      padding: 4px 10px;
+      font-size: 12px;
       font-weight: 700;
       color: #1e293b;
       border-bottom-right-radius: 8px;
     }
     .section-block-body {
-      padding: 10px 12px;
-      font-size: 14px;
+      padding: 8px 10px;
+      font-size: 13.5px;
       color: #0f172a;
       line-height: 1.5;
-      min-height: 54px;
+      min-height: 50px;
       white-space: pre-wrap;
       word-break: break-word;
     }
 
+    /* 3. Footer cố định phía dưới */
     .summary-fixed-footer {
       flex-shrink: 0;
       padding: 10px 14px;
@@ -368,7 +385,7 @@
       cursor: pointer;
     }
 
-    /* GIAO DIỆN RA VIỆN CHIỀU DỌC */
+    /* GIAO DIỆN RA VIỆN */
     .discharged-card {
       background: white;
       border-radius: 14px;
@@ -429,7 +446,7 @@
     </div>
   </div>
 
-  <!-- ==================== TẦNG 2: SƠ ĐỒ PHÒNG (CHO PHÉP SỬA TÊN & THÊM/GIẢM GIƯỜNG) ==================== -->
+  <!-- ==================== TẦNG 2: SƠ ĐỒ PHÒNG ==================== -->
   <div id="roomGridView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('homeView')">⬅️ Trang chủ</button>
@@ -437,16 +454,14 @@
       <div style="width:40px;"></div>
     </div>
 
-    <!-- Danh sách phòng hiển thị tự động -->
     <div id="roomsDynamicContainer"></div>
 
-    <!-- Nút thêm phòng mới -->
     <button class="btn-add-room-global" onclick="addNewRoom()">
       ➕ Thêm phòng mới
     </button>
   </div>
 
-  <!-- ==================== TẦNG 3: VIEW TÓM TẮT ==================== -->
+  <!-- ==================== TẦNG 3: VIEW TÓM TẮT (CỐ ĐỊNH KHUNG, CHỈ CUỘN CÁC NGÀY) ==================== -->
   <div id="summaryFullView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('roomGridView')">⬅️ Sơ đồ phòng</button>
@@ -454,7 +469,9 @@
       <div style="width:40px;"></div>
     </div>
 
+    <!-- KHUNG ĐƯỢC KHÓA CỐ ĐỊNH -->
     <div class="summary-app-window">
+      <!-- 1. Header cố định trên cùng -->
       <div class="summary-fixed-header">
         <div class="summary-top-info">
           <div>
@@ -463,28 +480,12 @@
           </div>
           <button class="btn-add-day-pill" onclick="handleAddNewDayClick()">➕ Thêm ngày mới</button>
         </div>
-        <div class="day-tab-scroll" id="dayTabsContainer"></div>
       </div>
 
-      <div class="summary-scrollable-body">
-        <div class="section-block-box">
-          <div class="section-block-tag">Chẩn đoán</div>
-          <div class="section-block-body" id="viewDiag">...</div>
-        </div>
-        <div class="section-block-box">
-          <div class="section-block-tag">Theo dõi</div>
-          <div class="section-block-body" id="viewTracking">...</div>
-        </div>
-        <div class="section-block-box">
-          <div class="section-block-tag">Xét nghiệm</div>
-          <div class="section-block-body" id="viewTests">...</div>
-        </div>
-        <div class="section-block-box">
-          <div class="section-block-tag">Hình ảnh</div>
-          <div class="section-block-body" id="viewImaging">...</div>
-        </div>
-      </div>
+      <!-- 2. Phần duy nhất được cuộn: Chứa tất cả Ngày 1, Ngày 2... liền mạch -->
+      <div class="summary-scrollable-body" id="seamlessDaysContainer"></div>
 
+      <!-- 3. Footer cố định dưới cùng -->
       <div class="summary-fixed-footer">
         <button class="btn-finish-treatment" onclick="finishCurrentTreatment()">Kết thúc điều trị</button>
       </div>
@@ -565,7 +566,6 @@
 </div>
 
 <script>
-  // Dữ liệu phòng mặc định nếu chưa lưu
   const defaultRooms = [
     { id: '825', name: 'Phòng 825', beds: [1, 2, 3, 4, 5, 6] },
     { id: '817', name: 'Phòng 817', beds: [1, 2] },
@@ -576,7 +576,6 @@
   let patients = JSON.parse(localStorage.getItem('bs_patients_scroll_v3')) || [];
   let currentEditing = { room: null, bed: null, id: null, isNewDay: false };
   let currentViewingPatientId = null;
-  let currentDayIndex = 0;
 
   function getNowForInput() {
     const now = new Date();
@@ -605,21 +604,17 @@
   }
 
   function getPatientInBed(roomName, bedNum) {
-    return patients.find(p => p.status === 'active' && p.room === String(roomName) && p.bed === String(bedNum));
+    return patients.find(p => p.status === 'active' && String(p.room).trim() === String(roomName).trim() && String(p.bed).trim() === String(bedNum).trim());
   }
 
-  /* ========================================================
-     CÁC THAO TÁC QUẢN LÝ PHÒNG VÀ GIƯỜNG (MỚI)
-     ======================================================== */
-  // 1. Sửa tên phòng
+  /* QUẢN LÝ PHÒNG */
   function renameRoom(roomId) {
     const r = roomList.find(x => x.id === roomId);
     if (!r) return;
     const newName = prompt("Nhập tên mới cho phòng:", r.name);
-    if (newName && newName.trim()) {
+    if (newName && newName.trim() && newName.trim() !== r.name) {
       const oldName = r.name;
       r.name = newName.trim();
-      // Cập nhật tên phòng trong hồ sơ bệnh nhân đang nằm
       patients.forEach(p => {
         if (p.room === oldName) p.room = r.name;
       });
@@ -627,7 +622,6 @@
     }
   }
 
-  // 2. Thêm giường
   function addBedToRoom(roomId) {
     const r = roomList.find(x => x.id === roomId);
     if (!r) return;
@@ -636,26 +630,40 @@
     saveRoomsAndRefresh();
   }
 
-  // 3. Giảm giường
   function removeBedFromRoom(roomId) {
     const r = roomList.find(x => x.id === roomId);
     if (!r || r.beds.length === 0) return;
     const lastBed = r.beds[r.beds.length - 1];
 
-    // Kiểm tra an toàn xem giường này có bệnh nhân không
     const p = getPatientInBed(r.name, lastBed);
     if (p) {
-      alert(`Giường ${lastBed} của ${r.name} hiện đang có bệnh nhân (${p.name}). Hãy cho bệnh nhân ra viện trước khi giảm giường!`);
+      alert(`Giường ${lastBed} của ${r.name} đang có bệnh nhân (${p.name}). Vui lòng cho bệnh nhân ra viện trước khi giảm giường!`);
       return;
     }
 
-    if (confirm(`Bạn muốn giảm Giường ${lastBed} của ${r.name}?`)) {
+    if (confirm(`Bạn có chắc muốn giảm bớt Giường ${lastBed} của ${r.name}?`)) {
       r.beds.pop();
       saveRoomsAndRefresh();
     }
   }
 
-  // 4. Thêm phòng mới
+  function deleteRoom(roomId) {
+    const r = roomList.find(x => x.id === roomId);
+    if (!r) return;
+
+    const activeInRoom = patients.filter(p => p.status === 'active' && String(p.room).trim() === String(r.name).trim());
+    if (activeInRoom.length > 0) {
+      const names = activeInRoom.map(p => p.name).join(', ');
+      alert(`Không thể xóa ${r.name} vì vẫn còn bệnh nhân đang điều trị: ${names}.\nHãy cho tất cả bệnh nhân trong phòng ra viện trước!`);
+      return;
+    }
+
+    if (confirm(`Bạn có chắc chắn muốn xóa hoàn toàn ${r.name}?`)) {
+      roomList = roomList.filter(x => x.id !== roomId);
+      saveRoomsAndRefresh();
+    }
+  }
+
   function addNewRoom() {
     const roomName = prompt("Nhập tên phòng mới (ví dụ: Phòng 820, Phòng Cấp cứu...):");
     if (!roomName || !roomName.trim()) return;
@@ -663,7 +671,7 @@
     const newRoom = {
       id: 'room_' + Date.now(),
       name: roomName.trim(),
-      beds: [1, 2] // Mặc định tạo sẵn 2 giường
+      beds: [1, 2]
     };
     roomList.push(newRoom);
     saveRoomsAndRefresh();
@@ -676,16 +684,13 @@
     renderDashboardCounts();
   }
 
-  /* ========================================================
-     THAO TÁC TIẾP NHẬN & TÓM TẮT BỆNH ÁN
-     ======================================================== */
+  /* THAO TÁC BỆNH NHÂN */
   function handleBedClick(roomName, bedNum) {
     const existing = getPatientInBed(roomName, bedNum);
     if (existing) {
-      currentDayIndex = existing.entries.length - 1;
       openSummaryView(existing.id);
     } else {
-      currentEditing = { room: String(roomName), bed: String(bedNum), id: null, isNewDay: false };
+      currentEditing = { room: String(roomName).trim(), bed: String(bedNum).trim(), id: null, isNewDay: false };
       document.getElementById('formViewTitle').textContent = `Tiếp nhận ${roomName} - Giường ${bedNum}`;
       document.getElementById('crumbPrefix').textContent = `G.${bedNum}.`;
       document.getElementById('recordName').value = '';
@@ -753,7 +758,6 @@
         p.entries.sort((a, b) => a.timestamp - b.timestamp);
         saveData();
         alert("Đã thêm ngày mới thành công!");
-        currentDayIndex = p.entries.length - 1;
         openSummaryView(p.id);
         return;
       }
@@ -770,12 +774,12 @@
       patients.unshift(newP);
       saveData();
       alert("Đã tiếp nhận bệnh nhân thành công!");
-      currentDayIndex = 0;
       openSummaryView(newP.id);
       return;
     }
   }
 
+  // Render các ngày 1, ngày 2... nối tiếp liền mạch, chỉ cuộn vùng này
   function openSummaryView(id) {
     currentViewingPatientId = id;
     const p = patients.find(x => x.id === id);
@@ -786,34 +790,38 @@
     document.getElementById('summaryBedBadge').textContent = `${p.room} - Giường ${p.bed}`;
     document.getElementById('summaryPatientTitle').textContent = `${p.name}`;
 
-    renderDayTabsAndContent();
-    showView('summaryFullView');
-  }
-
-  function renderDayTabsAndContent() {
-    const p = patients.find(x => x.id === currentViewingPatientId);
-    if (!p) return;
-
-    if (currentDayIndex >= p.entries.length) currentDayIndex = p.entries.length - 1;
-    if (currentDayIndex < 0) currentDayIndex = 0;
-
-    const tabsBox = document.getElementById('dayTabsContainer');
-    tabsBox.innerHTML = p.entries.map((item, idx) => `
-      <button class="day-tab-btn ${idx === currentDayIndex ? 'active' : ''}" onclick="selectDayIndex(${idx})">
-        Ngày ${idx + 1} (${formatDisplayTime(item.isoTime)})
-      </button>
+    const container = document.getElementById('seamlessDaysContainer');
+    container.innerHTML = p.entries.map((entry, idx) => `
+      <div class="day-column-seamless">
+        <div class="day-badge-header">
+          <span>Ngày ${idx + 1}</span>
+          <span style="font-size:11px; font-weight:normal; opacity:0.95;">(${formatDisplayTime(entry.isoTime)})</span>
+        </div>
+        <div class="section-block-box">
+          <div class="section-block-tag">Chẩn đoán</div>
+          <div class="section-block-body">${entry.diag || '—'}</div>
+        </div>
+        <div class="section-block-box">
+          <div class="section-block-tag">Theo dõi</div>
+          <div class="section-block-body">${entry.tracking || '—'}</div>
+        </div>
+        <div class="section-block-box">
+          <div class="section-block-tag">Xét nghiệm</div>
+          <div class="section-block-body">${entry.tests || '—'}</div>
+        </div>
+        <div class="section-block-box">
+          <div class="section-block-tag">Hình ảnh</div>
+          <div class="section-block-body">${entry.imaging || '—'}</div>
+        </div>
+      </div>
     `).join('');
 
-    const currentEntry = p.entries[currentDayIndex] || {};
-    document.getElementById('viewDiag').textContent = currentEntry.diag || '—';
-    document.getElementById('viewTracking').textContent = currentEntry.tracking || '—';
-    document.getElementById('viewTests').textContent = currentEntry.tests || '—';
-    document.getElementById('viewImaging').textContent = currentEntry.imaging || '—';
-  }
+    showView('summaryFullView');
 
-  function selectDayIndex(idx) {
-    currentDayIndex = idx;
-    renderDayTabsAndContent();
+    // Tự động cuộn sang ngày mới nhất bên phải
+    setTimeout(() => {
+      container.scrollLeft = container.scrollWidth;
+    }, 100);
   }
 
   function finishCurrentTreatment() {
@@ -895,7 +903,6 @@
     renderDashboardCounts();
   }
 
-  // Render danh sách phòng và các ô giường động
   function renderRoomsGrid() {
     const container = document.getElementById('roomsDynamicContainer');
     if (!container) return;
@@ -931,6 +938,7 @@
             <div class="room-control-buttons">
               <button class="btn-bed-ctrl" onclick="addBedToRoom('${r.id}')">+ Giường</button>
               <button class="btn-bed-ctrl" onclick="removeBedFromRoom('${r.id}')">- Giường</button>
+              <button class="btn-del-room" onclick="deleteRoom('${r.id}')">🗑️ Xóa phòng</button>
             </div>
           </div>
           <div class="grid-room-dynamic ${colClass}">${bedHtml || '<p style="padding:10px;text-align:center;grid-column:1/-1;color:#94a3b8;background:#fff;">Chưa có giường nào.</p>'}</div>

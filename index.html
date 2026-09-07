@@ -37,12 +37,15 @@
       -webkit-tap-highlight-color: transparent;
     }
     
+    /* CUỘN DỌC TỰ NHIÊN TOÀN TRANG WEB */
     body { 
       background: var(--bg); 
       color: var(--text-main); 
       min-height: 100vh; 
-      padding: 10px 8px;
+      padding: 12px 10px 40px 10px;
       letter-spacing: -0.01em;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
     
     .container { 
@@ -58,7 +61,7 @@
       color: #0369a1;
       background: #e0f2fe;
       border-radius: 20px;
-      padding: 3px 12px;
+      padding: 4px 12px;
       display: inline-flex;
       align-items: center;
       gap: 5px;
@@ -68,7 +71,7 @@
       display: flex; 
       align-items: center;
       justify-content: space-between; 
-      margin-bottom: 12px; 
+      margin-bottom: 14px; 
     }
     .btn-top {
       background: var(--card-bg);
@@ -119,8 +122,7 @@
       display: flex; 
       align-items: center; 
       justify-content: space-between; 
-      margin-bottom: 12px; 
-      flex-shrink: 0; 
+      margin-bottom: 14px; 
     }
     .btn-back { 
       background: #e2e8f0; 
@@ -230,20 +232,20 @@
     .patient-name-slot { font-size: 13.5px; font-weight: 700; line-height: 1.25; word-break: break-word; color: #0f172a; }
     .bed-empty-tag { font-size: 11px; color: #94a3b8; font-style: italic; }
 
-    /* CẤU TRÚC HỒ SƠ & VIEW TÓM TẮT */
-    .summary-app-window {
+    /* ========================================================
+       HỒ SƠ BỆNH ÁN: DẠNG TRANG MỞ TỰ NHIÊN (CUỘN CẢ TRANG WEB)
+       ======================================================== */
+    .summary-page-card {
       background: white;
       border: 1.5px solid var(--border);
       border-radius: var(--radius-lg);
-      height: calc(100vh - 78px);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
       box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+      overflow: hidden;
+      margin-bottom: 20px;
     }
-    .summary-fixed-header {
-      flex-shrink: 0;
-      padding: 12px 14px 8px 14px;
+    
+    .summary-card-header {
+      padding: 14px 14px 10px 14px;
       background: white;
       border-bottom: 1px solid var(--border-light);
     }
@@ -251,7 +253,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
     .header-action-group {
       display: flex;
@@ -288,6 +290,7 @@
     }
     .btn-add-day-pill:active { background: #bae6fd; }
 
+    /* Thanh chọn ngày nằm ngang */
     .day-tab-scroll {
       display: flex;
       align-items: center;
@@ -301,7 +304,7 @@
     .day-tab-btn {
       background: #f1f5f9;
       border: 1px solid var(--border);
-      padding: 6px 14px;
+      padding: 7px 14px;
       border-radius: 12px;
       font-size: 12.5px;
       font-weight: 600;
@@ -318,30 +321,12 @@
       box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
     }
 
-    .summary-scrollable-body {
-      flex-grow: 1;
-      height: 100%;
-      overflow-x: auto;
-      overflow-y: hidden;
-      -webkit-overflow-scrolling: touch;
-      scroll-snap-type: x mandatory;
-      display: flex;
-      scrollbar-width: none;
-    }
-    .summary-scrollable-body::-webkit-scrollbar { display: none; }
-
-    .day-slide-page {
-      width: 100%;
-      min-width: 100%;
-      height: 100%;
-      flex-shrink: 0;
-      scroll-snap-align: start;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
+    /* Thân danh sách 4 ô mở rộng theo chiều cao thực tế */
+    .summary-page-content {
+      padding: 14px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      padding: 12px 14px 20px 14px;
+      gap: 14px;
     }
 
     .section-block-box {
@@ -349,7 +334,6 @@
       border-radius: var(--radius-md);
       background: #ffffff;
       overflow: hidden;
-      flex-shrink: 0;
       box-shadow: 0 2px 6px rgba(0,0,0,0.02);
     }
     .section-block-tag {
@@ -364,19 +348,19 @@
       border-bottom-right-radius: 10px;
     }
     .section-block-body {
-      padding: 10px 14px;
+      padding: 12px 14px;
       font-size: 14.5px;
       color: #0f172a;
-      line-height: 1.55;
-      min-height: 48px;
+      line-height: 1.6;
+      min-height: 50px;
       white-space: pre-wrap;
       word-break: break-word;
     }
 
-    .summary-fixed-footer {
-      flex-shrink: 0;
-      padding: 10px 14px;
-      background: white;
+    /* Chân trang nằm ở đáy nội dung - Cuộn hết trang mới thấy */
+    .summary-card-footer {
+      padding: 14px;
+      background: #f8fafc;
       border-top: 1px solid var(--border-light);
       display: flex;
       justify-content: space-between;
@@ -388,7 +372,7 @@
       border: 1.5px solid #fca5a5;
       color: #dc2626;
       border-radius: var(--radius-md);
-      padding: 10px 14px;
+      padding: 10px 16px;
       font-size: 13.5px;
       font-weight: 700;
       cursor: pointer;
@@ -400,28 +384,25 @@
       border: 2px solid #334155;
       color: #1e293b;
       border-radius: var(--radius-md);
-      padding: 10px 18px;
+      padding: 10px 20px;
       font-size: 14px;
       font-weight: 700;
       cursor: pointer;
     }
 
     /* ========================================================
-       FORM NHẬP LIỆU NỔI (ĐỒNG BỘ CHUẨN GIAO DIỆN HỒ SƠ)
+       FORM NHẬP LIỆU NỔI (CUỘN CẢ TRANG WEB)
        ======================================================== */
-    .form-app-window {
+    .form-page-card {
       background: white;
       border: 1.5px solid var(--border);
       border-radius: var(--radius-lg);
-      height: calc(100vh - 78px);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
       box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+      overflow: hidden;
+      margin-bottom: 20px;
     }
-    .form-fixed-header {
-      flex-shrink: 0;
-      padding: 12px 14px;
+    .form-card-header {
+      padding: 14px;
       background: white;
       border-bottom: 1px solid var(--border-light);
     }
@@ -461,7 +442,7 @@
     .form-time-box input[type="datetime-local"] {
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 5px 6px;
+      padding: 6px 6px;
       font-size: 12px;
       color: #1e293b;
       outline: none;
@@ -469,15 +450,11 @@
       width: 100%;
     }
 
-    /* VÙNG CUỘN CỦA 4 KHỐI Ô NHẬP NỔI */
-    .form-scrollable-body {
-      flex-grow: 1;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      padding: 12px 14px 20px 14px;
+    .form-page-content {
+      padding: 14px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 14px;
     }
 
     .form-block-input-box {
@@ -485,7 +462,6 @@
       border-radius: var(--radius-md);
       background: #ffffff;
       overflow: hidden;
-      flex-shrink: 0;
       box-shadow: 0 2px 6px rgba(0,0,0,0.02);
     }
     .form-block-tag {
@@ -500,11 +476,11 @@
       border-bottom-right-radius: 10px;
     }
     .form-block-textarea-wrap {
-      padding: 8px 12px;
+      padding: 10px 14px;
     }
     .form-block-textarea-wrap textarea {
       width: 100%;
-      min-height: 80px;
+      min-height: 85px;
       border: none;
       outline: none;
       font-size: 14.5px;
@@ -514,10 +490,9 @@
       color: #0f172a;
     }
 
-    .form-fixed-footer {
-      flex-shrink: 0;
-      padding: 10px 14px;
-      background: white;
+    .form-card-footer {
+      padding: 14px;
+      background: #f8fafc;
       border-top: 1px solid var(--border-light);
       display: flex;
       justify-content: flex-end;
@@ -527,7 +502,7 @@
       color: white;
       border: none;
       border-radius: var(--radius-md);
-      padding: 10px 28px;
+      padding: 12px 32px;
       font-size: 15px;
       font-weight: 700;
       cursor: pointer;
@@ -655,7 +630,7 @@
     </button>
   </div>
 
-  <!-- VIEW TÓM TẮT -->
+  <!-- ==================== VIEW HỒ SƠ BỆNH NHÂN (CUỘN CẢ TRANG WEB) ==================== -->
   <div id="summaryFullView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('roomGridView')">⬅️ Sơ đồ phòng</button>
@@ -663,8 +638,9 @@
       <div style="width:40px;"></div>
     </div>
 
-    <div class="summary-app-window">
-      <div class="summary-fixed-header">
+    <div class="summary-page-card">
+      <!-- Đầu hồ sơ: Tên BN & Tabs Ngày -->
+      <div class="summary-card-header">
         <div class="summary-top-info">
           <div>
             <div style="font-size:11px; color:#64748b;">Hồ sơ bệnh nhân:</div>
@@ -678,16 +654,20 @@
         <div class="day-tab-scroll" id="dayTabsContainer"></div>
       </div>
 
-      <div class="summary-scrollable-body" id="syncSlideBody" onscroll="handleBodyScroll()"></div>
+      <!-- Nội dung 4 ô: Tự do dài theo nội dung, cuộn toàn màn hình điện thoại -->
+      <div class="summary-page-content" id="singleDayDisplayBody">
+        <!-- Được tạo tự động bởi hàm renderCurrentDayView() -->
+      </div>
 
-      <div class="summary-fixed-footer">
+      <!-- Chân thẻ: Nằm ở đáy toàn bộ nội dung, cuộn xuống dưới cùng sẽ thấy -->
+      <div class="summary-card-footer">
         <button class="btn-del-patient-active" onclick="deleteActivePatient()">🗑️ Xóa ca bệnh</button>
         <button class="btn-finish-treatment" onclick="finishCurrentTreatment()">Kết thúc điều trị</button>
       </div>
     </div>
   </div>
 
-  <!-- ==================== FORM NHẬP / SỬA / THÊM NGÀY (THIẾT KẾ MỚI ĐỒNG BỘ) ==================== -->
+  <!-- ==================== FORM NHẬP / SỬA / THÊM NGÀY (CUỘN CẢ TRANG WEB) ==================== -->
   <div id="patientFormView" class="view-section">
     <div class="view-header">
       <button class="btn-back" id="btnBackFromForm" onclick="handleBackFromForm()">⬅️ Quay lại</button>
@@ -695,9 +675,8 @@
       <div style="width:40px;"></div>
     </div>
 
-    <div class="form-app-window">
-      <!-- Header cố định: Tên bệnh nhân & Thời gian -->
-      <div class="form-fixed-header">
+    <div class="form-page-card">
+      <div class="form-card-header">
         <div class="form-top-grid">
           <div class="form-patient-name-box">
             <span id="crumbPrefix">Giường ></span>
@@ -710,9 +689,7 @@
         </div>
       </div>
 
-      <!-- Vùng cuộn: 4 ô dạng thẻ nổi chuẩn giao diện hồ sơ -->
-      <div class="form-scrollable-body">
-        <!-- Khối Chẩn đoán -->
+      <div class="form-page-content">
         <div class="form-block-input-box">
           <div class="form-block-tag">Chẩn đoán</div>
           <div class="form-block-textarea-wrap">
@@ -720,7 +697,6 @@
           </div>
         </div>
 
-        <!-- Khối Theo dõi -->
         <div class="form-block-input-box">
           <div class="form-block-tag">Theo dõi</div>
           <div class="form-block-textarea-wrap">
@@ -728,7 +704,6 @@
           </div>
         </div>
 
-        <!-- Khối Xét nghiệm -->
         <div class="form-block-input-box">
           <div class="form-block-tag">Xét nghiệm</div>
           <div class="form-block-textarea-wrap">
@@ -736,7 +711,6 @@
           </div>
         </div>
 
-        <!-- Khối Hình ảnh -->
         <div class="form-block-input-box">
           <div class="form-block-tag">Hình ảnh</div>
           <div class="form-block-textarea-wrap">
@@ -745,8 +719,7 @@
         </div>
       </div>
 
-      <!-- Footer cố định: Nút xác nhận -->
-      <div class="form-fixed-footer">
+      <div class="form-card-footer">
         <button type="button" class="btn-confirm-submit" onclick="saveRecord()">Xác nhận</button>
       </div>
     </div>
@@ -802,7 +775,6 @@
   let currentEditing = { room: null, bed: null, id: null, mode: 'create', entryIndex: null };
   let currentViewingPatientId = null;
   let currentActiveIndex = 0;
-  let isProgrammaticScroll = false;
 
   function updateSyncUI(status, text) {
     const el = document.getElementById('syncStatus');
@@ -890,6 +862,7 @@
       if (el) el.style.display = 'none';
     });
     document.getElementById(viewId).style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'auto' });
     renderDashboardCounts();
   }
 
@@ -1117,7 +1090,9 @@
     }
   }
 
-  /* VIEW TÓM TẮT */
+  /* ========================================================
+     VIEW HỒ SƠ: CHUYỂN NGÀY BẰNG TAB & CUỘN DỌC TỰ NHIÊN
+     ======================================================== */
   function openSummaryView(id) {
     currentViewingPatientId = id;
     const p = patients.find(x => x.id === id);
@@ -1129,85 +1104,56 @@
     document.getElementById('summaryPatientTitle').textContent = `${p.name}`;
 
     renderDayTabs(p);
-
-    const bodyBox = document.getElementById('syncSlideBody');
-    bodyBox.innerHTML = p.entries.map((entry, idx) => `
-      <div class="day-slide-page" id="dayPage_${idx}">
-        <div class="section-block-box">
-          <div class="section-block-tag">Chẩn đoán</div>
-          <div class="section-block-body">${entry.diag || '—'}</div>
-        </div>
-        <div class="section-block-box">
-          <div class="section-block-tag">Theo dõi</div>
-          <div class="section-block-body">${entry.tracking || '—'}</div>
-        </div>
-        <div class="section-block-box">
-          <div class="section-block-tag">Xét nghiệm</div>
-          <div class="section-block-body">${entry.tests || '—'}</div>
-        </div>
-        <div class="section-block-box">
-          <div class="section-block-tag">Hình ảnh</div>
-          <div class="section-block-body">${entry.imaging || '—'}</div>
-        </div>
-      </div>
-    `).join('');
-
+    renderCurrentDayContent(p, currentActiveIndex);
     showView('summaryFullView');
-
-    setTimeout(() => {
-      scrollToDay(currentActiveIndex, false);
-    }, 100);
   }
 
   function renderDayTabs(p) {
     const tabsBox = document.getElementById('dayTabsContainer');
     tabsBox.innerHTML = p.entries.map((item, idx) => `
-      <button class="day-tab-btn ${idx === currentActiveIndex ? 'active' : ''}" id="tabBtn_${idx}" onclick="scrollToDay(${idx}, true)">
+      <button class="day-tab-btn ${idx === currentActiveIndex ? 'active' : ''}" id="tabBtn_${idx}" onclick="selectDayTab(${idx})">
         Ngày ${idx + 1} (${formatDisplayTime(item.isoTime)})
       </button>
     `).join('');
   }
 
-  function scrollToDay(idx, smooth) {
-    const bodyBox = document.getElementById('syncSlideBody');
-    const targetPage = document.getElementById(`dayPage_${idx}`);
-    if (!targetPage || !bodyBox) return;
-
-    isProgrammaticScroll = true;
+  function selectDayTab(idx) {
     currentActiveIndex = idx;
-    updateActiveTabUI(idx);
+    const p = patients.find(x => x.id === currentViewingPatientId);
+    if (!p) return;
 
-    bodyBox.scrollTo({
-      left: targetPage.offsetLeft - bodyBox.offsetLeft,
-      behavior: smooth ? 'smooth' : 'auto'
-    });
+    renderDayTabs(p);
+    renderCurrentDayContent(p, idx);
 
-    setTimeout(() => { isProgrammaticScroll = false; }, 350);
-  }
-
-  function handleBodyScroll() {
-    if (isProgrammaticScroll) return;
-    const bodyBox = document.getElementById('syncSlideBody');
-    if (!bodyBox) return;
-
-    const width = bodyBox.clientWidth;
-    const scrollLeft = bodyBox.scrollLeft;
-    const newIndex = Math.round(scrollLeft / width);
-
-    if (newIndex !== currentActiveIndex && newIndex >= 0 && newIndex < (patients.find(x => x.id === currentViewingPatientId)?.entries.length || 0)) {
-      currentActiveIndex = newIndex;
-      updateActiveTabUI(newIndex);
-    }
-  }
-
-  function updateActiveTabUI(idx) {
-    document.querySelectorAll('.day-tab-btn').forEach((btn, i) => {
-      btn.classList.toggle('active', i === idx);
-    });
+    // Cuộn nhẹ tab được chọn vào giữa màn hình
     const activeBtn = document.getElementById(`tabBtn_${idx}`);
     if (activeBtn) {
       activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
     }
+  }
+
+  function renderCurrentDayContent(p, idx) {
+    const entry = p.entries[idx] || {};
+    const contentBox = document.getElementById('singleDayDisplayBody');
+    
+    contentBox.innerHTML = `
+      <div class="section-block-box">
+        <div class="section-block-tag">Chẩn đoán</div>
+        <div class="section-block-body">${entry.diag || '—'}</div>
+      </div>
+      <div class="section-block-box">
+        <div class="section-block-tag">Theo dõi</div>
+        <div class="section-block-body">${entry.tracking || '—'}</div>
+      </div>
+      <div class="section-block-box">
+        <div class="section-block-tag">Xét nghiệm</div>
+        <div class="section-block-body">${entry.tests || '—'}</div>
+      </div>
+      <div class="section-block-box">
+        <div class="section-block-tag">Hình ảnh</div>
+        <div class="section-block-body">${entry.imaging || '—'}</div>
+      </div>
+    `;
   }
 
   function finishCurrentTreatment() {

@@ -232,19 +232,53 @@
       align-items: center;
       margin-bottom: 10px;
     }
+    .header-action-group {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
     .btn-add-day-pill {
       background: var(--primary-light);
       border: 1.5px solid var(--primary);
       color: var(--primary);
-      padding: 6px 14px;
+      padding: 5px 10px;
       border-radius: 20px;
-      font-size: 12.5px;
+      font-size: 11.5px;
       font-weight: 700;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
     }
+    .btn-edit-day-pill {
+      background: #f8fafc;
+      border: 1.5px solid #64748b;
+      color: #334155;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .btn-del-day-pill {
+      background: #fef2f2;
+      border: 1.5px solid #fca5a5;
+      color: #dc2626;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .btn-del-day-pill:active { background: #fee2e2; }
 
     .day-tab-scroll {
       display: flex;
@@ -333,14 +367,28 @@
       background: white;
       border-top: 1px solid var(--border-light);
       display: flex;
-      justify-content: flex-end;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
     }
+    .btn-del-patient-active {
+      background: #fff;
+      border: 1.5px solid #fca5a5;
+      color: #dc2626;
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-del-patient-active:active { background: #fee2e2; }
+
     .btn-finish-treatment {
       background: #ffffff;
       border: 2px solid #334155;
       color: #1e293b;
       border-radius: var(--radius-md);
-      padding: 10px 20px;
+      padding: 10px 18px;
       font-size: 14px;
       font-weight: 700;
       cursor: pointer;
@@ -444,7 +492,7 @@
       cursor: pointer;
     }
 
-    /* MỤC RA VIỆN & XUẤT TOÀN BỘ PDF */
+    /* MỤC RA VIỆN */
     .discharged-header-actions {
       display: flex;
       justify-content: space-between;
@@ -512,6 +560,17 @@
       align-items: center;
       gap: 4px;
     }
+    .btn-del-patient-discharged {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      color: #dc2626;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-del-patient-discharged:active { background: #fee2e2; }
   </style>
 </head>
 <body>
@@ -567,7 +626,12 @@
             <div style="font-size:11px; color:#64748b;">Hồ sơ bệnh nhân:</div>
             <h2 id="summaryPatientTitle" style="font-size:18px; color:var(--primary); margin-top:2px;">...</h2>
           </div>
-          <button class="btn-add-day-pill" onclick="handleAddNewDayClick()">➕ Thêm ngày mới</button>
+          <!-- CỤM THAO TÁC NGÀY (CÓ NÚT XÓA NGÀY) -->
+          <div class="header-action-group">
+            <button class="btn-del-day-pill" onclick="handleDeleteCurrentDayClick()">🗑️ Xóa ngày này</button>
+            <button class="btn-edit-day-pill" onclick="handleEditCurrentDayClick()">✏️ Sửa ngày này</button>
+            <button class="btn-add-day-pill" onclick="handleAddNewDayClick()">➕ Thêm ngày mới</button>
+          </div>
         </div>
         <div class="day-tab-scroll" id="dayTabsContainer"></div>
       </div>
@@ -575,12 +639,13 @@
       <div class="summary-scrollable-body" id="syncSlideBody" onscroll="handleBodyScroll()"></div>
 
       <div class="summary-fixed-footer">
+        <button class="btn-del-patient-active" onclick="deleteActivePatient()">🗑️ Xóa ca bệnh</button>
         <button class="btn-finish-treatment" onclick="finishCurrentTreatment()">Kết thúc điều trị</button>
       </div>
     </div>
   </div>
 
-  <!-- FORM NHẬP / THÊM NGÀY -->
+  <!-- FORM NHẬP / THÊM / SỬA NGÀY -->
   <div id="patientFormView" class="view-section">
     <div class="view-header">
       <button class="btn-back" id="btnBackFromForm" onclick="handleBackFromForm()">⬅️ Quay lại</button>
@@ -626,7 +691,7 @@
     </div>
   </div>
 
-  <!-- DANH SÁCH RA VIỆN (KÈM NÚT XUẤT TOÀN BỘ FILE PDF) -->
+  <!-- DANH SÁCH RA VIỆN -->
   <div id="dischargedView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('homeView')">⬅️ Trang chủ</button>
@@ -634,7 +699,6 @@
       <div style="width:40px;"></div>
     </div>
 
-    <!-- KHỐI TỔNG QUAN & XUẤT TOÀN BỘ -->
     <div class="discharged-header-actions">
       <div class="discharged-total-text" id="dischargedSummaryText">Tổng: 0 hồ sơ</div>
       <button class="btn-export-all-pdf" onclick="exportAllPatientsPDF()">
@@ -671,7 +735,7 @@
 
   let roomList = JSON.parse(localStorage.getItem('bs_room_configs_v1')) || defaultRooms;
   let patients = JSON.parse(localStorage.getItem('bs_patients_scroll_v3')) || [];
-  let currentEditing = { room: null, bed: null, id: null, isNewDay: false };
+  let currentEditing = { room: null, bed: null, id: null, mode: 'create', entryIndex: null };
   let currentViewingPatientId = null;
   let currentActiveIndex = 0;
   let isProgrammaticScroll = false;
@@ -790,7 +854,7 @@
       currentActiveIndex = existing.entries.length - 1;
       openSummaryView(existing.id);
     } else {
-      currentEditing = { room: String(roomName).trim(), bed: String(bedNum).trim(), id: null, isNewDay: false };
+      currentEditing = { room: String(roomName).trim(), bed: String(bedNum).trim(), id: null, mode: 'create', entryIndex: null };
       document.getElementById('formViewTitle').textContent = `Tiếp nhận ${roomName} - Giường ${bedNum}`;
       document.getElementById('crumbPrefix').textContent = `G.${bedNum}.`;
       document.getElementById('recordName').value = '';
@@ -804,11 +868,12 @@
     }
   }
 
+  // Thêm ngày mới
   function handleAddNewDayClick() {
     const p = patients.find(x => x.id === currentViewingPatientId);
     if (!p) return;
 
-    currentEditing = { room: p.room, bed: p.bed, id: p.id, isNewDay: true };
+    currentEditing = { room: p.room, bed: p.bed, id: p.id, mode: 'add_day', entryIndex: null };
     const last = p.entries[p.entries.length - 1] || {};
 
     document.getElementById('formViewTitle').textContent = `Thêm ngày mới: ${p.name}`;
@@ -824,14 +889,62 @@
     showView('patientFormView');
   }
 
+  // Sửa ngày hiện tại
+  function handleEditCurrentDayClick() {
+    const p = patients.find(x => x.id === currentViewingPatientId);
+    if (!p || !p.entries[currentActiveIndex]) return;
+
+    const currentEntry = p.entries[currentActiveIndex];
+    currentEditing = { room: p.room, bed: p.bed, id: p.id, mode: 'edit_day', entryIndex: currentActiveIndex };
+
+    document.getElementById('formViewTitle').textContent = `Sửa Ngày ${currentActiveIndex + 1}: ${p.name}`;
+    document.getElementById('crumbPrefix').textContent = `${p.room} - G.${p.bed}`;
+    document.getElementById('recordName').value = p.name;
+    document.getElementById('recordName').readOnly = false;
+    document.getElementById('recordDateTimeInput').value = currentEntry.isoTime || getNowForInput();
+    document.getElementById('recordDiagnosis').value = currentEntry.diag || '';
+    document.getElementById('recordTracking').value = currentEntry.tracking || '';
+    document.getElementById('recordTests').value = currentEntry.tests || '';
+    document.getElementById('recordImagingText').value = currentEntry.imaging || '';
+
+    showView('patientFormView');
+  }
+
+  // XÓA NGÀY HIỆN TẠI ĐANG XEM
+  function handleDeleteCurrentDayClick() {
+    const p = patients.find(x => x.id === currentViewingPatientId);
+    if (!p || !p.entries[currentActiveIndex]) return;
+
+    if (p.entries.length <= 1) {
+      alert("Hồ sơ bệnh nhân chỉ có 1 ngày duy nhất, không thể xóa ngày này!\nNếu muốn xóa trọn vẹn ca bệnh khỏi giường, vui lòng bấm nút 'Xóa ca bệnh' ở góc dưới.");
+      return;
+    }
+
+    const dayName = `Ngày ${currentActiveIndex + 1} (${formatDisplayTime(p.entries[currentActiveIndex].isoTime)})`;
+    if (confirm(`Bạn có chắc chắn muốn XÓA ${dayName} của bệnh nhân "${p.name}"? Dữ liệu của ngày này sẽ không thể khôi phục!`)) {
+      p.entries.splice(currentActiveIndex, 1);
+      p.entries.sort((a, b) => a.timestamp - b.timestamp);
+      
+      // Chuyển vị trí hiển thị về ngày trước đó nếu xóa ngày cuối cùng
+      if (currentActiveIndex >= p.entries.length) {
+        currentActiveIndex = p.entries.length - 1;
+      }
+      
+      saveData();
+      alert("Đã xóa ngày thành công!");
+      openSummaryView(p.id);
+    }
+  }
+
   function handleBackFromForm() {
-    if (currentEditing.isNewDay) {
+    if (currentEditing.mode === 'add_day' || currentEditing.mode === 'edit_day') {
       showView('summaryFullView');
     } else {
       showView('roomGridView');
     }
   }
 
+  // Lưu thông tin
   function saveRecord() {
     const name = document.getElementById('recordName').value.trim();
     if (!name) return alert("Vui lòng nhập tên bệnh nhân!");
@@ -854,13 +967,23 @@
     if (currentEditing.id) {
       const p = patients.find(x => x.id === currentEditing.id);
       if (p) {
-        p.entries.push(entry);
-        p.entries.sort((a, b) => a.timestamp - b.timestamp);
-        saveData();
-        alert("Đã thêm ngày mới thành công!");
-        currentActiveIndex = p.entries.length - 1;
-        openSummaryView(p.id);
-        return;
+        p.name = name;
+        if (currentEditing.mode === 'edit_day') {
+          p.entries[currentEditing.entryIndex] = entry;
+          p.entries.sort((a, b) => a.timestamp - b.timestamp);
+          saveData();
+          alert("Đã cập nhật thông tin ngày này!");
+          openSummaryView(p.id);
+          return;
+        } else {
+          p.entries.push(entry);
+          p.entries.sort((a, b) => a.timestamp - b.timestamp);
+          saveData();
+          alert("Đã thêm ngày mới thành công!");
+          currentActiveIndex = p.entries.length - 1;
+          openSummaryView(p.id);
+          return;
+        }
       }
     } else {
       const newP = {
@@ -878,6 +1001,31 @@
       currentActiveIndex = 0;
       openSummaryView(newP.id);
       return;
+    }
+  }
+
+  // Xóa ca bệnh đang điều trị
+  function deleteActivePatient() {
+    const p = patients.find(x => x.id === currentViewingPatientId);
+    if (!p) return;
+
+    if (confirm(`Bạn có chắc chắn muốn XÓA HOÀN TOÀN hồ sơ bệnh nhân "${p.name}" (Giường ${p.bed} - ${p.room})? Dữ liệu sẽ không thể khôi phục!`)) {
+      patients = patients.filter(x => x.id !== p.id);
+      saveData();
+      alert("Đã xóa bệnh nhân thành công, giường đã được dọn trống!");
+      showView('roomGridView');
+    }
+  }
+
+  // Xóa ca bệnh đã ra viện
+  function deleteDischargedPatient(patientId) {
+    const p = patients.find(x => x.id === patientId);
+    if (!p) return;
+
+    if (confirm(`Bạn có chắc muốn xóa hồ sơ ra viện của "${p.name}"?`)) {
+      patients = patients.filter(x => x.id !== patientId);
+      saveData();
+      renderDashboardCounts();
     }
   }
 
@@ -987,10 +1135,7 @@
     }
   }
 
-  /* ========================================================
-     XUẤT FILE PDF LẺ & XUẤT TOÀN BỘ FILE PDF
-     ======================================================== */
-  // 1. Xuất lẻ 1 bệnh nhân
+  /* XUẤT FILE PDF */
   function exportPatientPDF(patientId) {
     const p = patients.find(x => x.id === patientId);
     if (!p) return;
@@ -1052,7 +1197,6 @@
     setTimeout(() => { printWindow.print(); }, 400);
   }
 
-  // 2. Xuất toàn bộ danh sách bệnh nhân đã ra viện vào 1 file PDF tổng
   function exportAllPatientsPDF() {
     const dischargedList = patients.filter(p => p.status === 'discharged');
     if (dischargedList.length === 0) {
@@ -1179,7 +1323,6 @@
     }).join('');
   }
 
-  /* ĐẾM CHUẨN XÁC THEO SỐ GIƯỜNG CÓ BỆNH NHÂN TRÊN MÀN HÌNH */
   function renderDashboardCounts() {
     let actualActiveBedsCount = 0;
     roomList.forEach(r => {
@@ -1213,6 +1356,9 @@
             📍 ${p.room} - Giường ${p.bed} | Điều trị: ${p.entries.length} ngày/mốc
           </div>
           <div class="discharged-actions">
+            <button class="btn-del-patient-discharged" onclick="deleteDischargedPatient(${p.id})">
+              🗑️ Xóa
+            </button>
             <button class="btn-export-pdf" onclick="exportPatientPDF(${p.id})">
               📄 Xuất file PDF
             </button>

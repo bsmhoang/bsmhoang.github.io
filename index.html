@@ -164,7 +164,7 @@
     .bed-empty-tag { font-size: 11px; color: #94a3b8; font-style: italic; }
 
     /* ========================================================
-       CẤU TRÚC HỒ SƠ BỆNH ÁN: KHUNG CỐ ĐỊNH, CHỈ CUỘN CÁC NGÀY
+       CẤU TRÚC HỒ SƠ: KHUNG NỔI, CUỘN ĐỒNG BỘ CẢ NGÀY VÀ CÁC MỤC
        ======================================================== */
     .summary-app-window {
       background: white;
@@ -180,14 +180,15 @@
     /* 1. Header cố định phía trên */
     .summary-fixed-header {
       flex-shrink: 0;
-      padding: 12px 14px;
+      padding: 12px 14px 8px 14px;
       background: white;
-      border-bottom: 1.5px solid #e2e8f0;
+      border-bottom: 1px solid #e2e8f0;
     }
     .summary-top-info {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      margin-bottom: 10px;
     }
     .btn-add-day-pill {
       background: #ffffff;
@@ -204,64 +205,88 @@
     }
     .btn-add-day-pill:active { background: #e0f2fe; }
 
-    /* 2. Phần nội dung cuộn ngang liền mạch các ngày (CHỈ CUỘN DUY NHẤT VÙNG NÀY) */
+    /* Thanh chọn ngày (trượt theo nội dung bên dưới) */
+    .day-tab-scroll {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .day-tab-scroll::-webkit-scrollbar { display: none; }
+    
+    .day-tab-btn {
+      background: #f1f5f9;
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: 12px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #334155;
+      white-space: nowrap;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .day-tab-btn.active {
+      background: #0284c7;
+      color: white;
+      border-color: #0284c7;
+      box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+    }
+
+    /* 2. Phần nội dung cuộn ngang đồng bộ với các ngày */
     .summary-scrollable-body {
       flex-grow: 1;
       overflow-x: auto;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding: 12px;
+      scroll-snap-type: x mandatory;
       display: flex;
+      padding: 12px 14px;
+      gap: 16px;
+      scrollbar-width: none;
+    }
+    .summary-scrollable-body::-webkit-scrollbar { display: none; }
+
+    /* Mỗi ngày là 1 trang (page) vừa vặn 100% khung hiển thị */
+    .day-slide-page {
+      width: 100%;
+      min-width: 100%;
+      flex-shrink: 0;
+      scroll-snap-align: start;
+      display: flex;
+      flex-direction: column;
       gap: 12px;
     }
 
-    /* MỖI NGÀY LÀ MỘT CỘT LIỀN MẠCH */
-    .day-column-seamless {
-      width: 285px;
-      min-width: 285px;
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    /* Nhãn mốc Ngày 1, Ngày 2... trên đầu mỗi cột */
-    .day-badge-header {
-      background: #0284c7;
-      color: white;
-      padding: 7px 12px;
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: 700;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    /* Các ô thẻ Chẩn đoán, Theo dõi, Xét nghiệm, Hình ảnh */
+    /* Các khối hộp nổi bo tròn theo phong cách ảnh 6296 */
     .section-block-box {
       border: 1.5px solid var(--border);
-      border-radius: 12px;
+      border-radius: 14px;
       background: #ffffff;
       overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
     }
     .section-block-tag {
       display: inline-block;
       background: #f1f5f9;
       border-right: 1.5px solid var(--border);
       border-bottom: 1.5px solid var(--border);
-      padding: 4px 10px;
-      font-size: 12px;
+      padding: 5px 14px;
+      font-size: 12.5px;
       font-weight: 700;
       color: #1e293b;
-      border-bottom-right-radius: 8px;
+      border-bottom-right-radius: 10px;
     }
     .section-block-body {
-      padding: 8px 10px;
-      font-size: 13.5px;
+      padding: 10px 14px;
+      font-size: 14px;
       color: #0f172a;
-      line-height: 1.5;
-      min-height: 50px;
+      line-height: 1.55;
+      min-height: 54px;
       white-space: pre-wrap;
       word-break: break-word;
     }
@@ -427,7 +452,7 @@
 
 <div class="container">
 
-  <!-- ==================== TẦNG 1: TRANG ĐẦU TIÊN ==================== -->
+  <!-- ==================== TRANG ĐẦU TIÊN ==================== -->
   <div id="homeView">
     <div class="top-bar">
       <button class="btn-top" onclick="showView('profileView')">👨‍⚕️ Giới thiệu cá nhân</button>
@@ -446,7 +471,7 @@
     </div>
   </div>
 
-  <!-- ==================== TẦNG 2: SƠ ĐỒ PHÒNG ==================== -->
+  <!-- ==================== SƠ ĐỒ PHÒNG ==================== -->
   <div id="roomGridView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('homeView')">⬅️ Trang chủ</button>
@@ -461,7 +486,7 @@
     </button>
   </div>
 
-  <!-- ==================== TẦNG 3: VIEW TÓM TẮT (CỐ ĐỊNH KHUNG, CHỈ CUỘN CÁC NGÀY) ==================== -->
+  <!-- ==================== VIEW TÓM TẮT: CUỘN ĐỒNG BỘ NGÀY VÀ CÁC KHỐI ==================== -->
   <div id="summaryFullView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('roomGridView')">⬅️ Sơ đồ phòng</button>
@@ -469,9 +494,8 @@
       <div style="width:40px;"></div>
     </div>
 
-    <!-- KHUNG ĐƯỢC KHÓA CỐ ĐỊNH -->
     <div class="summary-app-window">
-      <!-- 1. Header cố định trên cùng -->
+      <!-- 1. Header cố định phía trên: Tên bệnh nhân & Thanh nút chọn ngày -->
       <div class="summary-fixed-header">
         <div class="summary-top-info">
           <div>
@@ -480,12 +504,13 @@
           </div>
           <button class="btn-add-day-pill" onclick="handleAddNewDayClick()">➕ Thêm ngày mới</button>
         </div>
+        <div class="day-tab-scroll" id="dayTabsContainer"></div>
       </div>
 
-      <!-- 2. Phần duy nhất được cuộn: Chứa tất cả Ngày 1, Ngày 2... liền mạch -->
-      <div class="summary-scrollable-body" id="seamlessDaysContainer"></div>
+      <!-- 2. Phần duy nhất cuộn: Chứa các khối nổi Chẩn đoán, Theo dõi... trượt ngang theo từng ngày -->
+      <div class="summary-scrollable-body" id="syncSlideBody" onscroll="handleBodyScroll()"></div>
 
-      <!-- 3. Footer cố định dưới cùng -->
+      <!-- 3. Footer cố định phía dưới -->
       <div class="summary-fixed-footer">
         <button class="btn-finish-treatment" onclick="finishCurrentTreatment()">Kết thúc điều trị</button>
       </div>
@@ -559,7 +584,7 @@
       <div style="width:64px; height:64px; background:#0284c7; color:white; border-radius:50%; margin:0 auto 10px; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:bold;">BS</div>
       <h2>Bác sĩ Minh Hoàng</h2>
       <p style="color:#0284c7; font-weight:600; font-size:14px; margin-top:2px;">Bác sĩ Điều trị</p>
-      <p style="color:#64748b; font-size:13px; margin-top:8px; line-height:1.5;">Hệ thống sơ đồ phòng bệnh & theo dõi diễn biến lâm sàng tối ưu hiển thị.</p>
+      <p style="color:#64748b; font-size:13px; margin-top:8px; line-height:1.5;">Hệ thống sơ đồ buồng bệnh & theo dõi lâm sàng thông minh.</p>
     </div>
   </div>
 
@@ -576,6 +601,8 @@
   let patients = JSON.parse(localStorage.getItem('bs_patients_scroll_v3')) || [];
   let currentEditing = { room: null, bed: null, id: null, isNewDay: false };
   let currentViewingPatientId = null;
+  let currentActiveIndex = 0;
+  let isProgrammaticScroll = false;
 
   function getNowForInput() {
     const now = new Date();
@@ -688,6 +715,7 @@
   function handleBedClick(roomName, bedNum) {
     const existing = getPatientInBed(roomName, bedNum);
     if (existing) {
+      currentActiveIndex = existing.entries.length - 1;
       openSummaryView(existing.id);
     } else {
       currentEditing = { room: String(roomName).trim(), bed: String(bedNum).trim(), id: null, isNewDay: false };
@@ -758,6 +786,7 @@
         p.entries.sort((a, b) => a.timestamp - b.timestamp);
         saveData();
         alert("Đã thêm ngày mới thành công!");
+        currentActiveIndex = p.entries.length - 1;
         openSummaryView(p.id);
         return;
       }
@@ -774,12 +803,13 @@
       patients.unshift(newP);
       saveData();
       alert("Đã tiếp nhận bệnh nhân thành công!");
+      currentActiveIndex = 0;
       openSummaryView(newP.id);
       return;
     }
   }
 
-  // Render các ngày 1, ngày 2... nối tiếp liền mạch, chỉ cuộn vùng này
+  /* MỞ VIEW TÓM TẮT & ĐỒNG BỘ CUỘN */
   function openSummaryView(id) {
     currentViewingPatientId = id;
     const p = patients.find(x => x.id === id);
@@ -790,25 +820,32 @@
     document.getElementById('summaryBedBadge').textContent = `${p.room} - Giường ${p.bed}`;
     document.getElementById('summaryPatientTitle').textContent = `${p.name}`;
 
-    const container = document.getElementById('seamlessDaysContainer');
-    container.innerHTML = p.entries.map((entry, idx) => `
-      <div class="day-column-seamless">
-        <div class="day-badge-header">
-          <span>Ngày ${idx + 1}</span>
-          <span style="font-size:11px; font-weight:normal; opacity:0.95;">(${formatDisplayTime(entry.isoTime)})</span>
-        </div>
+    // 1. Render thanh nút chọn ngày
+    renderDayTabs(p);
+
+    // 2. Render các trang nội dung khối nổi tương ứng
+    const bodyBox = document.getElementById('syncSlideBody');
+    bodyBox.innerHTML = p.entries.map((entry, idx) => `
+      <div class="day-slide-page" id="dayPage_${idx}">
+        <!-- Khối Chẩn đoán nổi -->
         <div class="section-block-box">
           <div class="section-block-tag">Chẩn đoán</div>
           <div class="section-block-body">${entry.diag || '—'}</div>
         </div>
+
+        <!-- Khối Theo dõi nổi -->
         <div class="section-block-box">
           <div class="section-block-tag">Theo dõi</div>
           <div class="section-block-body">${entry.tracking || '—'}</div>
         </div>
+
+        <!-- Khối Xét nghiệm nổi -->
         <div class="section-block-box">
           <div class="section-block-tag">Xét nghiệm</div>
           <div class="section-block-body">${entry.tests || '—'}</div>
         </div>
+
+        <!-- Khối Hình ảnh nổi -->
         <div class="section-block-box">
           <div class="section-block-tag">Hình ảnh</div>
           <div class="section-block-body">${entry.imaging || '—'}</div>
@@ -818,10 +855,64 @@
 
     showView('summaryFullView');
 
-    // Tự động cuộn sang ngày mới nhất bên phải
+    // Cuộn đến ngày đang chọn
     setTimeout(() => {
-      container.scrollLeft = container.scrollWidth;
+      scrollToDay(currentActiveIndex, false);
     }, 100);
+  }
+
+  function renderDayTabs(p) {
+    const tabsBox = document.getElementById('dayTabsContainer');
+    tabsBox.innerHTML = p.entries.map((item, idx) => `
+      <button class="day-tab-btn ${idx === currentActiveIndex ? 'active' : ''}" id="tabBtn_${idx}" onclick="scrollToDay(${idx}, true)">
+        Ngày ${idx + 1} (${formatDisplayTime(item.isoTime)})
+      </button>
+    `).join('');
+  }
+
+  // Khi bấm nút ngày -> Cuộn nội dung đến ngày đó
+  function scrollToDay(idx, smooth) {
+    const bodyBox = document.getElementById('syncSlideBody');
+    const targetPage = document.getElementById(`dayPage_${idx}`);
+    if (!targetPage || !bodyBox) return;
+
+    isProgrammaticScroll = true;
+    currentActiveIndex = idx;
+    updateActiveTabUI(idx);
+
+    bodyBox.scrollTo({
+      left: targetPage.offsetLeft - bodyBox.offsetLeft,
+      behavior: smooth ? 'smooth' : 'auto'
+    });
+
+    setTimeout(() => { isProgrammaticScroll = false; }, 350);
+  }
+
+  // Khi vuốt ngón tay cuộn nội dung các khối -> Đồng bộ thanh ngày phía trên
+  function handleBodyScroll() {
+    if (isProgrammaticScroll) return;
+    const bodyBox = document.getElementById('syncSlideBody');
+    if (!bodyBox) return;
+
+    const width = bodyBox.clientWidth;
+    const scrollLeft = bodyBox.scrollLeft;
+    const newIndex = Math.round(scrollLeft / width);
+
+    if (newIndex !== currentActiveIndex && newIndex >= 0) {
+      currentActiveIndex = newIndex;
+      updateActiveTabUI(newIndex);
+    }
+  }
+
+  function updateActiveTabUI(idx) {
+    document.querySelectorAll('.day-tab-btn').forEach((btn, i) => {
+      btn.classList.toggle('active', i === idx);
+    });
+    // Tự cuộn thanh ngày để luôn thấy nút ngày đang xem
+    const activeBtn = document.getElementById(`tabBtn_${idx}`);
+    if (activeBtn) {
+      activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
   }
 
   function finishCurrentTreatment() {
@@ -948,10 +1039,18 @@
   }
 
   function renderDashboardCounts() {
-    const activeList = patients.filter(p => p.status === 'active');
+    let actualActiveBedsCount = 0;
+    roomList.forEach(r => {
+      r.beds.forEach(bed => {
+        if (getPatientInBed(r.name, bed)) {
+          actualActiveBedsCount++;
+        }
+      });
+    });
+
     const dischargedList = patients.filter(p => p.status === 'discharged');
 
-    document.getElementById('homeActiveCount').textContent = `${activeList.length} Đang điều trị`;
+    document.getElementById('homeActiveCount').textContent = `${actualActiveBedsCount} Đang điều trị`;
     document.getElementById('homeDischargedCount').textContent = `${dischargedList.length} Đã ra viện`;
 
     renderRoomsGrid();

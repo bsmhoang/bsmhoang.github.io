@@ -326,7 +326,7 @@
   <!-- MODAL SỬA THÔNG TIN BÁC SĨ -->
   <div id="editProfileModal" class="custom-modal-overlay" onclick="closeEditProfileModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()" style="text-align:left;">
-      <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:14px; text-align:center;" id="editProfileModalTitle">Sửa Thông Tin Bác Sĩ</div>
+      <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:14px; text-align:center;">Sửa Thông Tin Bác Sĩ</div>
       <div style="margin-bottom:10px;">
         <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Họ và tên:</label>
         <input type="text" id="editDocNameInput" style="width:100%; padding:9px; border:1px solid var(--border); border-radius:8px; margin-top:3px; font-size:14px; font-weight:600;">
@@ -352,9 +352,9 @@
   const CORRECT_PIN = "000000";
   const TILE_SIZE = 40;
   const defaultRooms = [
-    { id: '825', name: 'P 825', beds: [1, 2, 3, 4, 5, 6], door: 'bottom', bedOrientations: {}, bedPositions: {}, mobileRotated: false },
-    { id: '817', name: 'P 817', beds: [1, 2], door: 'bottom', bedOrientations: {}, bedPositions: {}, mobileRotated: false },
-    { id: '819', name: 'P 819', beds: [1, 2], door: 'bottom', bedOrientations: {}, bedPositions: {}, mobileRotated: false }
+    { id: '825', name: 'P 825', beds: [1, 2, 3, 4, 5, 6], door: 'bottom', bedOrientations: {}, bedPositions: {} },
+    { id: '817', name: 'P 817', beds: [1, 2], door: 'bottom', bedOrientations: {}, bedPositions: {} },
+    { id: '819', name: 'P 819', beds: [1, 2], door: 'bottom', bedOrientations: {}, bedPositions: {} }
   ];
 
   let roomList = JSON.parse(localStorage.getItem('bs_room_configs_v1')) || defaultRooms;
@@ -404,7 +404,7 @@
   }
   ['touchstart', 'mousemove', 'scroll', 'keydown', 'click'].forEach(evt => window.addEventListener(evt, resetInactivityTimer, true));
 
-  /* HIỂN THỊ HỒ SƠ BÁC SĨ */
+  /* HỒ SƠ BÁC SĨ */
   function renderDoctorProfileUI() {
     document.getElementById('doctorNameText').textContent = doctorProfile.name;
     document.getElementById('doctorTitleText').textContent = doctorProfile.title;
@@ -557,13 +557,6 @@
     } catch { updateSyncUI('error', 'Không thể lưu'); }
   }
 
-  /* XOAY NGUYÊN KHỐI PHÒNG (DẠNG HOÁN ĐỔI TỌA ĐỘ TIÊU CHUẨN) */
-  function rotateRoomOnMobile(id) {
-    const r = roomList.find(x => x.id === id); if (!r) return;
-    r.mobileRotated = !r.mobileRotated;
-    syncDataToCloud();
-  }
-
   /* QUẢN LÝ PHÒNG & MODAL SỬA PHÒNG */
   function editRoomSettings(id) {
     const r = roomList.find(x => x.id === id); if (!r) return;
@@ -665,7 +658,7 @@
   }
   function addNewRoom() {
     const name = prompt("Tên phòng mới:"); if (!name?.trim()) return;
-    const newR = { id: 'r_' + Date.now(), name: name.trim(), beds: [1, 2], door: 'bottom', bedOrientations: {}, bedPositions: {}, roomBounds: { tilesX: 8, tilesY: 6 }, mobileRotated: false };
+    const newR = { id: 'r_' + Date.now(), name: name.trim(), beds: [1, 2], door: 'bottom', bedOrientations: {}, bedPositions: {}, roomBounds: { tilesX: 8, tilesY: 6 } };
     fitAndCompactRoom(newR); roomList.push(newR); syncDataToCloud();
     setTimeout(() => openDoorSelector(newR.id), 200);
   }
@@ -852,99 +845,47 @@
     win.document.close(); win.focus(); setTimeout(() => win.print(), 400);
   }
 
-  /* RENDER SƠ ĐỒ CHUẨN XÁC, HOÁN ĐỔI TỌA ĐỘ NGÂN HÀNG X-Y KHI XOAY PHÒNG ĐỂ ĐẢM BẢO KHÔNG LỆCH GIAO DIỆN */
+  /* RENDER SƠ ĐỒ CHUẨN XÁC, ỔN ĐỊNH VÀ CĂN GIỮA */
   function renderRoomsGrid() {
     const c = document.getElementById('roomsDynamicContainer'); if (!c) return;
-    const isMobile = window.innerWidth <= 767;
 
     c.innerHTML = roomList.map(r => {
-      const isArr = !isMobile && !!arrangeModeRooms[r.id];
+      const isArr = !!arrangeModeRooms[r.id];
       fitAndCompactRoom(r);
       const b = r.roomBounds || { tilesX: 8, tilesY: 6 };
-      
-      let tx = isArr ? 18 : b.tilesX;
-      let ty = isArr ? 12 : b.tilesY;
-      const finalDoor = r.door || 'bottom';
-
-      if (isMobile && r.mobileRotated) {
-        const tmp = tx; tx = ty; ty = tmp;
-      }
-
-      const doorHtml = finalDoor !== 'none' ? `<div class="door-indicator door-${finalDoor}">🚪 Cửa</div>` : '';
+      const tx = isArr ? 18 : b.tilesX, ty = isArr ? 12 : b.tilesY;
+      const doorHtml = r.door !== 'none' ? `<div class="door-indicator door-${r.door||'bottom'}">🚪 Cửa</div>` : '';
       let defX = 1, defY = 1;
-
       const bedHtml = r.beds.map(bed => {
         const p = getPatientInBed(r.name, bed);
-        const originalIsVert = r.bedOrientations?.[bed] === 'vertical';
-        const spanX = originalIsVert ? 2 : 3;
+        const isV = r.bedOrientations?.[bed] === 'vertical';
+        const spanX = isV ? 2 : 3;
         let pos = r.bedPositions?.[bed];
-
         if (!pos?.tileX) {
-          if (defX + spanX > (isMobile && r.mobileRotated ? ty : tx) - 1) { defX = 1; defY += 4; }
+          if (defX + spanX > tx - 1) { defX = 1; defY += 4; }
           pos = { tileX: defX, tileY: defY }; defX += spanX + 1;
           r.bedPositions = r.bedPositions || {}; r.bedPositions[bed] = pos;
         }
-
-        let pX = pos.tileX, pY = pos.tileY;
-        let finalIsVert = originalIsVert;
-
-        if (isMobile && r.mobileRotated) {
-          pX = pos.tileY; 
-          pY = pos.tileX; 
-          finalIsVert = !originalIsVert;
-        }
-
         return `
-          <div class="bed-item-draggable ${p?'occupied':''} ${finalIsVert?'orient-vertical':'orient-horizontal'} ${isArr?'arranging':''}"
-               id="bedEl_${r.id}_${bed}" style="left:${pX*TILE_SIZE}px; top:${pY*TILE_SIZE}px;"
+          <div class="bed-item-draggable ${p?'occupied':''} ${isV?'orient-vertical':'orient-horizontal'} ${isArr?'arranging':''}"
+               id="bedEl_${r.id}_${bed}" style="left:${pos.tileX*TILE_SIZE}px; top:${pos.tileY*TILE_SIZE}px;"
                onpointerdown="startDraggingBed(event,'${r.id}','${bed}')" onclick="handleBedClick('${r.name}','${bed}','${r.id}')">
             <div class="bed-pillow"></div>
             <div class="bed-mattress-content">
               <div class="bed-num-row">
                 <span class="bed-num">${bed}.</span>
-                ${!isMobile ? `<button type="button" class="btn-rotate-rect" onclick="rotateSingleBed(event,'${r.id}','${bed}')">${originalIsVert?'↕️ Dọc':'↔️ Ngang'}</button>` : ''}
+                <button type="button" class="btn-rotate-rect" onclick="rotateSingleBed(event,'${r.id}','${bed}')">${isV?'↕️ Dọc':'↔️ Ngang'}</button>
               </div>
               <div class="bed-text-flow"><div class="${p?'patient-name-slot':'bed-empty-tag'}">${p?p.name:'+ Trống'}</div></div>
             </div>
           </div>`;
       }).join('');
 
-      setTimeout(() => {
-        const wrapper = document.getElementById(`scaleWrap_${r.id}`);
-        const viewport = document.getElementById(`viewport_${r.id}`);
-        const boundary = document.getElementById(`floorBoundary_${r.id}`);
-        if (wrapper && viewport && boundary && !isArr) {
-          const availableW = viewport.clientWidth - 10;
-          const roomW = tx * TILE_SIZE;
-          const roomH = ty * TILE_SIZE;
-
-          if (roomW > availableW) {
-            const scaleVal = availableW / roomW;
-            wrapper.style.width = availableW + 'px';
-            wrapper.style.height = (roomH * scaleVal) + 'px';
-            boundary.style.transform = `scale(${scaleVal})`;
-            boundary.style.transformOrigin = 'top left';
-            boundary.style.position = 'absolute';
-            boundary.style.left = '0';
-            boundary.style.top = '0';
-          } else {
-            wrapper.style.width = roomW + 'px';
-            wrapper.style.height = roomH + 'px';
-            boundary.style.transform = 'scale(1)';
-            boundary.style.position = 'relative';
-            boundary.style.left = 'unset';
-            boundary.style.top = 'unset';
-          }
-        }
-      }, 50);
-
       return `
         <div class="room-block-wrapper">
           <div class="room-header-bar">
             <div class="room-title-name"><span>${r.name}</span></div>
             <div class="room-control-buttons">
-              <button class="btn-bed-ctrl mobile-only-ctrl" onclick="rotateRoomOnMobile('${r.id}')">🔄 Xoay phòng</button>
-
               <button class="btn-bed-ctrl desktop-only-ctrl ${isArr?'btn-arrange-active':''}" onclick="toggleArrangeMode('${r.id}')">${isArr?'💾 Lưu vị trí':'📐 Sắp xếp'}</button>
               <button class="btn-bed-ctrl desktop-only-ctrl" onclick="openDoorSelector('${r.id}')">🚪 Cửa</button>
               <button class="btn-bed-ctrl desktop-only-ctrl" onclick="editRoomSettings('${r.id}')">✏️ Sửa phòng</button>
@@ -952,11 +893,9 @@
             </div>
           </div>
           ${isArr?'<div class="arrange-instruction-bar">📐 Kéo thả giường bắt dính vào ô gạch, sau đó bấm [💾 Lưu vị trí] để Fit phòng!</div>':''}
-          <div class="room-scroll-viewport" id="viewport_${r.id}">
-            <div class="room-scale-wrapper" id="scaleWrap_${r.id}">
-              <div class="room-floor-boundary ${isArr?'is-arranging':''}" id="floorBoundary_${r.id}" style="width:${tx*TILE_SIZE}px; height:${ty*TILE_SIZE}px;">
-                ${doorHtml}${bedHtml || '<p style="padding:40px;text-align:center;color:#94a3b8;">Chưa có giường.</p>'}
-              </div>
+          <div class="room-scroll-viewport">
+            <div class="room-floor-boundary ${isArr?'is-arranging':''}" id="floorBoundary_${r.id}" style="width:${tx*TILE_SIZE}px; height:${ty*TILE_SIZE}px;">
+              ${doorHtml}${bedHtml || '<p style="padding:40px;text-align:center;color:#94a3b8;">Chưa có giường.</p>'}
             </div>
           </div>
         </div>`;

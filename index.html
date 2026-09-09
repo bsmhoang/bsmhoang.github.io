@@ -21,6 +21,7 @@
 
     /* Màn hình khóa tối giản */
     #lockScreenView { position: fixed; inset: 0; background: var(--bg); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .lock-minimal-box { width: 100%; max-width: 280px; display: flex; justify-content: center; }
     .pin-input-minimal { width: 100%; max-width: 280px; padding: 16px; font-size: 28px; text-align: center; letter-spacing: 12px; border: 2px solid var(--border); border-radius: var(--radius-md); outline: none; background: #fff; color: #0f172a; font-weight: 700; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
     .pin-input-minimal:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(2,132,199,0.18); }
 
@@ -252,7 +253,7 @@
     <div id="dischargedListContainer"></div>
   </div>
 
-  <!-- TRANG GIỚI THIỆU CÁ NHÂN (CÓ THỂ SỬA THÔNG TIN VÀ THÊM ẢNH) -->
+  <!-- TRANG GIỚI THIỆU CÁ NHÂN -->
   <div id="profileView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('homeView')">⬅️ Trang chủ</button>
@@ -409,7 +410,7 @@
   function saveDoctorProfile() {
     doctorProfile.name = document.getElementById('editDocNameInput').value.trim() || "Bác sĩ Minh Hoàng";
     doctorProfile.title = document.getElementById('editDocTitleInput').value.trim() || "Bác sĩ Điều trị";
-    doctorProfile.bio = document.getElementById('editDocBioInput'].value.trim();
+    doctorProfile.bio = document.getElementById('editDocBioInput').value.trim();
     localStorage.setItem('bs_doctor_profile_v1', JSON.stringify(doctorProfile));
     renderDoctorProfileUI();
     closeEditProfileModal();
@@ -578,7 +579,6 @@
     if (r) { r.door = dir; syncDataToCloud(); renderRoomsGrid(); }
     closeDoorModal();
   }
-
   function toggleArrangeMode(id) {
     const r = roomList.find(x => x.id === id); if (!r) return;
     if (arrangeModeRooms[id]) {
@@ -587,7 +587,6 @@
     } else { arrangeModeRooms[id] = true; }
     renderRoomsGrid();
   }
-
   function fitAndCompactRoom(r) {
     if (!r.beds?.length) return;
     let minX = 999, minY = 999, maxX = 0, maxY = 0;
@@ -608,7 +607,6 @@
     });
     r.roomBounds = { tilesX: Math.max(5, (maxX - minX) + 2), tilesY: Math.max(4, (maxY - minY) + 2) };
   }
-
   function rotateSingleBed(e, roomId, bed) {
     e.stopPropagation();
     const r = roomList.find(x => x.id === roomId); if (!r) return;
@@ -717,7 +715,7 @@
     }
   }
 
-  /* BẢNG CHỌN CHUYỂN GIƯỜNG TRỰC QUAN (KHÔNG CẦN NHẬP SỐ) */
+  /* BẢNG CHỌN CHUYỂN GIƯỜNG TRỰC QUAN */
   function openTransferBedModal() {
     const p = patients.find(x => x.id === currentViewingPatientId); if (!p) return;
     const empties = [];

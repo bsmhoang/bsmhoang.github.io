@@ -847,7 +847,7 @@
     win.document.close(); win.focus(); setTimeout(() => win.print(), 400);
   }
 
-  /* RENDER SƠ ĐỒ PHÒNG: TỰ ĐỘNG XOAY DỌC TRÊN ĐIỆN THOẠI KHỚP TUYỆT ĐỐI */
+  /* RENDER SƠ ĐỒ PHÒNG CHUẨN XÁC, KHÓA KÉO THẢ TRÊN ĐIỆN THOẠI ĐỂ TRÁNH BẤM NHẦM BỆNH NHÂN */
   function renderRoomsGrid() {
     const c = document.getElementById('roomsDynamicContainer'); if (!c) return;
     const isMobile = window.innerWidth <= 767;
@@ -856,14 +856,9 @@
       const isArr = !isMobile && !!arrangeModeRooms[r.id];
       fitAndCompactRoom(r);
       const b = r.roomBounds || { tilesX: 8, tilesY: 6 };
-      
-      // TRÊN ĐIỆN THOẠI: Tự động hoán đổi chiều để sơ đồ phòng chuyển sang dáng DỌC phù hợp màn hình dọc
-      let tx = isArr ? 18 : b.tilesX, ty = isArr ? 12 : b.tilesY;
-      if (isMobile) { const tmp = tx; tx = ty; ty = tmp; }
-
+      const tx = isArr ? 18 : b.tilesX, ty = isArr ? 12 : b.tilesY;
       const doorHtml = r.door !== 'none' ? `<div class="door-indicator door-${r.door||'bottom'}">${r.door==='top'?'⬇️':r.door==='left'?'➡️':r.door==='right'?'⬅️':'⬆️'} Cửa</div>` : '';
       let defX = 1, defY = 1;
-
       const bedHtml = r.beds.map(bed => {
         const p = getPatientInBed(r.name, bed);
         const isV = r.bedOrientations?.[bed] === 'vertical';
@@ -874,13 +869,9 @@
           pos = { tileX: defX, tileY: defY }; defX += spanX + 1;
           r.bedPositions = r.bedPositions || {}; r.bedPositions[bed] = pos;
         }
-
-        let pX = pos.tileX, pY = pos.tileY;
-        if (isMobile) { pX = pos.tileY; pY = pos.tileX; } // Hoán đổi tọa độ X và Y để tự động xoay dọc cả giường lẫn phòng
-
         return `
           <div class="bed-item-draggable ${p?'occupied':''} ${isV?'orient-vertical':'orient-horizontal'} ${isArr?'arranging':''}"
-               id="bedEl_${r.id}_${bed}" style="left:${pX*TILE_SIZE}px; top:${pY*TILE_SIZE}px;"
+               id="bedEl_${r.id}_${bed}" style="left:${pos.tileX*TILE_SIZE}px; top:${pos.tileY*TILE_SIZE}px;"
                onpointerdown="startDraggingBed(event,'${r.id}','${bed}')" onclick="handleBedClick('${r.name}','${bed}','${r.id}')">
             <div class="bed-pillow"></div>
             <div class="bed-mattress-content">

@@ -37,6 +37,7 @@
       -webkit-tap-highlight-color: transparent;
     }
     
+    /* GIAO DIỆN CHUNG (MẶC ĐỊNH CHO ĐIỆN THOẠI) */
     body { 
       background: var(--bg); 
       color: var(--text-main); 
@@ -51,6 +52,7 @@
       max-width: 580px; 
       margin: 0 auto; 
       width: 100%; 
+      transition: max-width 0.2s ease;
     }
 
     /* THANH TRẠNG THÁI ĐỒNG BỘ */
@@ -232,9 +234,7 @@
     .patient-name-slot { font-size: 13.5px; font-weight: 700; line-height: 1.25; word-break: break-word; color: #0f172a; }
     .bed-empty-tag { font-size: 11px; color: #94a3b8; font-style: italic; }
 
-    /* ========================================================
-       1. HỒ SƠ BỆNH ÁN: GIỮ NGUYÊN VUỐT NGANG THEO TỪNG NGÀY
-       ======================================================== */
+    /* HỒ SƠ BỆNH ÁN: VUỐT NGANG THEO NGÀY */
     .summary-app-window {
       background: white;
       border: 1.5px solid var(--border);
@@ -322,7 +322,6 @@
       box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
     }
 
-    /* KHUNG VUỐT NGANG CHUYỂN NGÀY */
     .summary-scrollable-body {
       flex-grow: 1;
       height: 100%;
@@ -335,7 +334,6 @@
     }
     .summary-scrollable-body::-webkit-scrollbar { display: none; }
 
-    /* TỪNG NGÀY VUỐT NGANG VÀ TỰ DO CUỘN DỌC */
     .day-slide-page {
       width: 100%;
       min-width: 100%;
@@ -381,40 +379,58 @@
 
     .summary-fixed-footer {
       flex-shrink: 0;
-      padding: 10px 14px;
+      padding: 10px 12px;
       background: white;
       border-top: 1px solid var(--border-light);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 10px;
+      gap: 6px;
+    }
+    .footer-left-btns {
+      display: flex;
+      gap: 6px;
+      align-items: center;
     }
     .btn-del-patient-active {
       background: #fff;
       border: 1.5px solid #fca5a5;
       color: #dc2626;
       border-radius: var(--radius-md);
-      padding: 10px 14px;
-      font-size: 13.5px;
+      padding: 9px 12px;
+      font-size: 12.5px;
       font-weight: 700;
       cursor: pointer;
+      white-space: nowrap;
     }
     .btn-del-patient-active:active { background: #fee2e2; }
+
+    .btn-transfer-bed {
+      background: #f0f9ff;
+      border: 1.5px solid #7dd3fc;
+      color: #0369a1;
+      border-radius: var(--radius-md);
+      padding: 9px 12px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-transfer-bed:active { background: #bae6fd; }
 
     .btn-finish-treatment {
       background: #ffffff;
       border: 2px solid #334155;
       color: #1e293b;
       border-radius: var(--radius-md);
-      padding: 10px 18px;
-      font-size: 14px;
+      padding: 9px 14px;
+      font-size: 13px;
       font-weight: 700;
       cursor: pointer;
+      white-space: nowrap;
     }
 
-    /* ========================================================
-       2. MỤC THÊM / SỬA NGÀY: CUỘN DỌC TOÀN TRANG TỰ NHIÊN
-       ======================================================== */
+    /* FORM NHẬP / SỬA / THÊM NGÀY: CUỘN TOÀN TRANG TỰ NHIÊN */
     .form-fullpage-card {
       background: white;
       border: 1.5px solid var(--border);
@@ -593,6 +609,71 @@
       cursor: pointer;
     }
     .btn-del-patient-discharged:active { background: #fee2e2; }
+
+    /* ========================================================
+       TỐI ƯU HÓA CHO MÁY TÍNH / LAPTOP (WINDOWS & MÀN HÌNH RỘNG)
+       ======================================================== */
+    @media (min-width: 768px) {
+      body {
+        padding: 24px 20px 50px 20px;
+      }
+      
+      .container { 
+        max-width: 1080px; /* Mở rộng tối đa cho màn hình PC */
+      }
+
+      /* Menu chính chia 2 cột rộng rãi */
+      .btn-menu-list {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      /* Sơ đồ phòng buồng trên máy tính: 6 giường / hàng */
+      .grid-room-dynamic {
+        grid-template-columns: repeat(6, 1fr);
+      }
+      .grid-room-dynamic.col-2 {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      /* Bố cục hồ sơ và form chia 2 cột song song cân đối */
+      .day-slide-page,
+      .form-fullpage-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        align-content: start;
+      }
+
+      .form-top-grid {
+        grid-template-columns: 1fr 220px;
+      }
+
+      /* Chiều cao cửa sổ hồ sơ trên PC */
+      .summary-app-window {
+        height: calc(100vh - 100px);
+      }
+
+      /* Nút bấm to hơn, có hiệu ứng hover chuột trên PC */
+      .big-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+      }
+      .bed-slot:hover {
+        filter: brightness(0.96);
+      }
+      .btn-top:hover,
+      .btn-back:hover,
+      .btn-edit-day-pill:hover,
+      .btn-add-day-pill:hover,
+      .btn-del-patient-active:hover,
+      .btn-transfer-bed:hover,
+      .btn-finish-treatment:hover,
+      .btn-confirm-submit:hover {
+        filter: brightness(0.95);
+      }
+    }
   </style>
 </head>
 <body>
@@ -623,7 +704,7 @@
   <div id="roomGridView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('homeView')">⬅️ Trang chủ</button>
-      <h3 style="font-size:15px; font-weight:700;">Sơ đồ phòng bệnh</h3>
+      <h3 style="font-size:16px; font-weight:700;">Sơ đồ phòng bệnh</h3>
       <div style="width:40px;"></div>
     </div>
 
@@ -634,11 +715,11 @@
     </button>
   </div>
 
-  <!-- ==================== VIEW HỒ SƠ: GIỮ NGUYÊN VUỐT NGANG THEO NGÀY ==================== -->
+  <!-- VIEW HỒ SƠ BỆNH ÁN -->
   <div id="summaryFullView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('roomGridView')">⬅️ Sơ đồ phòng</button>
-      <h3 style="font-size:15px; font-weight:700;" id="summaryBedBadge">Phòng - Giường</h3>
+      <h3 style="font-size:16px; font-weight:700;" id="summaryBedBadge">Phòng - Giường</h3>
       <div style="width:40px;"></div>
     </div>
 
@@ -647,7 +728,7 @@
         <div class="summary-top-info">
           <div>
             <div style="font-size:11px; color:#64748b;">Hồ sơ bệnh nhân:</div>
-            <h2 id="summaryPatientTitle" style="font-size:18px; color:var(--primary); margin-top:2px;">...</h2>
+            <h2 id="summaryPatientTitle" style="font-size:19px; color:var(--primary); margin-top:2px;">...</h2>
           </div>
           <div class="header-action-group">
             <button class="btn-edit-day-pill" onclick="handleEditCurrentDayClick()">✏️ Sửa ngày này</button>
@@ -657,21 +738,23 @@
         <div class="day-tab-scroll" id="dayTabsContainer"></div>
       </div>
 
-      <!-- VÙNG VUỐT NGANG CHUYỂN NGÀY TỰ NHIÊN -->
       <div class="summary-scrollable-body" id="syncSlideBody" onscroll="handleBodyScroll()"></div>
 
       <div class="summary-fixed-footer">
-        <button class="btn-del-patient-active" onclick="deleteActivePatient()">🗑️ Xóa ca bệnh</button>
+        <div class="footer-left-btns">
+          <button class="btn-del-patient-active" onclick="deleteActivePatient()">🗑️ Xóa ca bệnh</button>
+          <button class="btn-transfer-bed" onclick="transferPatientBed()">🔄 Chuyển giường</button>
+        </div>
         <button class="btn-finish-treatment" onclick="finishCurrentTreatment()">Kết thúc điều trị</button>
       </div>
     </div>
   </div>
 
-  <!-- ==================== FORM THÊM / SỬA NGÀY: CUỘN DỌC TOÀN TRANG ==================== -->
+  <!-- FORM THÊM / SỬA NGÀY -->
   <div id="patientFormView" class="view-section">
     <div class="view-header">
       <button class="btn-back" id="btnBackFromForm" onclick="handleBackFromForm()">⬅️ Quay lại</button>
-      <h3 style="font-size:15px; font-weight:700;" id="formViewTitle">Nhập thông tin bệnh nhân</h3>
+      <h3 style="font-size:16px; font-weight:700;" id="formViewTitle">Nhập thông tin bệnh nhân</h3>
       <div style="width:40px;"></div>
     </div>
 
@@ -729,7 +812,7 @@
   <div id="dischargedView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('homeView')">⬅️ Trang chủ</button>
-      <h3 style="font-size:15px; font-weight:700;">Danh Sách Ra Viện</h3>
+      <h3 style="font-size:16px; font-weight:700;">Danh Sách Ra Viện</h3>
       <div style="width:40px;"></div>
     </div>
 
@@ -747,14 +830,14 @@
   <div id="profileView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('homeView')">⬅️ Trang chủ</button>
-      <h3 style="font-size:15px; font-weight:700;">Hồ Sơ Bác Sĩ</h3>
+      <h3 style="font-size:16px; font-weight:700;">Hồ Sơ Bác Sĩ</h3>
       <div style="width:40px;"></div>
     </div>
-    <div style="background:white; border-radius:var(--radius-lg); padding:28px 16px; text-align:center; border:1px solid var(--border); box-shadow:0 4px 12px rgba(0,0,0,0.02);">
-      <div style="width:64px; height:64px; background:var(--primary); color:white; border-radius:50%; margin:0 auto 10px; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:bold;">BS</div>
-      <h2 style="font-size:18px;">Bác sĩ Minh Hoàng</h2>
-      <p style="color:var(--primary); font-weight:700; font-size:14px; margin-top:2px;">Bác sĩ Điều trị</p>
-      <p style="color:#64748b; font-size:13px; margin-top:8px; line-height:1.5;">Hệ thống sơ đồ buồng bệnh & theo dõi lâm sàng thông minh.</p>
+    <div style="background:white; border-radius:var(--radius-lg); padding:32px 20px; text-align:center; border:1px solid var(--border); box-shadow:0 4px 12px rgba(0,0,0,0.02); max-width: 500px; margin: 0 auto;">
+      <div style="width:70px; height:70px; background:var(--primary); color:white; border-radius:50%; margin:0 auto 12px; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:bold;">BS</div>
+      <h2 style="font-size:20px;">Bác sĩ Minh Hoàng</h2>
+      <p style="color:var(--primary); font-weight:700; font-size:14.5px; margin-top:2px;">Bác sĩ Điều trị</p>
+      <p style="color:#64748b; font-size:13.5px; margin-top:8px; line-height:1.5;">Hệ thống sơ đồ buồng bệnh & theo dõi lâm sàng thông minh.</p>
     </div>
   </div>
 
@@ -1081,6 +1164,52 @@
     }
   }
 
+  /* CHUYỂN GIƯỜNG */
+  function transferPatientBed() {
+    const p = patients.find(x => x.id === currentViewingPatientId);
+    if (!p) return;
+
+    const emptyBeds = [];
+    roomList.forEach(r => {
+      r.beds.forEach(b => {
+        const occ = getPatientInBed(r.name, b);
+        if (!occ) {
+          emptyBeds.push({ room: r.name, bed: String(b) });
+        }
+      });
+    });
+
+    if (emptyBeds.length === 0) {
+      alert("Hiện tại không còn giường trống nào trong tất cả các phòng để chuyển!");
+      return;
+    }
+
+    let msg = `CHUYỂN GIƯỜNG CHO BỆNH NHÂN: ${p.name}\n`;
+    msg += `Vị trí hiện tại: ${p.room} - Giường ${p.bed}\n\n`;
+    msg += `Chọn số thứ tự giường trống bạn muốn chuyển đến:\n`;
+    emptyBeds.forEach((item, idx) => {
+      msg += `${idx + 1}. ${item.room} - Giường ${item.bed}\n`;
+    });
+
+    const choice = prompt(msg);
+    if (!choice) return;
+
+    const chosenIdx = parseInt(choice.trim()) - 1;
+    if (isNaN(chosenIdx) || chosenIdx < 0 || chosenIdx >= emptyBeds.length) {
+      alert("Lựa chọn không hợp lệ!");
+      return;
+    }
+
+    const target = emptyBeds[chosenIdx];
+    if (confirm(`Xác nhận chuyển bệnh nhân "${p.name}" từ [${p.room} - Giường ${p.bed}] sang [${target.room} - Giường ${target.bed}]?`)) {
+      p.room = target.room;
+      p.bed = target.bed;
+      syncDataToCloud();
+      alert(`Đã chuyển thành công sang ${target.room} - Giường ${target.bed}!`);
+      openSummaryView(p.id);
+    }
+  }
+
   function deleteDischargedPatient(patientId) {
     const p = patients.find(x => x.id === patientId);
     if (!p) return;
@@ -1091,9 +1220,7 @@
     }
   }
 
-  /* ========================================================
-     VIEW HỒ SƠ: GIỮ NGUYÊN VUỐT NGANG VÀ ĐỒNG BỘ NÚT NGÀY
-     ======================================================== */
+  /* VIEW HỒ SƠ */
   function openSummaryView(id) {
     currentViewingPatientId = id;
     const p = patients.find(x => x.id === id);

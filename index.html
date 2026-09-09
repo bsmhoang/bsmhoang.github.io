@@ -39,17 +39,22 @@
     .view-section { display: none; }
     .view-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 
-    /* Giao diện dạng Bảng quản lý phòng & giường */
-    .table-room-card { background: #fff; border: 1.5px solid var(--border); border-radius: var(--radius-lg); margin-bottom: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
-    .table-room-header { background: #f8fafc; padding: 10px 16px; border-bottom: 1.5px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 15px; color: #0f172a; }
-    .rooms-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
-    .rooms-table th, .rooms-table td { padding: 10px 16px; border-bottom: 1px solid var(--border-light); }
-    .rooms-table th { background: #fdfdfd; color: var(--text-muted); font-size: 12px; text-transform: uppercase; font-weight: 600; }
+    /* Lưới danh sách phòng dạng bảng 3x2 */
+    .rooms-grid-3x2 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 10px; }
+    @media (max-width: 767px) {
+      .rooms-grid-3x2 { grid-template-columns: 1fr; }
+    }
+
+    .table-room-card { background: #fff; border: 1.5px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.02); display: flex; flex-direction: column; }
+    .table-room-header { background: #f8fafc; padding: 10px 14px; border-bottom: 1.5px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 14.5px; color: #0f172a; }
+    .rooms-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13.5px; }
+    .rooms-table th, .rooms-table td { padding: 9px 12px; border-bottom: 1px solid var(--border-light); }
+    .rooms-table th { background: #fdfdfd; color: var(--text-muted); font-size: 11.5px; text-transform: uppercase; font-weight: 600; }
     .rooms-table tr:last-child td { border-bottom: none; }
     .rooms-table tr:hover { background: #f8fafc; cursor: pointer; }
-    .badge-bed { display: inline-block; padding: 2px 8px; background: #e2e8f0; border-radius: 6px; font-weight: 700; font-size: 12px; color: #334155; }
-    .badge-patient { display: inline-block; padding: 3px 10px; background: #e0f2fe; color: #0369a1; border-radius: 12px; font-weight: 700; font-size: 12.5px; }
-    .badge-empty { color: #94a3b8; font-style: italic; font-weight: 500; font-size: 13px; }
+    .badge-bed { display: inline-block; padding: 2px 6px; background: #e2e8f0; border-radius: 6px; font-weight: 700; font-size: 11.5px; color: #334155; }
+    .badge-patient { display: inline-block; padding: 2px 8px; background: #e0f2fe; color: #0369a1; border-radius: 10px; font-weight: 700; font-size: 12px; }
+    .badge-empty { color: #94a3b8; font-style: italic; font-weight: 500; font-size: 12px; }
 
     .custom-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.65); z-index: 100000; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(3px); }
     .custom-modal-card { background: #fff; border-radius: 20px; padding: 24px; width: 100%; max-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; max-height: 90vh; overflow-y: auto; }
@@ -121,7 +126,7 @@
       <button class="btn-back" onclick="showView('homeView')">⬅️ Trang chủ</button>
       <h3 style="font-size:16px; font-weight:700;">Danh Sách Phòng Bệnh</h3><div style="width:40px;"></div>
     </div>
-    <div id="roomsDynamicContainer"></div>
+    <div class="rooms-grid-3x2" id="roomsDynamicContainer"></div>
   </div>
 
   <div id="summaryFullView" class="view-section">
@@ -646,7 +651,7 @@
     win.document.close(); win.focus(); setTimeout(() => win.print(), 400);
   }
 
-  /* RENDER DẠNG BẢNG QUẢN LÝ PHÒNG */
+  /* RENDER DẠNG BẢNG 3x2 */
   function renderRoomsGrid() {
     const c = document.getElementById('roomsDynamicContainer'); if (!c) return;
 
@@ -655,9 +660,9 @@
         const p = getPatientInBed(r.name, bed);
         return `
           <tr onclick="handleBedClick('${r.name}', '${bed}')">
-            <td style="width: 80px; font-weight: 700; color: var(--primary);">Giường ${bed}</td>
+            <td style="width: 75px; font-weight: 700; color: var(--primary);">Giường ${bed}</td>
             <td>
-              ${p ? `<span class="badge-patient">👤 ${p.name}</span>` : `<span class="badge-empty">+ Trống (Bấm để tiếp nhận)</span>`}
+              ${p ? `<span class="badge-patient">${p.name}</span>` : `<span class="badge-empty">+ Trống</span>`}
             </td>
           </tr>`;
       }).join('');
@@ -672,7 +677,7 @@
             <thead>
               <tr>
                 <th>Vị trí</th>
-                <th>Tình trạng bệnh nhân</th>
+                <th>Bệnh nhân</th>
               </tr>
             </thead>
             <tbody>

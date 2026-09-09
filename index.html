@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes, viewport-fit=cover">
   <title>Bác Sĩ Minh Hoàng - Quản Lý Bệnh Nhân</title>
   <meta name="theme-color" content="#0284c7">
   <meta name="mobile-web-app-capable" content="yes">
@@ -12,11 +12,12 @@
     :root {
       --primary: #0284c7; --primary-hover: #0369a1; --primary-light: #e0f2fe;
       --bg: #f1f5f9; --card-bg: #ffffff; --text-main: #0f172a; --text-muted: #64748b;
-      --border: #cbd5e1; --border-light: #e2e8f0; --radius-lg: 16px; --radius-md: 12px; --radius-sm: 8px;
+      --border: #cbd5e1; --border-light: #e2e8f0; --radius-lg: 16px; --radius-md: 12px;
+      --radius-sm: 8px; --coc-tile: 40px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Google Sans','Roboto',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; -webkit-tap-highlight-color: transparent; }
     body { background: var(--bg); color: var(--text-main); min-height: 100vh; padding: 12px 10px 40px; letter-spacing: -0.01em; overflow-y: auto; }
-    .container { max-width: 680px; margin: 0 auto; width: 100%; }
+    .container { max-width: 900px; margin: 0 auto; width: 100%; }
 
     /* Màn hình khóa tối giản */
     #lockScreenView { position: fixed; inset: 0; background: var(--bg); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; }
@@ -42,27 +43,55 @@
     .view-section { display: none; }
     .view-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 
-    /* Sơ đồ buồng bệnh dạng lưới thẻ (Grid Cards) */
-    .room-card-box { background: #fff; border: 1.5px solid var(--border); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
-    .room-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1.5px solid var(--border-light); padding-bottom: 10px; }
-    .room-title-name { font-size: 17px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px; }
-    .room-actions-group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    /* Sơ đồ phòng & Responsive tự động Fit / Phóng to thu nhỏ trên điện thoại */
+    .room-block-wrapper { margin-bottom: 30px; display: flex; flex-direction: column; align-items: center; width: 100%; }
+    .room-header-bar { display: flex; justify-content: space-between; align-items: center; margin: 16px 2px 8px; flex-wrap: wrap; gap: 6px; width: 100%; max-width: 820px; }
+    .room-title-name { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+    .room-control-buttons { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+    .btn-bed-ctrl { background: #fff; border: 1px solid var(--border); font-size: 11.5px; font-weight: 600; padding: 5px 8px; border-radius: 6px; cursor: pointer; color: #334155; }
+    .btn-arrange-active { background: #fef08a !important; border-color: #eab308 !important; color: #854d0e !important; }
+    .btn-del-room { background: #fef2f2; border: 1px solid #fca5a5; color: #dc2626; }
     
-    .room-door-badge { font-size: 11px; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 6px; font-weight: 600; }
+    /* Trên điện thoại: Tự động ẩn các nút sửa phòng & sắp xếp */
+    @media (max-width: 767px) {
+      .desktop-only-ctrl { display: none !important; }
+    }
 
-    /* Lưới giường trực quan */
-    .beds-grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 10px; }
-    .bed-grid-card { background: #f8fafc; border: 2px solid var(--border); border-radius: 10px; padding: 10px; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; min-height: 85px; transition: all 0.15s; position: relative; }
-    .bed-grid-card:hover { border-color: var(--primary); background: #fff; }
-    .bed-grid-card.occupied { background: #f0f9ff; border-color: #0284c7; }
-    
-    .bed-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-    .bed-card-num { font-size: 12px; font-weight: 700; color: var(--primary); }
-    .bed-grid-card:not(.occupied) .bed-card-num { color: var(--text-muted); }
-    .bed-patient-name { font-size: 13.5px; font-weight: 700; color: #0f172a; word-break: break-word; line-height: 1.2; }
-    .bed-empty-text { font-size: 11.5px; color: #94a3b8; font-style: italic; }
+    .room-scroll-viewport { width: 100%; overflow: auto; padding: 6px 4px; display: flex; justify-content: center; -webkit-overflow-scrolling: touch; }
+    .room-scale-wrapper { display: flex; justify-content: center; transform-origin: top center; }
 
-    .btn-add-room-global { background: #fff; border: 1.5px dashed var(--primary); color: var(--primary); width: 100%; padding: 13px; border-radius: var(--radius-md); font-size: 14px; font-weight: 700; cursor: pointer; margin: 20px 0; display: flex; justify-content: center; align-items: center; gap: 6px; }
+    .room-floor-boundary {
+      position: relative; border: 3.5px solid #334155; border-radius: 14px; box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+      background-color: #f1f5f9; margin: 0 auto; flex-shrink: 0;
+      background-image: linear-gradient(45deg,#e2e8f0 25%,transparent 25%), linear-gradient(-45deg,#e2e8f0 25%,transparent 25%), linear-gradient(45deg,transparent 75%,#e2e8f0 75%), linear-gradient(-45deg,transparent 75%,#e2e8f0 75%);
+      background-size: calc(var(--coc-tile)*2) calc(var(--coc-tile)*2); background-position: 0 0, 0 var(--coc-tile), var(--coc-tile) -var(--coc-tile), -var(--coc-tile) 0;
+    }
+    .room-floor-boundary.is-arranging { border: 3.5px dashed #eab308; }
+    .room-floor-boundary.is-arranging::before { content: ""; position: absolute; inset: 0; background-image: linear-gradient(to right,rgba(148,163,184,0.45) 1px,transparent 1px), linear-gradient(to bottom,rgba(148,163,184,0.45) 1px,transparent 1px); background-size: var(--coc-tile) var(--coc-tile); pointer-events: none; z-index: 1; }
+
+    .door-indicator { position: absolute; background: #0284c7; color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; z-index: 10; display: flex; align-items: center; gap: 3px; }
+    .door-top { top: 2px; left: 10px; } .door-bottom { bottom: 2px; left: 10px; } .door-left { left: 2px; top: 10px; } .door-right { right: 2px; top: 10px; }
+    .arrange-instruction-bar { background: #fef9c3; border: 1px solid #fde047; color: #854d0e; font-size: 11.5px; font-weight: 600; padding: 6px 14px; border-radius: 8px; margin-bottom: 8px; text-align: center; width: 100%; max-width: 820px; }
+
+    /* Khối giường */
+    .bed-item-draggable { position: absolute; cursor: pointer; user-select: none; touch-action: none; border: 2px solid #475569; border-radius: 8px; background: #fff; display: flex; box-shadow: 0 3px 6px rgba(0,0,0,0.12); overflow: hidden; z-index: 2; }
+    .bed-item-draggable.arranging { cursor: grab; border-color: #eab308; box-shadow: 0 0 0 2px #fde047; }
+    .bed-item-draggable.dragging { cursor: grabbing; opacity: 0.9; z-index: 99 !important; box-shadow: 0 12px 28px rgba(0,0,0,0.4); }
+    .bed-item-draggable.orient-horizontal { width: 120px !important; height: 80px !important; flex-direction: row; }
+    .bed-item-draggable.orient-horizontal .bed-pillow { width: 18px; height: 100%; background: #cbd5e1; border-right: 2px solid #94a3b8; flex-shrink: 0; }
+    .bed-item-draggable.orient-vertical { width: 80px !important; height: 120px !important; flex-direction: column; }
+    .bed-item-draggable.orient-vertical .bed-pillow { height: 18px; width: 100%; background: #cbd5e1; border-bottom: 2px solid #94a3b8; flex-shrink: 0; }
+    .bed-item-draggable.occupied { background: #f0f9ff; border-color: #0284c7; }
+    .bed-item-draggable.occupied .bed-pillow { background: #bae6fd; border-color: #38bdf8; }
+    .bed-mattress-content { padding: 4px 6px; display: flex; flex-direction: column; justify-content: space-between; flex-grow: 1; overflow: hidden; width: 100%; height: 100%; }
+    .bed-item-draggable.orient-horizontal .patient-name-slot, .bed-item-draggable.orient-horizontal .bed-empty-tag { font-size: 12px; font-weight: 700; line-height: 1.2; word-break: break-word; color: #0f172a; }
+    .bed-item-draggable.orient-vertical .bed-text-flow { writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; text-align: center; overflow: hidden; }
+    .bed-item-draggable.orient-vertical .patient-name-slot, .bed-item-draggable.orient-vertical .bed-empty-tag { font-size: 12px; font-weight: 700; line-height: 1.2; color: #0f172a; white-space: nowrap; text-overflow: ellipsis; }
+    .bed-num-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+    .bed-num { font-size: 11px; font-weight: 700; color: var(--primary); }
+    .btn-rotate-rect { background: #fff; border: 1px solid var(--border); color: #334155; border-radius: 4px; font-size: 10px; padding: 1px 4px; cursor: pointer; }
+    .bed-empty-tag { font-size: 11px; color: #94a3b8; font-style: italic; }
+    .btn-add-room-global { background: #fff; border: 1.5px dashed var(--primary); color: var(--primary); width: 100%; max-width: 820px; padding: 13px; border-radius: var(--radius-md); font-size: 14px; font-weight: 700; cursor: pointer; margin: 20px auto; display: flex; justify-content: center; align-items: center; gap: 6px; }
 
     /* Modal chung */
     .custom-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.65); z-index: 100000; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(3px); }
@@ -145,10 +174,10 @@
   <div id="roomGridView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('homeView')">⬅️ Trang chủ</button>
-      <h3 style="font-size:16px; font-weight:700;">Danh Sách Buồng Bệnh</h3><div style="width:40px;"></div>
+      <h3 style="font-size:16px; font-weight:700;">Sơ đồ phòng bệnh</h3><div style="width:40px;"></div>
     </div>
     <div id="roomsDynamicContainer"></div>
-    <button class="btn-add-room-global" onclick="addNewRoom()">➕ Thêm phòng mới</button>
+    <button class="btn-add-room-global desktop-only-ctrl" onclick="addNewRoom()">➕ Thêm phòng mới</button>
   </div>
 
   <div id="summaryFullView" class="view-section">
@@ -324,10 +353,11 @@
 <script>
   const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxVVVoEdjNY5fsWGuJegc9EHAcrzTFaty4VEhMeyo5HsKdT-U89s9SlT7R-zdaXuMayzw/exec";
   const CORRECT_PIN = "000000";
+  const TILE_SIZE = 40;
   const defaultRooms = [
-    { id: '825', name: 'P 825', beds: [1, 2, 3, 4, 5, 6], door: 'bottom' },
-    { id: '817', name: 'P 817', beds: [1, 2], door: 'bottom' },
-    { id: '819', name: 'P 819', beds: [1, 2], door: 'bottom' }
+    { id: '825', name: 'P 825', beds: [1, 2, 3, 4, 5, 6], door: 'bottom', bedOrientations: {}, bedPositions: {} },
+    { id: '817', name: 'P 817', beds: [1, 2], door: 'bottom', bedOrientations: {}, bedPositions: {} },
+    { id: '819', name: 'P 819', beds: [1, 2], door: 'bottom', bedOrientations: {}, bedPositions: {} }
   ];
 
   let roomList = JSON.parse(localStorage.getItem('bs_room_configs_v1')) || defaultRooms;
@@ -341,8 +371,8 @@
 
   let currentEditing = { room: null, bed: null, id: null, mode: 'create', entryIndex: null };
   let currentViewingPatientId = null, currentActiveIndex = 0, currentDoorSelectingRoomId = null, currentEditingRoomId = null;
-  let formImages = { diag: [], tracking: [], tests: [], imaging: [] };
-  let inactivityTimer = null, isAuthenticated = false;
+  let arrangeModeRooms = {}, formImages = { diag: [], tracking: [], tests: [], imaging: [] };
+  let inactivityTimer = null, isAuthenticated = false, activeDrag = null;
 
   /* AUTH & TỰ ĐỘNG KHÓA */
   function resetInactivityTimer() {
@@ -567,9 +597,12 @@
           alert("Không thể giảm giường vì có giường đang có bệnh nhân điều trị!");
         } else {
           r.beds = r.beds.slice(0, targetCount);
+          removedBeds.forEach(b => { delete r.bedOrientations?.[b]; delete r.bedPositions?.[b]; });
         }
       }
     }
+
+    fitAndCompactRoom(r);
     syncDataToCloud();
     closeEditRoomModal();
   }
@@ -586,7 +619,41 @@
     if (r) { r.door = dir; syncDataToCloud(); renderRoomsGrid(); }
     closeDoorModal();
   }
-
+  function toggleArrangeMode(id) {
+    const r = roomList.find(x => x.id === id); if (!r) return;
+    if (arrangeModeRooms[id]) {
+      delete arrangeModeRooms[id]; fitAndCompactRoom(r); syncDataToCloud();
+      alert("Đã lưu vị trí và tự động Fit khung phòng!");
+    } else { arrangeModeRooms[id] = true; }
+    renderRoomsGrid();
+  }
+  function fitAndCompactRoom(r) {
+    if (!r.beds?.length) return;
+    let minX = 999, minY = 999, maxX = 0, maxY = 0;
+    r.beds.forEach(bed => {
+      const pos = r.bedPositions?.[bed] || { tileX: 1, tileY: 1 };
+      const isVert = r.bedOrientations?.[bed] === 'vertical';
+      const spanX = isVert ? 2 : 3, spanY = isVert ? 3 : 2;
+      minX = Math.min(minX, pos.tileX); minY = Math.min(minY, pos.tileY);
+      maxX = Math.max(maxX, pos.tileX + spanX); maxY = Math.max(maxY, pos.tileY + spanY);
+    });
+    if (minX === 999) minX = 1; if (minY === 999) minY = 1;
+    const shiftX = minX - 1, shiftY = minY - 1;
+    r.beds.forEach(bed => {
+      if (r.bedPositions?.[bed]) {
+        r.bedPositions[bed].tileX = Math.max(1, r.bedPositions[bed].tileX - shiftX);
+        r.bedPositions[bed].tileY = Math.max(1, r.bedPositions[bed].tileY - shiftY);
+      }
+    });
+    r.roomBounds = { tilesX: Math.max(5, (maxX - minX) + 2), tilesY: Math.max(4, (maxY - minY) + 2) };
+  }
+  function rotateSingleBed(e, roomId, bed) {
+    e.stopPropagation();
+    const r = roomList.find(x => x.id === roomId); if (!r) return;
+    r.bedOrientations = r.bedOrientations || {};
+    r.bedOrientations[bed] = r.bedOrientations[bed] === 'vertical' ? 'horizontal' : 'vertical';
+    syncDataToCloud();
+  }
   function deleteRoom(id) {
     const r = roomList.find(x => x.id === id); if (!r) return;
     if (patients.some(p => p.status === 'active' && p.room === r.name)) return alert("Còn bệnh nhân đang điều trị, không thể xóa phòng!");
@@ -594,13 +661,14 @@
   }
   function addNewRoom() {
     const name = prompt("Tên phòng mới:"); if (!name?.trim()) return;
-    const newR = { id: 'r_' + Date.now(), name: name.trim(), beds: [1, 2], door: 'bottom' };
-    roomList.push(newR); syncDataToCloud();
+    const newR = { id: 'r_' + Date.now(), name: name.trim(), beds: [1, 2], door: 'bottom', bedOrientations: {}, bedPositions: {}, roomBounds: { tilesX: 8, tilesY: 6 } };
+    fitAndCompactRoom(newR); roomList.push(newR); syncDataToCloud();
     setTimeout(() => openDoorSelector(newR.id), 200);
   }
 
   /* BỆNH ÁN & TIẾP NHẬN */
-  function handleBedClick(room, bed) {
+  function handleBedClick(room, bed, roomId) {
+    if (window.innerWidth <= 767 && arrangeModeRooms[roomId]) return;
     const existing = getPatientInBed(room, bed);
     if (existing) { currentActiveIndex = existing.entries.length - 1; openSummaryView(existing.id); }
     else {
@@ -779,43 +847,125 @@
     win.document.close(); win.focus(); setTimeout(() => win.print(), 400);
   }
 
-  /* RENDER GIAO DIỆN LƯỚI THẺ THÔNG MINH (GRID CARDS) HOÀN HẢO TRÊN MỌI ĐIỆN THOẠI */
+  /* RENDER SƠ ĐỒ & SCALE TỰ ĐỘNG KHÔNG BỊ TRÀN VIỀN, HỖ TRỢ PULL-TO-ZOOM TRÊN ĐIỆN THOẠI */
   function renderRoomsGrid() {
     const c = document.getElementById('roomsDynamicContainer'); if (!c) return;
+    const isMobile = window.innerWidth <= 767;
+
     c.innerHTML = roomList.map(r => {
-      const doorText = r.door === 'top' ? '⬇️ Cửa Trên' : r.door === 'left' ? '➡️ Cửa Trái' : r.door === 'right' ? '⬅️ Cửa Phải' : r.door === 'none' ? '🚫 Không cửa' : '⬆️ Cửa Dưới';
-      
-      const bedsHtml = r.beds.map(bed => {
+      const isArr = !isMobile && !!arrangeModeRooms[r.id];
+      fitAndCompactRoom(r);
+      const b = r.roomBounds || { tilesX: 8, tilesY: 6 };
+      const tx = isArr ? 18 : b.tilesX, ty = isArr ? 12 : b.tilesY;
+      const doorHtml = r.door !== 'none' ? `<div class="door-indicator door-${r.door||'bottom'}">${r.door==='top'?'⬇️':r.door==='left'?'➡️':r.door==='right'?'⬅️':'⬆️'} Cửa</div>` : '';
+      let defX = 1, defY = 1;
+      const bedHtml = r.beds.map(bed => {
         const p = getPatientInBed(r.name, bed);
+        const isV = r.bedOrientations?.[bed] === 'vertical';
+        const spanX = isV ? 2 : 3;
+        let pos = r.bedPositions?.[bed];
+        if (!pos?.tileX) {
+          if (defX + spanX > tx - 1) { defX = 1; defY += 4; }
+          pos = { tileX: defX, tileY: defY }; defX += spanX + 1;
+          r.bedPositions = r.bedPositions || {}; r.bedPositions[bed] = pos;
+        }
         return `
-          <div class="bed-grid-card ${p ? 'occupied' : ''}" onclick="handleBedClick('${r.name}', '${bed}')">
-            <div class="bed-card-top">
-              <span class="bed-card-num">Giường ${bed}</span>
-            </div>
-            <div>
-              ${p ? `<div class="bed-patient-name">${p.name}</div>` : `<div class="bed-empty-text">+ Trống</div>`}
+          <div class="bed-item-draggable ${p?'occupied':''} ${isV?'orient-vertical':'orient-horizontal'} ${isArr?'arranging':''}"
+               id="bedEl_${r.id}_${bed}" style="left:${pos.tileX*TILE_SIZE}px; top:${pos.tileY*TILE_SIZE}px;"
+               onpointerdown="startDraggingBed(event,'${r.id}','${bed}')" onclick="handleBedClick('${r.name}','${bed}','${r.id}')">
+            <div class="bed-pillow"></div>
+            <div class="bed-mattress-content">
+              <div class="bed-num-row">
+                <span class="bed-num">${bed}.</span>
+                ${!isMobile ? `<button type="button" class="btn-rotate-rect" onclick="rotateSingleBed(event,'${r.id}','${bed}')">${isV?'↕️ Dọc':'↔️ Ngang'}</button>` : ''}
+              </div>
+              <div class="bed-text-flow"><div class="${p?'patient-name-slot':'bed-empty-tag'}">${p?p.name:'+ Trống'}</div></div>
             </div>
           </div>`;
       }).join('');
+      
+      setTimeout(() => {
+        const wrapper = document.getElementById(`scaleWrap_${r.id}`);
+        const viewport = document.getElementById(`viewport_${r.id}`);
+        const boundary = document.getElementById(`floorBoundary_${r.id}`);
+        if (wrapper && viewport && boundary && !isArr) {
+          const availableW = viewport.clientWidth - 4;
+          const roomW = tx * TILE_SIZE;
+          const roomH = ty * TILE_SIZE;
+          if (roomW > availableW) {
+            const scaleVal = availableW / roomW;
+            wrapper.style.width = roomW + 'px';
+            wrapper.style.height = (roomH * scaleVal) + 'px';
+            boundary.style.transform = `scale(${scaleVal})`;
+            boundary.style.transformOrigin = 'top left';
+            boundary.style.position = 'absolute';
+            boundary.style.left = '0';
+            boundary.style.top = '0';
+          } else {
+            wrapper.style.width = roomW + 'px';
+            wrapper.style.height = roomH + 'px';
+            boundary.style.transform = 'scale(1)';
+            boundary.style.position = 'relative';
+            boundary.style.left = 'unset';
+            boundary.style.top = 'unset';
+          }
+        } else if (wrapper && boundary && isArr) {
+          const roomW = tx * TILE_SIZE;
+          const roomH = ty * TILE_SIZE;
+          wrapper.style.width = roomW + 'px';
+          wrapper.style.height = roomH + 'px';
+          boundary.style.transform = 'scale(1)';
+          boundary.style.position = 'relative';
+          boundary.style.left = 'unset';
+          boundary.style.top = 'unset';
+        }
+      }, 50);
 
       return `
-        <div class="room-card-box">
-          <div class="room-card-header">
-            <div class="room-title-name">
-              <span>${r.name}</span>
-              <span class="room-door-badge">${doorText}</span>
-            </div>
-            <div class="room-actions-group">
-              <button class="btn-bed-ctrl" onclick="editRoomSettings('${r.id}')">✏️ Sửa phòng</button>
-              <button class="btn-bed-ctrl" onclick="openDoorSelector('${r.id}')">🚪 Cửa</button>
-              <button class="btn-bed-ctrl btn-del-room" onclick="deleteRoom('${r.id}')">🗑️ Xóa</button>
+        <div class="room-block-wrapper">
+          <div class="room-header-bar">
+            <div class="room-title-name"><span>${r.name}</span></div>
+            <div class="room-control-buttons">
+              <button class="btn-bed-ctrl desktop-only-ctrl ${isArr?'btn-arrange-active':''}" onclick="toggleArrangeMode('${r.id}')">${isArr?'💾 Lưu vị trí':'📐 Sắp xếp'}</button>
+              <button class="btn-bed-ctrl desktop-only-ctrl" onclick="openDoorSelector('${r.id}')">🚪 Cửa</button>
+              <button class="btn-bed-ctrl desktop-only-ctrl" onclick="editRoomSettings('${r.id}')">✏️ Sửa phòng</button>
+              <button class="btn-bed-ctrl desktop-only-ctrl btn-del-room" onclick="deleteRoom('${r.id}')">🗑️ Xóa</button>
             </div>
           </div>
-          <div class="beds-grid-container">
-            ${bedsHtml || '<p style="color:#94a3b8; font-size:13px; text-align:center; padding:10px;">Phòng chưa có giường.</p>'}
+          ${isArr?'<div class="arrange-instruction-bar">📐 Kéo thả giường bắt dính vào ô gạch, sau đó bấm [💾 Lưu vị trí] để Fit phòng!</div>':''}
+          <div class="room-scroll-viewport" id="viewport_${r.id}">
+            <div class="room-scale-wrapper" id="scaleWrap_${r.id}">
+              <div class="room-floor-boundary ${isArr?'is-arranging':''}" id="floorBoundary_${r.id}" style="width:${tx*TILE_SIZE}px; height:${ty*TILE_SIZE}px;">
+                ${doorHtml}${bedHtml || '<p style="padding:40px;text-align:center;color:#94a3b8;">Chưa có giường.</p>'}
+              </div>
+            </div>
           </div>
         </div>`;
     }).join('');
+  }
+
+  function startDraggingBed(e, roomId, bed) {
+    if (window.innerWidth <= 767 || !arrangeModeRooms[roomId] || e.target.closest('.btn-rotate-rect')) return;
+    const bedEl = document.getElementById(`bedEl_${roomId}_${bed}`);
+    const floorEl = document.getElementById(`floorBoundary_${roomId}`);
+    if (!bedEl || !floorEl) return;
+    e.preventDefault(); bedEl.classList.add('dragging');
+    const br = bedEl.getBoundingClientRect(), fr = floorEl.getBoundingClientRect();
+    activeDrag = { roomId, bed, bedEl, floorEl, offX: e.clientX - br.left, offY: e.clientY - br.top, fLeft: fr.left, fTop: fr.top };
+    const move = ev => {
+      if (!activeDrag) return; ev.preventDefault();
+      const tx = Math.max(0, Math.round((ev.clientX - activeDrag.fLeft - activeDrag.offX) / TILE_SIZE));
+      const ty = Math.max(0, Math.round((ev.clientY - activeDrag.fTop - activeDrag.offY) / TILE_SIZE));
+      activeDrag.bedEl.style.left = (tx * TILE_SIZE) + 'px'; activeDrag.bedEl.style.top = (ty * TILE_SIZE) + 'px';
+      const r = roomList.find(x => x.id === activeDrag.roomId);
+      if (r) { r.bedPositions = r.bedPositions || {}; r.bedPositions[activeDrag.bed] = { tileX: tx, tileY: ty }; }
+    };
+    const stop = () => {
+      if (activeDrag) { activeDrag.bedEl.classList.remove('dragging'); activeDrag = null; }
+      window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', stop);
+    };
+    window.addEventListener('pointermove', move, { passive: false });
+    window.addEventListener('pointerup', stop);
   }
 
   function renderDashboardCounts() {

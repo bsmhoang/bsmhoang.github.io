@@ -43,7 +43,7 @@
     .view-section { display: none; }
     .view-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 
-    /* Sơ đồ phòng & Khớp chuẩn tỉ lệ di động */
+    /* Sơ đồ phòng */
     .room-block-wrapper { margin-bottom: 30px; display: flex; flex-direction: column; align-items: center; width: 100%; }
     .room-header-bar { display: flex; justify-content: space-between; align-items: center; margin: 16px 2px 8px; flex-wrap: wrap; gap: 6px; width: 100%; max-width: 820px; }
     .room-title-name { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
@@ -847,7 +847,7 @@
     win.document.close(); win.focus(); setTimeout(() => win.print(), 400);
   }
 
-  /* RENDER SƠ ĐỒ & SCALE CHUẨN XÁC, KHÔNG BỊ LỆCH KHUNG TRÊN MỌI THIẾT BỊ */
+  /* RENDER SƠ ĐỒ DỌC TRÊN ĐIỆN THOẠI & XOAY NGANG TRÊN MÁY TÍNH */
   function renderRoomsGrid() {
     const c = document.getElementById('roomsDynamicContainer'); if (!c) return;
     const isMobile = window.innerWidth <= 767;
@@ -855,23 +855,39 @@
     c.innerHTML = roomList.map(r => {
       const isArr = !isMobile && !!arrangeModeRooms[r.id];
       fitAndCompactRoom(r);
-      const b = r.roomBounds || { tilesX: 8, tilesY: 6 };
-      const tx = isArr ? 18 : b.tilesX, ty = isArr ? 12 : b.tilesY;
+      
+      let b = r.roomBounds || { tilesX: 8, tilesY: 6 };
+      let tx = isArr ? 18 : b.tilesX, ty = isArr ? 12 : b.tilesY;
+
+      // Nếu là điện thoại, tự động chuyển sơ đồ thành chiều dọc (hoán đổi width và height cho phù hợp màn hình dọc)
+      if (isMobile) {
+        const temp = tx; tx = ty; ty = temp;
+      }
+
       const doorHtml = r.door !== 'none' ? `<div class="door-indicator door-${r.door||'bottom'}">${r.door==='top'?'⬇️':r.door==='left'?'➡️':r.door==='right'?'⬅️':'⬆️'} Cửa</div>` : '';
       let defX = 1, defY = 1;
+
       const bedHtml = r.beds.map(bed => {
         const p = getPatientInBed(r.name, bed);
         const isV = r.bedOrientations?.[bed] === 'vertical';
-        const spanX = isV ? 2 : 3;
+        
         let pos = r.bedPositions?.[bed];
         if (!pos?.tileX) {
+          const spanX = isV ? 2 : 3;
           if (defX + spanX > tx - 1) { defX = 1; defY += 4; }
           pos = { tileX: defX, tileY: defY }; defX += spanX + 1;
           r.bedPositions = r.bedPositions || {}; r.bedPositions[bed] = pos;
         }
+
+        // Trên điện thoại, tự động điều chỉnh tọa độ cho sơ đồ dọc
+        let pX = pos.tileX, pY = pos.tileY;
+        if (isMobile) {
+          pX = pos.tileY; pY = pos.tileX; // Hoán đổi X và Y để tự động xoay dọc sơ đồ
+        }
+
         return `
           <div class="bed-item-draggable ${p?'occupied':''} ${isV?'orient-vertical':'orient-horizontal'} ${isArr?'arranging':''}"
-               id="bedEl_${r.id}_${bed}" style="left:${pos.tileX*TILE_SIZE}px; top:${pos.tileY*TILE_SIZE}px;"
+               id="bedEl_${r.id}_${bed}" style="left:${pX*TILE_SIZE}px; top:${pY*TILE_SIZE}px;"
                onpointerdown="startDraggingBed(event,'${r.id}','${bed}')" onclick="handleBedClick('${r.name}','${bed}','${r.id}')">
             <div class="bed-pillow"></div>
             <div class="bed-mattress-content">

@@ -37,7 +37,6 @@
       -webkit-tap-highlight-color: transparent;
     }
     
-    /* GIAO DIỆN CHUNG (MẶC ĐỊNH CHO ĐIỆN THOẠI) */
     body { 
       background: var(--bg); 
       color: var(--text-main); 
@@ -52,7 +51,6 @@
       max-width: 580px; 
       margin: 0 auto; 
       width: 100%; 
-      transition: max-width 0.2s ease;
     }
 
     /* THANH TRẠNG THÁI ĐỒNG BỘ */
@@ -137,7 +135,7 @@
       cursor: pointer; 
     }
 
-    /* SƠ ĐỒ PHÒNG GIƯỜNG */
+    /* SƠ ĐỒ PHÒNG GIƯỜNG - GIAO DIỆN GỐC */
     .room-header-bar {
       display: flex;
       justify-content: space-between;
@@ -234,7 +232,7 @@
     .patient-name-slot { font-size: 13.5px; font-weight: 700; line-height: 1.25; word-break: break-word; color: #0f172a; }
     .bed-empty-tag { font-size: 11px; color: #94a3b8; font-style: italic; }
 
-    /* HỒ SƠ BỆNH ÁN: VUỐT NGANG THEO NGÀY */
+    /* HỒ SƠ BỆNH ÁN CỐ ĐỊNH CHIỀU CAO - VUỐT NGANG */
     .summary-app-window {
       background: white;
       border: 1.5px solid var(--border);
@@ -430,7 +428,9 @@
       white-space: nowrap;
     }
 
-    /* FORM NHẬP / SỬA / THÊM NGÀY: CUỘN TOÀN TRANG TỰ NHIÊN */
+    /* ========================================================
+       FORM NHẬP / SỬA: TỰ ĐỘNG GIÃN CAO - BỎ THANH CUỘN DỌC
+       ======================================================== */
     .form-fullpage-card {
       background: white;
       border: 1.5px solid var(--border);
@@ -498,16 +498,19 @@
     .form-block-textarea-wrap {
       padding: 10px 14px;
     }
+    /* Xóa hoàn toàn thanh cuộn dọc bên trong ô textarea */
     .form-block-textarea-wrap textarea {
       width: 100%;
-      min-height: 90px;
+      min-height: 80px;
       border: none;
       outline: none;
       font-size: 14.5px;
       line-height: 1.6;
-      resize: vertical;
+      resize: none;
+      overflow-y: hidden; /* Không hiện thanh cuộn dọc */
       background: transparent;
       color: #0f172a;
+      display: block;
     }
 
     .form-fullpage-footer {
@@ -610,68 +613,16 @@
     }
     .btn-del-patient-discharged:active { background: #fee2e2; }
 
-    /* ========================================================
-       TỐI ƯU HÓA CHO MÁY TÍNH / LAPTOP (WINDOWS & MÀN HÌNH RỘNG)
-       ======================================================== */
+    /* BỐ CỤC FORM TRÊN MÀN HÌNH MÁY TÍNH */
     @media (min-width: 768px) {
-      body {
-        padding: 24px 20px 50px 20px;
-      }
-      
-      .container { 
-        max-width: 1080px; /* Mở rộng tối đa cho màn hình PC */
-      }
-
-      /* Menu chính chia 2 cột rộng rãi */
-      .btn-menu-list {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-      }
-
-      /* Sơ đồ phòng buồng trên máy tính: 6 giường / hàng */
-      .grid-room-dynamic {
-        grid-template-columns: repeat(6, 1fr);
-      }
-      .grid-room-dynamic.col-2 {
-        grid-template-columns: repeat(4, 1fr);
-      }
-
-      /* Bố cục hồ sơ và form chia 2 cột song song cân đối */
-      .day-slide-page,
+      .container { max-width: 900px; }
       .form-fullpage-content {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 16px;
-        align-content: start;
       }
-
       .form-top-grid {
         grid-template-columns: 1fr 220px;
-      }
-
-      /* Chiều cao cửa sổ hồ sơ trên PC */
-      .summary-app-window {
-        height: calc(100vh - 100px);
-      }
-
-      /* Nút bấm to hơn, có hiệu ứng hover chuột trên PC */
-      .big-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.06);
-      }
-      .bed-slot:hover {
-        filter: brightness(0.96);
-      }
-      .btn-top:hover,
-      .btn-back:hover,
-      .btn-edit-day-pill:hover,
-      .btn-add-day-pill:hover,
-      .btn-del-patient-active:hover,
-      .btn-transfer-bed:hover,
-      .btn-finish-treatment:hover,
-      .btn-confirm-submit:hover {
-        filter: brightness(0.95);
       }
     }
   </style>
@@ -776,28 +727,28 @@
         <div class="section-block-box">
           <div class="section-block-tag">Chẩn đoán</div>
           <div class="form-block-textarea-wrap">
-            <textarea id="recordDiagnosis" placeholder="Nhập mã bệnh, tên chẩn đoán..."></textarea>
+            <textarea id="recordDiagnosis" placeholder="Nhập mã bệnh, tên chẩn đoán..." oninput="autoExpandTextarea(this)"></textarea>
           </div>
         </div>
 
         <div class="section-block-box">
           <div class="section-block-tag">Theo dõi</div>
           <div class="form-block-textarea-wrap">
-            <textarea id="recordTracking" placeholder="Diễn tiến, triệu chứng, nước tiểu, sinh hiệu..."></textarea>
+            <textarea id="recordTracking" placeholder="Diễn tiến, triệu chứng, nước tiểu, sinh hiệu..." oninput="autoExpandTextarea(this)"></textarea>
           </div>
         </div>
 
         <div class="section-block-box">
           <div class="section-block-tag">Xét nghiệm</div>
           <div class="form-block-textarea-wrap">
-            <textarea id="recordTests" placeholder="Công thức máu, sinh hóa, cận lâm sàng..."></textarea>
+            <textarea id="recordTests" placeholder="Công thức máu, sinh hóa, cận lâm sàng..." oninput="autoExpandTextarea(this)"></textarea>
           </div>
         </div>
 
         <div class="section-block-box">
           <div class="section-block-tag">Hình ảnh</div>
           <div class="form-block-textarea-wrap">
-            <textarea id="recordImagingText" placeholder="Kết quả X-quang, Siêu âm, CLVT, MRI..."></textarea>
+            <textarea id="recordImagingText" placeholder="Kết quả X-quang, Siêu âm, CLVT, MRI..." oninput="autoExpandTextarea(this)"></textarea>
           </div>
         </div>
       </div>
@@ -844,7 +795,7 @@
 </div>
 
 <script>
-  // LINK GOOGLE APPS SCRIPT CHÍNH XÁC CỦA BẠN:
+  // LINK GOOGLE APPS SCRIPT CỦA BẠN:
   const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxVVVoEdjNY5fsWGuJegc9EHAcrzTFaty4VEhMeyo5HsKdT-U89s9SlT7R-zdaXuMayzw/exec";
 
   const defaultRooms = [
@@ -859,6 +810,22 @@
   let currentViewingPatientId = null;
   let currentActiveIndex = 0;
   let isProgrammaticScroll = false;
+
+  // Tự động giãn chiều cao ô văn bản khi nhập, ẩn hoàn toàn thanh cuộn dọc
+  function autoExpandTextarea(element) {
+    if (!element) return;
+    element.style.height = 'auto';
+    element.style.height = (element.scrollHeight) + 'px';
+  }
+
+  function resizeAllTextareas() {
+    setTimeout(() => {
+      ['recordDiagnosis', 'recordTracking', 'recordTests', 'recordImagingText'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) autoExpandTextarea(el);
+      });
+    }, 50);
+  }
 
   function updateSyncUI(status, text) {
     const el = document.getElementById('syncStatus');
@@ -1042,6 +1009,7 @@
       document.getElementById('recordTests').value = '';
       document.getElementById('recordImagingText').value = '';
       showView('patientFormView');
+      resizeAllTextareas();
     }
   }
 
@@ -1063,6 +1031,7 @@
     document.getElementById('recordImagingText').value = '';
 
     showView('patientFormView');
+    resizeAllTextareas();
   }
 
   function handleEditCurrentDayClick() {
@@ -1083,6 +1052,7 @@
     document.getElementById('recordImagingText').value = currentEntry.imaging || '';
 
     showView('patientFormView');
+    resizeAllTextareas();
   }
 
   function handleBackFromForm() {
@@ -1220,7 +1190,7 @@
     }
   }
 
-  /* VIEW HỒ SƠ */
+  /* VIEW HỒ SƠ BỆNH ÁN */
   function openSummaryView(id) {
     currentViewingPatientId = id;
     const p = patients.find(x => x.id === id);

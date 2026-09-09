@@ -53,6 +53,91 @@
       width: 100%; 
     }
 
+    /* MÀN HÌNH ĐĂNG NHẬP / MÃ KHÓA PIN */
+    #lockScreenView {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: var(--bg);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .lock-card {
+      background: white;
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      padding: 36px 24px;
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+    }
+    .lock-avatar {
+      width: 68px;
+      height: 68px;
+      background: var(--primary-light);
+      color: var(--primary);
+      border-radius: 50%;
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      border: 2px solid #bae6fd;
+    }
+    .lock-title {
+      font-size: 19px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+    .lock-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+    .pin-input {
+      width: 100%;
+      padding: 14px;
+      font-size: 24px;
+      text-align: center;
+      letter-spacing: 12px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-md);
+      outline: none;
+      background: #f8fafc;
+      color: #0f172a;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .pin-input:focus {
+      border-color: var(--primary);
+      background: white;
+    }
+    .btn-unlock {
+      width: 100%;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+    }
+    .btn-unlock:active { background: var(--primary-hover); }
+    .lock-error-msg {
+      color: #dc2626;
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 10px;
+      min-height: 18px;
+    }
+
     /* THANH TRẠNG THÁI ĐỒNG BỘ */
     .sync-status-bar {
       font-size: 11.5px;
@@ -68,7 +153,7 @@
 
     .top-bar { 
       display: flex; 
-      align-items: center;
+      align-items: center; 
       justify-content: space-between; 
       margin-bottom: 12px; 
     }
@@ -232,7 +317,7 @@
     .patient-name-slot { font-size: 13.5px; font-weight: 700; line-height: 1.25; word-break: break-word; color: #0f172a; }
     .bed-empty-tag { font-size: 11px; color: #94a3b8; font-style: italic; }
 
-    /* HỒ SƠ BỆNH ÁN: CHIỀU DỌC THÔNG SUỐT */
+    /* HỒ SƠ BỆNH ÁN: CHIỀU DỌC */
     .summary-page-container {
       background: white;
       border: 1.5px solid var(--border);
@@ -371,7 +456,6 @@
       word-break: break-word;
     }
 
-    /* KHUNG HIỂN THỊ DANH SÁCH ẢNH */
     .images-grid-preview {
       display: flex;
       flex-wrap: wrap;
@@ -646,11 +730,11 @@
     }
     .btn-del-patient-discharged:active { background: #fee2e2; }
 
-    /* MODAL XEM ẢNH PHÓNG TO */
+    /* MODAL XEM ẢNH */
     #imageModalViewer {
       display: none;
       position: fixed;
-      z-index: 9999;
+      z-index: 99999;
       top: 0; left: 0;
       width: 100%; height: 100%;
       background: rgba(0, 0, 0, 0.85);
@@ -674,7 +758,19 @@
 </head>
 <body>
 
-<div class="container">
+<!-- MÀN HÌNH ĐĂNG NHẬP (MẬT MÃ: 000000) -->
+<div id="lockScreenView">
+  <div class="lock-card">
+    <div class="lock-avatar">🔐</div>
+    <h2 class="lock-title">Bệnh Án Lâm Sàng</h2>
+    <p class="lock-subtitle">Nhập mật mã 6 số để mở hệ thống</p>
+    <input type="password" id="pinInput" class="pin-input" maxlength="6" inputmode="numeric" placeholder="••••••" onkeydown="handlePinKeydown(event)">
+    <button type="button" class="btn-unlock" onclick="verifyPin()">Mở khóa</button>
+    <div id="lockErrorMsg" class="lock-error-msg"></div>
+  </div>
+</div>
+
+<div class="container" id="appMainContainer" style="display:none;">
 
   <!-- TRANG CHỦ -->
   <div id="homeView">
@@ -711,7 +807,7 @@
     </button>
   </div>
 
-  <!-- VIEW HỒ SƠ BỆNH ÁN: CHIỀU DỌC THÔNG SUỐT -->
+  <!-- VIEW HỒ SƠ BỆNH ÁN: CHIỀU DỌC -->
   <div id="summaryFullView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('roomGridView')">⬅️ Sơ đồ phòng</button>
@@ -746,7 +842,7 @@
     </div>
   </div>
 
-  <!-- FORM THÊM / SỬA NGÀY (CÓ NÚT THÊM ẢNH & DÁN ẢNH) -->
+  <!-- FORM THÊM / SỬA NGÀY -->
   <div id="patientFormView" class="view-section">
     <div class="view-header">
       <button class="btn-back" id="btnBackFromForm" onclick="handleBackFromForm()">⬅️ Quay lại</button>
@@ -754,7 +850,6 @@
       <div style="width:40px;"></div>
     </div>
 
-    <!-- 4 Input file ẩn hỗ trợ Chụp / Tải ảnh -->
     <input type="file" id="fileInput_diag" accept="image/*" style="display:none" onchange="handleImageFileSelected(this, 'diag')">
     <input type="file" id="fileInput_tracking" accept="image/*" style="display:none" onchange="handleImageFileSelected(this, 'tracking')">
     <input type="file" id="fileInput_tests" accept="image/*" style="display:none" onchange="handleImageFileSelected(this, 'tests')">
@@ -775,7 +870,6 @@
       </div>
 
       <div class="form-fullpage-content">
-        <!-- Chẩn đoán -->
         <div class="section-block-box">
           <div class="section-block-head-bar">
             <span class="section-block-tag">Chẩn đoán</span>
@@ -787,7 +881,6 @@
           <div class="images-grid-preview" id="preview_diag" style="display:none"></div>
         </div>
 
-        <!-- Theo dõi -->
         <div class="section-block-box">
           <div class="section-block-head-bar">
             <span class="section-block-tag">Theo dõi</span>
@@ -799,7 +892,6 @@
           <div class="images-grid-preview" id="preview_tracking" style="display:none"></div>
         </div>
 
-        <!-- Xét nghiệm -->
         <div class="section-block-box">
           <div class="section-block-head-bar">
             <span class="section-block-tag">Xét nghiệm</span>
@@ -811,7 +903,6 @@
           <div class="images-grid-preview" id="preview_tests" style="display:none"></div>
         </div>
 
-        <!-- Hình ảnh -->
         <div class="section-block-box">
           <div class="section-block-head-bar">
             <span class="section-block-tag">Hình ảnh</span>
@@ -863,7 +954,6 @@
     </div>
   </div>
 
-  <!-- POPUP XEM ẢNH TO -->
   <div id="imageModalViewer" onclick="this.style.display='none'">
     <img id="modalViewerImg" src="" alt="Ảnh bệnh án">
   </div>
@@ -872,6 +962,7 @@
 
 <script>
   const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxVVVoEdjNY5fsWGuJegc9EHAcrzTFaty4VEhMeyo5HsKdT-U89s9SlT7R-zdaXuMayzw/exec";
+  const CORRECT_PIN = "000000"; // MẬT MÃ BẢO VỆ
 
   const defaultRooms = [
     { id: '825', name: 'Phòng 825', beds: [1, 2, 3, 4, 5, 6] },
@@ -885,14 +976,66 @@
   let currentViewingPatientId = null;
   let currentActiveIndex = 0;
 
-  // Mảng lưu trữ ảnh tạm thời khi đang mở Form
-  let formImages = {
-    diag: [],
-    tracking: [],
-    tests: [],
-    imaging: []
-  };
+  let formImages = { diag: [], tracking: [], tests: [], imaging: [] };
 
+  /* ========================================================
+     BẢO MẬT: MÃ PIN & TỰ ĐỘNG THOÁT SAU 1 PHÚT
+     ======================================================== */
+  let inactivityTimer = null;
+  let isAuthenticated = false;
+
+  function resetInactivityTimer() {
+    if (!isAuthenticated) return;
+    clearTimeout(inactivityTimer);
+    // 60,000 ms = 1 phút không hoạt động
+    inactivityTimer = setTimeout(() => {
+      lockSystem();
+    }, 60000);
+  }
+
+  function handlePinKeydown(e) {
+    if (e.key === 'Enter') {
+      verifyPin();
+    }
+  }
+
+  function verifyPin() {
+    const input = document.getElementById('pinInput');
+    const err = document.getElementById('lockErrorMsg');
+    if (input.value === CORRECT_PIN) {
+      isAuthenticated = true;
+      document.getElementById('lockScreenView').style.display = 'none';
+      document.getElementById('appMainContainer').style.display = 'block';
+      err.textContent = '';
+      input.value = '';
+      resetInactivityTimer();
+      renderDashboardCounts();
+      loadDataFromCloud();
+    } else {
+      err.textContent = 'Mật mã không đúng. Vui lòng nhập lại!';
+      input.value = '';
+      input.focus();
+    }
+  }
+
+  function lockSystem() {
+    isAuthenticated = false;
+    clearTimeout(inactivityTimer);
+    document.getElementById('appMainContainer').style.display = 'none';
+    document.getElementById('lockScreenView').style.display = 'flex';
+    document.getElementById('pinInput').value = '';
+    document.getElementById('lockErrorMsg').textContent = 'Hệ thống đã tự động khóa do không hoạt động 1 phút.';
+    document.getElementById('pinInput').focus();
+  }
+
+  // Bắt các sự kiện tương tác của người dùng để tính lại 1 phút
+  ['touchstart', 'mousemove', 'scroll', 'keydown', 'click'].forEach(evt => {
+    window.addEventListener(evt, resetInactivityTimer, true);
+  });
+
+  /* ========================================================
+     XỬ LÝ HÌNH ẢNH
+     ======================================================== */
   function autoExpandTextarea(element) {
     if (!element) return;
     element.style.height = 'auto';
@@ -908,9 +1051,6 @@
     }, 50);
   }
 
-  /* ========================================================
-     XỬ LÝ ẢNH (NÉN, CHỌN ẢNH, DÁN ẢNH TỪ CLIPBOARD)
-     ======================================================== */
   function triggerPickImage(field) {
     const input = document.getElementById(`fileInput_${field}`);
     if (input) input.click();
@@ -920,7 +1060,7 @@
     if (input.files && input.files[0]) {
       const file = input.files[0];
       compressAndAddImage(file, field);
-      input.value = ''; // reset để chọn lại được cùng file
+      input.value = '';
     }
   }
 
@@ -936,14 +1076,13 @@
     }
   }
 
-  // Nén ảnh tự động bằng Canvas (Đảm bảo dung lượng nhẹ, lưu Sheets mượt mà)
   function compressAndAddImage(file, field) {
     const reader = new FileReader();
     reader.onload = function(evt) {
       const img = new Image();
       img.onload = function() {
         const canvas = document.createElement('canvas');
-        const maxDim = 1200; // Tối đa 1200px (đủ nét đọc kết quả CLS/X-quang)
+        const maxDim = 1200;
         let w = img.width;
         let h = img.height;
 
@@ -961,7 +1100,6 @@
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, w, h);
         
-        // Nén ở chuẩn WebP/JPEG chất lượng 0.7
         const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
         formImages[field].push(compressedBase64);
         renderFormImagePreviews(field);
@@ -1005,7 +1143,7 @@
   }
 
   /* ========================================================
-     ĐỒNG BỘ CLOUD & QUẢN LÝ
+     ĐỒNG BỘ CLOUD & QUẢN LÝ DỮ LIỆU
      ======================================================== */
   function updateSyncUI(status, text) {
     const el = document.getElementById('syncStatus');
@@ -1170,7 +1308,6 @@
     syncDataToCloud();
   }
 
-  /* THAO TÁC TIẾP NHẬN / THÊM NGÀY / SỬA NGÀY */
   function handleBedClick(roomName, bedNum) {
     const existing = getPatientInBed(roomName, bedNum);
     if (existing) {
@@ -1237,7 +1374,6 @@
     document.getElementById('recordTests').value = currentEntry.tests || '';
     document.getElementById('recordImagingText').value = currentEntry.imaging || '';
 
-    // Nạp lại ảnh cũ của ngày đó (nếu có)
     formImages = {
       diag: [...(currentEntry.images?.diag || [])],
       tracking: [...(currentEntry.images?.tracking || [])],
@@ -1390,7 +1526,6 @@
     }
   }
 
-  /* VIEW HỒ SƠ BỆNH ÁN: HIỂN THỊ CẢ TEXT VÀ HÌNH ẢNH */
   function openSummaryView(id) {
     currentViewingPatientId = id;
     const p = patients.find(x => x.id === id);
@@ -1484,7 +1619,6 @@
     }
   }
 
-  /* XUẤT BÁO CÁO FILE PDF CẢ VĂN BẢN VÀ ẢNH */
   function exportPatientPDF(patientId) {
     const p = patients.find(x => x.id === patientId);
     if (!p) return;
@@ -1718,8 +1852,11 @@
     }
   }
 
-  renderDashboardCounts();
-  loadDataFromCloud();
+  // Tự động focus vào ô nhập mã PIN khi vừa mở trang
+  window.onload = () => {
+    const pin = document.getElementById('pinInput');
+    if (pin) pin.focus();
+  };
 </script>
 </body>
 </html>

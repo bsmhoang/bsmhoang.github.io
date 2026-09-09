@@ -52,13 +52,8 @@
     .btn-arrange-active { background: #fef08a !important; border-color: #eab308 !important; color: #854d0e !important; }
     .btn-del-room { background: #fef2f2; border: 1px solid #fca5a5; color: #dc2626; }
     
-    /* Phân quyền hiển thị riêng cho Điện thoại / Máy tính */
     @media (max-width: 767px) {
       .desktop-only-ctrl { display: none !important; }
-      .mobile-only-ctrl { display: inline-flex !important; }
-    }
-    @media (min-width: 768px) {
-      .mobile-only-ctrl { display: none !important; }
     }
 
     .room-scroll-viewport { width: 100%; overflow-x: auto; padding: 12px 4px; display: flex; justify-content: center; -webkit-overflow-scrolling: touch; }
@@ -563,7 +558,7 @@
     } catch { updateSyncUI('error', 'Không thể lưu'); }
   }
 
-  /* XOAY PHÒNG TRỰC TIẾP TRÊN ĐIỆN THOẠI */
+  /* XOAY PHÒNG TRÊN ĐIỆN THOẠI */
   function rotateRoomOnMobile(id) {
     const r = roomList.find(x => x.id === id); if (!r) return;
     r.mobileRotated = !r.mobileRotated;
@@ -858,7 +853,7 @@
     win.document.close(); win.focus(); setTimeout(() => win.print(), 400);
   }
 
-  /* RENDER SƠ ĐỒ CHUẨN XÁC, CÓ NÚT XOAY PHÒNG TRÊN ĐIỆN THOẠI VÀ CĂN GIỮA TUYỆT ĐỐI */
+  /* RENDER SƠ ĐỒ PHÒNG HOÀN CHỈNH: XOAY ĐỒNG BỘ CẢ PHÒNG, CỬA VÀ GIƯỜNG (BAO GỒM SỐ THỨ TỰ) */
   function renderRoomsGrid() {
     const c = document.getElementById('roomsDynamicContainer'); if (!c) return;
     const isMobile = window.innerWidth <= 767;
@@ -872,7 +867,7 @@
       let ty = isArr ? 12 : b.tilesY;
       let finalDoor = r.door || 'bottom';
 
-      // Nếu là điện thoại và người dùng bấm nút Xoay phòng
+      // NẾU LÀ ĐIỆN THOẠI VÀ BẤM XOAY PHÒNG: Hoán đổi tọa độ phòng và hướng cửa
       if (isMobile && r.mobileRotated) {
         const tmp = tx; tx = ty; ty = tmp;
         if (finalDoor === 'bottom') finalDoor = 'right';
@@ -887,10 +882,10 @@
       const bedHtml = r.beds.map(bed => {
         const p = getPatientInBed(r.name, bed);
         const originalIsVert = r.bedOrientations?.[bed] === 'vertical';
-        const spanX = originalIsVert ? 2 : 3;
         let pos = r.bedPositions?.[bed];
 
         if (!pos?.tileX) {
+          const spanX = originalIsVert ? 2 : 3;
           if (defX + spanX > (isMobile && r.mobileRotated ? ty : tx) - 1) { defX = 1; defY += 4; }
           pos = { tileX: defX, tileY: defY }; defX += spanX + 1;
           r.bedPositions = r.bedPositions || {}; r.bedPositions[bed] = pos;
@@ -899,8 +894,10 @@
         let pX = pos.tileX, pY = pos.tileY;
         let finalIsVert = originalIsVert;
 
+        // XOAY ĐỒNG BỘ CẢ TỌA ĐỘ VÀ CHIỀU GIƯỜNG (KÈM SỐ THỨ TỰ)
         if (isMobile && r.mobileRotated) {
-          pX = pos.tileY; pY = pos.tileX;
+          pX = pos.tileY; 
+          pY = pos.tileX; 
           finalIsVert = !originalIsVert;
         }
 
@@ -924,7 +921,7 @@
           <div class="room-header-bar">
             <div class="room-title-name"><span>${r.name}</span></div>
             <div class="room-control-buttons">
-              <!-- Nút xoay phòng riêng trên điện thoại -->
+              <!-- Nút xoay phòng trực tiếp trên điện thoại -->
               <button class="btn-bed-ctrl mobile-only-ctrl" onclick="rotateRoomOnMobile('${r.id}')">🔄 Xoay phòng</button>
 
               <button class="btn-bed-ctrl desktop-only-ctrl ${isArr?'btn-arrange-active':''}" onclick="toggleArrangeMode('${r.id}')">${isArr?'💾 Lưu vị trí':'📐 Sắp xếp'}</button>
@@ -944,7 +941,7 @@
   }
 
   function startDraggingBed(e, roomId, bed) {
-    if (window.innerWidth <= 767 || !arrangeModeRooms[roomId] || e.target.closest('.btn-rotate-rect')) return;
+    if (!arrangeModeRooms[roomId] || e.target.closest('.btn-rotate-rect')) return;
     const bedEl = document.getElementById(`bedEl_${roomId}_${bed}`);
     const floorEl = document.getElementById(`floorBoundary_${roomId}`);
     if (!bedEl || !floorEl) return;

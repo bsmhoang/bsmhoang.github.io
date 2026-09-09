@@ -408,7 +408,6 @@
     document.getElementById('editRoomModalTitle').textContent = `Sửa phòng - ${r.name}`;
     
     const container = document.getElementById('editRoomBedListContainer');
-    // Chỉ hiển thị các giường thực tế đang tồn tại trong phòng
     container.innerHTML = r.beds.map(bed => {
       const p = getPatientInBed(r.name, bed);
       return `
@@ -467,22 +466,29 @@
       alert("Không thể xóa giường đang có bệnh nhân điều trị!");
       return;
     }
+    
+    // Xóa giường được chọn khỏi danh sách
+    r.beds = r.beds.filter(b => !bedsToRemove.includes(b));
 
+    // Thuật toán kiểm tra và tự động xóa cột ngoài cùng nếu toàn bộ các ô trong cột đó đã trống sạch
     const colCount = r.cols || 3;
-    const maxBed = r.beds.length ? Math.max(...r.beds) : 0;
-    
-    // Thuật toán kiểm tra và tự động xóa hàng/cột ngoài cùng nếu toàn bộ ô trong đó bị xóa sạch
-    bedsToRemove.forEach(b => {
-      const isOuterCol = (b % colCount === 0 || b % colCount === 1);
-      const isOuterRow = (b <= colCount || b > maxBed - colCount);
-      
-      // Nếu là hàng/cột ngoài cùng hoặc nằm ở biên trống, cho phép gỡ bỏ hoàn toàn khỏi mảng beds
-      r.beds = r.beds.filter(item => item !== b);
-    });
+    let maxBedVal = r.beds.length ? Math.max(...r.beds) : 0;
+    let totalRows = Math.ceil((maxBedVal || 1) / colCount);
 
-    // Cơ chế thông minh: Kiểm tra hàng/cột ngoài cùng nếu trống hoàn toàn thì thu gọn bớt hàng/cột
-    // Các ô ở giữa nếu xóa mà 2 bên vẫn có ô chứa thông tin giường thì để trống khoảng không gian (is-empty-slot)
-    
+    // Kiểm tra cột ngoài cùng bên phải (cột cuối) xem có trống sạch không
+    let rightColEmpty = true;
+    for (let row = 0; row < totalRows; row++) {
+      let bedIndex = row * colCount + colCount;
+      if (r.beds.includes(bedIndex)) {
+        rightColEmpty = false;
+        break;
+      }
+    }
+    // Nếu cột ngoài cùng trống, tự động giảm số lượng cột đi 1
+    if (rightColEmpty && colCount > 1) {
+      r.cols = colCount - 1;
+    }
+
     syncDataToCloud();
     closeEditRoomModal();
   }
@@ -781,7 +787,6 @@
               ${p ? `<span class="bed-cell-name">👤 ${p.name}</span>` : `<span class="bed-cell-empty">+ Trống</span>`}
             </div>`;
         } else {
-          // Ô trống giữ chỗ khi xóa giường ở giữa (nếu 2 bên còn ô chứa thông tin)
           bedsHtml += `<div class="bed-cell-item is-empty-slot"></div>`;
         }
       }

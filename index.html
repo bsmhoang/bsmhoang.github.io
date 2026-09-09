@@ -332,6 +332,9 @@
     }
     .summary-scrollable-body::-webkit-scrollbar { display: none; }
 
+    /* ========================================================
+       TRIỆT TIÊU HOÀN TOÀN THANH CUỘN DỌC TRONG HỒ SƠ
+       ======================================================== */
     .day-slide-page {
       width: 100%;
       min-width: 100%;
@@ -344,6 +347,13 @@
       flex-direction: column;
       gap: 12px;
       padding: 12px 14px 20px 14px;
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE/Edge */
+    }
+    .day-slide-page::-webkit-scrollbar {
+      display: none; /* Chrome, Safari, Edge */
+      width: 0;
+      height: 0;
     }
 
     .section-block-box {
@@ -428,9 +438,7 @@
       white-space: nowrap;
     }
 
-    /* ========================================================
-       FORM NHẬP / SỬA: TỰ ĐỘNG GIÃN CAO - BỎ THANH CUỘN DỌC
-       ======================================================== */
+    /* FORM NHẬP / SỬA: TỰ ĐỘNG GIÃN CAO - BỎ THANH CUỘN DỌC */
     .form-fullpage-card {
       background: white;
       border: 1.5px solid var(--border);
@@ -498,7 +506,6 @@
     .form-block-textarea-wrap {
       padding: 10px 14px;
     }
-    /* Xóa hoàn toàn thanh cuộn dọc bên trong ô textarea */
     .form-block-textarea-wrap textarea {
       width: 100%;
       min-height: 80px;
@@ -507,7 +514,7 @@
       font-size: 14.5px;
       line-height: 1.6;
       resize: none;
-      overflow-y: hidden; /* Không hiện thanh cuộn dọc */
+      overflow-y: hidden;
       background: transparent;
       color: #0f172a;
       display: block;
@@ -795,7 +802,6 @@
 </div>
 
 <script>
-  // LINK GOOGLE APPS SCRIPT CỦA BẠN:
   const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxVVVoEdjNY5fsWGuJegc9EHAcrzTFaty4VEhMeyo5HsKdT-U89s9SlT7R-zdaXuMayzw/exec";
 
   const defaultRooms = [
@@ -811,7 +817,6 @@
   let currentActiveIndex = 0;
   let isProgrammaticScroll = false;
 
-  // Tự động giãn chiều cao ô văn bản khi nhập, ẩn hoàn toàn thanh cuộn dọc
   function autoExpandTextarea(element) {
     if (!element) return;
     element.style.height = 'auto';
@@ -921,7 +926,6 @@
     return patients.find(p => p.status === 'active' && String(p.room).trim() === String(roomName).trim() && String(p.bed).trim() === String(bedNum).trim());
   }
 
-  /* QUẢN LÝ PHÒNG */
   function renameRoom(roomId) {
     const r = roomList.find(x => x.id === roomId);
     if (!r) return;
@@ -991,7 +995,6 @@
     syncDataToCloud();
   }
 
-  /* THAO TÁC BỆNH NHÂN */
   function handleBedClick(roomName, bedNum) {
     const existing = getPatientInBed(roomName, bedNum);
     if (existing) {
@@ -1134,7 +1137,6 @@
     }
   }
 
-  /* CHUYỂN GIƯỜNG */
   function transferPatientBed() {
     const p = patients.find(x => x.id === currentViewingPatientId);
     if (!p) return;
@@ -1190,7 +1192,6 @@
     }
   }
 
-  /* VIEW HỒ SƠ BỆNH ÁN */
   function openSummaryView(id) {
     currentViewingPatientId = id;
     const p = patients.find(x => x.id === id);
@@ -1296,7 +1297,6 @@
     }
   }
 
-  /* XUẤT FILE PDF */
   function exportPatientPDF(patientId) {
     const p = patients.find(x => x.id === patientId);
     if (!p) return;
@@ -1510,7 +1510,6 @@
     }
   }
 
-  // Khởi chạy hệ thống và nạp dữ liệu online
   renderDashboardCounts();
   loadDataFromCloud();
 </script>

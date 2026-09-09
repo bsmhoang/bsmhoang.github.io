@@ -37,19 +37,18 @@
       -webkit-tap-highlight-color: transparent;
     }
     
-    /* CUỘN THÔNG SUỐT LIỀN MẠCH TỪ TRÊN XUỐNG DƯỚI TOÀN TRANG */
     body { 
       background: var(--bg); 
       color: var(--text-main); 
       min-height: 100vh; 
-      padding: 10px 8px 40px 8px;
+      padding: 12px 10px 40px 10px;
       letter-spacing: -0.01em;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
     }
     
     .container { 
-      max-width: 580px; 
+      max-width: 680px; 
       margin: 0 auto; 
       width: 100%; 
     }
@@ -136,7 +135,7 @@
       cursor: pointer; 
     }
 
-    /* SƠ ĐỒ PHÒNG GIƯỜNG - GIAO DIỆN NGUYÊN BẢN */
+    /* SƠ ĐỒ PHÒNG GIƯỜNG */
     .room-header-bar {
       display: flex;
       justify-content: space-between;
@@ -234,7 +233,7 @@
     .bed-empty-tag { font-size: 11px; color: #94a3b8; font-style: italic; }
 
     /* ========================================================
-       HỒ SƠ BỆNH ÁN: KHÔNG KHÓA CHIỀU CAO - CUỘN LIỀN MẠCH TỰ DO
+       HỒ SƠ BỆNH ÁN: XẾP THEO CHIỀU DỌC - CUỘN LIỀN MẠCH
        ======================================================== */
     .summary-page-container {
       background: white;
@@ -320,7 +319,7 @@
       box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
     }
 
-    /* Thân chứa thông tin: Tự do giãn nở 100%, không bị giới hạn chiều cao */
+    /* Thân chứa: Xếp 1 cột dọc thông suốt */
     .summary-page-body {
       padding: 14px;
       display: flex;
@@ -356,7 +355,6 @@
       word-break: break-word;
     }
 
-    /* Chân trang: Đặt tự nhiên ở đáy toàn bộ nội dung */
     .summary-page-footer {
       padding: 14px;
       background: #f8fafc;
@@ -409,7 +407,7 @@
       white-space: nowrap;
     }
 
-    /* FORM NHẬP / SỬA: TỰ ĐỘNG GIÃN CAO - CUỘN LIỀN MẠCH */
+    /* FORM NHẬP / SỬA: XẾP THEO CHIỀU DỌC */
     .form-fullpage-card {
       background: white;
       border: 1.5px solid var(--border);
@@ -591,15 +589,7 @@
     }
     .btn-del-patient-discharged:active { background: #fee2e2; }
 
-    /* TRÊN MÀN HÌNH RỘNG (PC / WINDOWS) */
     @media (min-width: 768px) {
-      .container { max-width: 960px; }
-      .summary-page-body,
-      .form-fullpage-content {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
-      }
       .form-top-grid {
         grid-template-columns: 1fr 220px;
       }
@@ -645,7 +635,7 @@
     </button>
   </div>
 
-  <!-- VIEW HỒ SƠ BỆNH ÁN: CUỘN DỌC LIỀN MẠCH THÔNG SUỐT -->
+  <!-- VIEW HỒ SƠ BỆNH ÁN: XẾP 1 CỘT DỌC -->
   <div id="summaryFullView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('roomGridView')">⬅️ Sơ đồ phòng</button>
@@ -665,14 +655,12 @@
             <button class="btn-add-day-pill" onclick="handleAddNewDayClick()">➕ Thêm ngày mới</button>
           </div>
         </div>
-        <!-- Thanh chọn ngày -->
         <div class="day-tab-scroll" id="dayTabsContainer"></div>
       </div>
 
-      <!-- Thân chứa nội dung 4 ô: Tự do giãn dài, cuộn toàn trang liền mạch -->
+      <!-- Khối nội dung xếp theo chiều dọc -->
       <div class="summary-page-body" id="singleDayDisplayBody"></div>
 
-      <!-- Nằm ở đáy toàn bộ nội dung, cuộn hết trang sẽ thấy tự nhiên -->
       <div class="summary-page-footer">
         <div class="footer-left-btns">
           <button class="btn-del-patient-active" onclick="deleteActivePatient()">🗑️ Xóa ca bệnh</button>
@@ -683,7 +671,7 @@
     </div>
   </div>
 
-  <!-- FORM THÊM / SỬA NGÀY: CUỘN DỌC LIỀN MẠCH -->
+  <!-- FORM THÊM / SỬA NGÀY: XẾP 1 CỘT DỌC -->
   <div id="patientFormView" class="view-section">
     <div class="view-header">
       <button class="btn-back" id="btnBackFromForm" onclick="handleBackFromForm()">⬅️ Quay lại</button>
@@ -1166,9 +1154,7 @@
     }
   }
 
-  /* ========================================================
-     HỒ SƠ BỆNH ÁN: HIỂN THỊ LIỀN MẠCH - CUỘN DỌC CẢ TRANG
-     ======================================================== */
+  /* VIEW HỒ SƠ BỆNH ÁN: XẾP THEO CHIỀU DỌC */
   function openSummaryView(id) {
     currentViewingPatientId = id;
     const p = patients.find(x => x.id === id);
@@ -1211,7 +1197,7 @@
     const entry = p.entries[idx] || {};
     const contentBox = document.getElementById('singleDayDisplayBody');
     
-    // Mở bung tự nhiên toàn bộ chiều cao của từng khối
+    // 4 khối xếp lần lượt từ trên xuống dưới theo chiều dọc
     contentBox.innerHTML = `
       <div class="section-block-box">
         <div class="section-block-tag">Chẩn đoán</div>
@@ -1245,7 +1231,6 @@
     }
   }
 
-  /* XUẤT FILE PDF */
   function exportPatientPDF(patientId) {
     const p = patients.find(x => x.id === patientId);
     if (!p) return;

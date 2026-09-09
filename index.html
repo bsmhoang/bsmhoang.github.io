@@ -52,12 +52,11 @@
     .btn-arrange-active { background: #fef08a !important; border-color: #eab308 !important; color: #854d0e !important; }
     .btn-del-room { background: #fef2f2; border: 1px solid #fca5a5; color: #dc2626; }
     
-    @media (max-width: 767px) {
-      .desktop-only-ctrl { display: none !important; }
+    @media (min-width: 768px) {
+      .mobile-only-ctrl { display: none !important; }
     }
 
-    .room-scroll-viewport { width: 100%; overflow: hidden; padding: 6px 4px; display: flex; justify-content: center; }
-    .room-scale-wrapper { display: flex; justify-content: center; transform-origin: top center; overflow: hidden; }
+    .room-scroll-viewport { width: 100%; overflow-x: auto; padding: 12px 4px; display: flex; justify-content: center; -webkit-overflow-scrolling: touch; }
 
     .room-floor-boundary {
       position: relative; border: 3.5px solid #334155; border-radius: 14px; box-shadow: 0 4px 14px rgba(0,0,0,0.08);
@@ -176,7 +175,7 @@
       <h3 style="font-size:16px; font-weight:700;">Sơ đồ phòng bệnh</h3><div style="width:40px;"></div>
     </div>
     <div id="roomsDynamicContainer"></div>
-    <button class="btn-add-room-global desktop-only-ctrl" onclick="addNewRoom()">➕ Thêm phòng mới</button>
+    <button class="btn-add-room-global" onclick="addNewRoom()">➕ Thêm phòng mới</button>
   </div>
 
   <div id="summaryFullView" class="view-section">
@@ -667,8 +666,6 @@
 
   /* BỆNH ÁN & TIẾP NHẬN */
   function handleBedClick(room, bed, roomId) {
-    const isMobile = window.innerWidth <= 767;
-    if (isMobile && arrangeModeRooms[roomId]) return;
     const existing = getPatientInBed(room, bed);
     if (existing) { currentActiveIndex = existing.entries.length - 1; openSummaryView(existing.id); }
     else {
@@ -847,13 +844,12 @@
     win.document.close(); win.focus(); setTimeout(() => win.print(), 400);
   }
 
-  /* RENDER SƠ ĐỒ PHÒNG CHUẨN XÁC, KHÓA KÉO THẢ TRÊN ĐIỆN THOẠI ĐỂ TRÁNH BẤM NHẦM BỆNH NHÂN */
+  /* RENDER SƠ ĐỒ CHUẨN XÁC, CĂN GIỮA TUYỆT ĐỐI KHÔNG BỊ TRÀN */
   function renderRoomsGrid() {
     const c = document.getElementById('roomsDynamicContainer'); if (!c) return;
-    const isMobile = window.innerWidth <= 767;
 
     c.innerHTML = roomList.map(r => {
-      const isArr = !isMobile && !!arrangeModeRooms[r.id];
+      const isArr = !!arrangeModeRooms[r.id];
       fitAndCompactRoom(r);
       const b = r.roomBounds || { tilesX: 8, tilesY: 6 };
       const tx = isArr ? 18 : b.tilesX, ty = isArr ? 12 : b.tilesY;
@@ -877,49 +873,12 @@
             <div class="bed-mattress-content">
               <div class="bed-num-row">
                 <span class="bed-num">${bed}.</span>
-                ${!isMobile ? `<button type="button" class="btn-rotate-rect" onclick="rotateSingleBed(event,'${r.id}','${bed}')">${isV?'↕️ Dọc':'↔️ Ngang'}</button>` : ''}
+                <button type="button" class="btn-rotate-rect" onclick="rotateSingleBed(event,'${r.id}','${bed}')">${isV?'↕️ Dọc':'↔️ Ngang'}</button>
               </div>
               <div class="bed-text-flow"><div class="${p?'patient-name-slot':'bed-empty-tag'}">${p?p.name:'+ Trống'}</div></div>
             </div>
           </div>`;
       }).join('');
-      
-      setTimeout(() => {
-        const wrapper = document.getElementById(`scaleWrap_${r.id}`);
-        const viewport = document.getElementById(`viewport_${r.id}`);
-        const boundary = document.getElementById(`floorBoundary_${r.id}`);
-        if (wrapper && viewport && boundary && !isArr) {
-          const availableW = viewport.clientWidth - 8;
-          const roomW = tx * TILE_SIZE;
-          const roomH = ty * TILE_SIZE;
-          if (roomW > availableW) {
-            const scaleVal = availableW / roomW;
-            wrapper.style.width = availableW + 'px';
-            wrapper.style.height = (roomH * scaleVal) + 'px';
-            boundary.style.transform = `scale(${scaleVal})`;
-            boundary.style.transformOrigin = 'top left';
-            boundary.style.position = 'absolute';
-            boundary.style.left = '0';
-            boundary.style.top = '0';
-          } else {
-            wrapper.style.width = roomW + 'px';
-            wrapper.style.height = roomH + 'px';
-            boundary.style.transform = 'scale(1)';
-            boundary.style.position = 'relative';
-            boundary.style.left = 'unset';
-            boundary.style.top = 'unset';
-          }
-        } else if (wrapper && boundary && isArr) {
-          const roomW = tx * TILE_SIZE;
-          const roomH = ty * TILE_SIZE;
-          wrapper.style.width = roomW + 'px';
-          wrapper.style.height = roomH + 'px';
-          boundary.style.transform = 'scale(1)';
-          boundary.style.position = 'relative';
-          boundary.style.left = 'unset';
-          boundary.style.top = 'unset';
-        }
-      }, 50);
 
       return `
         <div class="room-block-wrapper">
@@ -933,11 +892,9 @@
             </div>
           </div>
           ${isArr?'<div class="arrange-instruction-bar">📐 Kéo thả giường bắt dính vào ô gạch, sau đó bấm [💾 Lưu vị trí] để Fit phòng!</div>':''}
-          <div class="room-scroll-viewport" id="viewport_${r.id}">
-            <div class="room-scale-wrapper" id="scaleWrap_${r.id}">
-              <div class="room-floor-boundary ${isArr?'is-arranging':''}" id="floorBoundary_${r.id}" style="width:${tx*TILE_SIZE}px; height:${ty*TILE_SIZE}px;">
-                ${doorHtml}${bedHtml || '<p style="padding:40px;text-align:center;color:#94a3b8;">Chưa có giường.</p>'}
-              </div>
+          <div class="room-scroll-viewport">
+            <div class="room-floor-boundary ${isArr?'is-arranging':''}" id="floorBoundary_${r.id}" style="width:${tx*TILE_SIZE}px; height:${ty*TILE_SIZE}px;">
+              ${doorHtml}${bedHtml || '<p style="padding:40px;text-align:center;color:#94a3b8;">Chưa có giường.</p>'}
             </div>
           </div>
         </div>`;
@@ -945,7 +902,7 @@
   }
 
   function startDraggingBed(e, roomId, bed) {
-    if (window.innerWidth <= 767 || !arrangeModeRooms[roomId] || e.target.closest('.btn-rotate-rect')) return;
+    if (!arrangeModeRooms[roomId] || e.target.closest('.btn-rotate-rect')) return;
     const bedEl = document.getElementById(`bedEl_${roomId}_${bed}`);
     const floorEl = document.getElementById(`floorBoundary_${roomId}`);
     if (!bedEl || !floorEl) return;

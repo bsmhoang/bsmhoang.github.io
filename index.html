@@ -275,12 +275,12 @@
     /* SÀN PHÒNG BỆNH VÀ CỬA RA VÀO */
     .room-floor-boundary {
       position: relative;
-      border: 2.5px solid #64748b;
+      border: 3px solid #475569;
       border-radius: 14px;
-      background: #f8fafc;
+      background: #f1f5f9;
       margin-bottom: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-      padding: 16px 12px 14px 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+      padding: 18px 12px 16px 12px;
     }
 
     .door-indicator {
@@ -291,96 +291,95 @@
       font-weight: 700;
       padding: 3px 10px;
       border-radius: 6px;
-      z-index: 5;
+      z-index: 10;
       display: flex;
       align-items: center;
       gap: 3px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.25);
     }
     .door-top { top: -14px; left: 24px; }
     .door-bottom { bottom: -14px; left: 24px; }
     .door-left { left: -14px; top: 24px; }
     .door-right { right: -14px; top: 24px; }
 
-    /* LƯỚI KHUNG CHỨA CÁC GIƯỜNG */
-    .grid-room-dynamic {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      align-items: start;
-    }
-    .grid-room-dynamic.col-2 {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
     /* ========================================================
-       MÔ HÌNH CHIẾC GIƯỜNG BỆNH HÌNH CHỮ NHẬT & XOAY THỰC TẾ
+       LƯỚI Ô VUÔNG SÀN PHÒNG & GIƯỜNG ĐẶT TRÊN CÁC Ô
        ======================================================== */
-    .bed-item-wrapper {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 100%;
+    .room-tiles-grid {
+      display: grid;
+      /* Mặc định chia thành 6 cột ô vuông nhỏ đều nhau */
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      grid-auto-flow: dense;
+      background: #e2e8f0;
+      padding: 8px;
+      border-radius: 10px;
+      /* Họa tiết các đường kẻ ô vuông gạch sàn */
+      background-image: 
+        linear-gradient(to right, rgba(203, 213, 225, 0.6) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(203, 213, 225, 0.6) 1px, transparent 1px);
+      background-size: 20px 20px;
     }
 
-    /* Chiếc giường hình chữ nhật */
-    .bed-box-rectangle {
+    /* Chiếc giường hình chữ nhật đặt đè lên các ô */
+    .bed-grid-rectangle {
       position: relative;
       border: 2px solid #94a3b8;
       border-radius: 8px;
       background: #ffffff;
       cursor: pointer;
       display: flex;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
       transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       overflow: hidden;
-      width: 100%;
     }
 
-    /* GIƯỜNG NGANG: Hình chữ nhật nằm ngang (tỷ lệ rộng > dài) */
-    .bed-box-rectangle.orient-horizontal {
-      height: 72px;
+    /* GIƯỜNG NGANG: Chiếm 2 hoặc 3 ô ngang, 1 ô dọc */
+    .bed-grid-rectangle.orient-horizontal {
+      grid-column: span 3;
+      grid-row: span 1;
+      height: 76px;
       flex-direction: row;
     }
-    /* Gối đầu giường ngang (ở bên trái) */
-    .bed-box-rectangle.orient-horizontal .bed-pillow {
-      width: 16px;
+    .bed-grid-rectangle.orient-horizontal .bed-pillow {
+      width: 18px;
       height: 100%;
       background: #e2e8f0;
-      border-right: 1.5px solid #cbd5e1;
+      border-right: 2px solid #cbd5e1;
       flex-shrink: 0;
     }
-    .bed-box-rectangle.occupied.orient-horizontal .bed-pillow {
-      background: #bae6fd;
-      border-color: #7dd3fc;
-    }
 
-    /* GIƯỜNG DỌC: Hình chữ nhật đứng (tỷ lệ dài > rộng) */
-    .bed-box-rectangle.orient-vertical {
-      height: 140px;
+    /* GIƯỜNG DỌC: Chiếm 2 ô ngang, 2 ô dọc (Hình chữ nhật đứng thẳng) */
+    .bed-grid-rectangle.orient-vertical {
+      grid-column: span 2;
+      grid-row: span 2;
+      height: 155px;
       flex-direction: column;
     }
-    /* Gối đầu giường dọc (ở trên cùng) */
-    .bed-box-rectangle.orient-vertical .bed-pillow {
-      height: 18px;
+    .bed-grid-rectangle.orient-vertical .bed-pillow {
+      height: 20px;
       width: 100%;
       background: #e2e8f0;
-      border-bottom: 1.5px solid #cbd5e1;
+      border-bottom: 2px solid #cbd5e1;
       flex-shrink: 0;
     }
-    .bed-box-rectangle.occupied.orient-vertical .bed-pillow {
-      background: #bae6fd;
-      border-color: #7dd3fc;
-    }
 
-    /* Đệm giường đang có bệnh nhân */
-    .bed-box-rectangle.occupied {
+    /* Khi có bệnh nhân đang nằm */
+    .bed-grid-rectangle.occupied {
       background: #f0f9ff;
+      border-color: #0284c7;
+      box-shadow: 0 4px 10px rgba(2, 132, 199, 0.16);
+    }
+    .bed-grid-rectangle.occupied.orient-horizontal .bed-pillow {
+      background: #bae6fd;
       border-color: #38bdf8;
-      box-shadow: 0 3px 8px rgba(2, 132, 199, 0.12);
+    }
+    .bed-grid-rectangle.occupied.orient-vertical .bed-pillow {
+      background: #bae6fd;
+      border-color: #38bdf8;
     }
 
-    /* Phần thân nệm ghi thông tin bệnh nhân */
+    /* Phần thân đệm hiển thị thông tin */
     .bed-mattress-content {
       padding: 6px;
       display: flex;
@@ -389,29 +388,29 @@
       flex-grow: 1;
       overflow: hidden;
     }
-
     .bed-num-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 2px;
     }
-    .bed-num { font-size: 12px; font-weight: 700; color: var(--primary); }
-    .bed-box-rectangle:not(.occupied) .bed-num { color: #64748b; }
+    .bed-num { font-size: 12.5px; font-weight: 700; color: var(--primary); }
+    .bed-grid-rectangle:not(.occupied) .bed-num { color: #475569; }
 
-    /* Nút xoay hình chữ nhật */
+    /* Nút xoay trực tiếp hình chữ nhật */
     .btn-rotate-rect {
       background: #ffffff;
       border: 1px solid var(--border);
-      color: #64748b;
+      color: #475569;
       border-radius: 4px;
-      font-size: 10.5px;
-      padding: 1px 4px;
+      font-size: 11px;
+      padding: 2px 5px;
       cursor: pointer;
-      line-height: 1.2;
+      line-height: 1.1;
       display: inline-flex;
       align-items: center;
       gap: 2px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
     .btn-rotate-rect:hover {
       background: #e2e8f0;
@@ -425,7 +424,7 @@
       word-break: break-word; 
       color: #0f172a; 
     }
-    .bed-empty-tag { font-size: 11px; color: #94a3b8; font-style: italic; }
+    .bed-empty-tag { font-size: 11.5px; color: #94a3b8; font-style: italic; }
 
     .btn-add-room-global {
       background: white;
@@ -1370,7 +1369,7 @@
   }
 
   /* ========================================================
-     QUẢN LÝ PHÒNG & CỬA RA VÀO VỚI 4 MŨI TÊN
+     QUẢN LÝ PHÒNG & BỐ CỤC Ô VUÔNG
      ======================================================== */
   function renameRoom(roomId) {
     const r = roomList.find(x => x.id === roomId);
@@ -1409,7 +1408,7 @@
     syncDataToCloud();
   }
 
-  // HÀM XOAY HÌNH CHỮ NHẬT CỦA TỪNG CHIẾC GIƯỜNG
+  // XOAY HÌNH CHỮ NHẬT GIƯỜNG TRÊN CÁC Ô VUÔNG (SPAN CỘT/HÀNG)
   function rotateSingleBed(event, roomId, bedNum) {
     event.stopPropagation();
     const r = roomList.find(x => x.id === roomId);
@@ -1946,13 +1945,12 @@
     setTimeout(() => { printWindow.print(); }, 400);
   }
 
-  /* RENDER SƠ ĐỒ PHÒNG VỚI HÌNH CHỮ NHẬT GIƯỜNG BỆNH */
+  /* RENDER SÀN PHÒNG CHIA Ô DỌC VÀ NGANG VỚI GIƯỜNG ĐẶT TRÊN Ô */
   function renderRoomsGrid() {
     const container = document.getElementById('roomsDynamicContainer');
     if (!container) return;
 
     container.innerHTML = roomList.map(r => {
-      const colClass = r.beds.length % 3 === 0 ? '' : (r.beds.length === 2 ? 'col-2' : '');
       const door = r.door || 'bottom';
       const bedOrientations = r.bedOrientations || {};
 
@@ -1964,7 +1962,7 @@
 
       const bedHtml = r.beds.map(bed => {
         const p = getPatientInBed(r.name, bed);
-        // Hướng hình chữ nhật: 'vertical' (dọc) hoặc 'horizontal' (ngang)
+        // Xoay Dọc: chiếm 1x2 ô, Xoay Ngang: chiếm 2x1 ô
         const isVert = (bedOrientations[bed] === 'vertical');
         const orientClass = isVert ? 'orient-vertical' : 'orient-horizontal';
         const rotateIcon = isVert ? '↕️ Dọc' : '↔️ Ngang';
@@ -1974,18 +1972,16 @@
           `<div class="bed-empty-tag">+ Trống</div>`;
 
         return `
-          <div class="bed-item-wrapper">
-            <div class="bed-box-rectangle ${p ? 'occupied' : ''} ${orientClass}" onclick="handleBedClick('${r.name}', '${bed}')">
-              <!-- Gối đầu giường -->
-              <div class="bed-pillow"></div>
-              <!-- Thân đệm giường chứa tên và thông tin -->
-              <div class="bed-mattress-content">
-                <div class="bed-num-row">
-                  <span class="bed-num">${bed}.</span>
-                  <button type="button" class="btn-rotate-rect" onclick="rotateSingleBed(event, '${r.id}', '${bed}')" title="Bấm để xoay hình chữ nhật dọc/ngang">${rotateIcon}</button>
-                </div>
-                ${patientNameHtml}
+          <div class="bed-grid-rectangle ${p ? 'occupied' : ''} ${orientClass}" onclick="handleBedClick('${r.name}', '${bed}')">
+            <!-- Gối đầu giường -->
+            <div class="bed-pillow"></div>
+            <!-- Thân đệm giường -->
+            <div class="bed-mattress-content">
+              <div class="bed-num-row">
+                <span class="bed-num">${bed}.</span>
+                <button type="button" class="btn-rotate-rect" onclick="rotateSingleBed(event, '${r.id}', '${bed}')" title="Xoay hình chữ nhật dọc/ngang">${rotateIcon}</button>
               </div>
+              ${patientNameHtml}
             </div>
           </div>
         `;
@@ -2005,10 +2001,11 @@
               <button class="btn-del-room" onclick="deleteRoom('${r.id}')">🗑️ Xóa</button>
             </div>
           </div>
+          <!-- Mặt sàn phòng bệnh chia thành các ô dọc và ngang -->
           <div class="room-floor-boundary">
             ${doorHtml}
-            <div class="grid-room-dynamic ${colClass}">
-              ${bedHtml || '<p style="padding:10px;text-align:center;grid-column:1/-1;color:#94a3b8;background:#fff;">Chưa có giường nào.</p>'}
+            <div class="room-tiles-grid">
+              ${bedHtml || '<p style="padding:16px;text-align:center;grid-column:1/-1;color:#94a3b8;background:#fff;border-radius:8px;">Chưa có giường nào.</p>'}
             </div>
           </div>
         </div>

@@ -272,7 +272,7 @@
       cursor: pointer;
     }
 
-    /* KHUNG PHÒNG CÓ CỬA */
+    /* KHUNG PHÒNG CÓ CỬA MŨI TÊN */
     .room-floor-boundary {
       position: relative;
       border: 2.5px solid #64748b;
@@ -280,26 +280,29 @@
       background: #ffffff;
       margin-bottom: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-      padding: 6px;
+      padding: 8px;
     }
+
+    /* NHÃN CỬA BẰNG HÌNH ẢNH MŨI TÊN */
     .door-indicator {
       position: absolute;
-      background: #38bdf8;
-      color: #0369a1;
-      font-size: 10.5px;
+      background: #0284c7;
+      color: #ffffff;
+      font-size: 11.5px;
       font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 4px;
+      padding: 3px 10px;
+      border-radius: 6px;
       z-index: 5;
       display: flex;
       align-items: center;
-      gap: 2px;
-      border: 1.5px solid #0284c7;
+      gap: 3px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
-    .door-top { top: -12px; left: 20px; }
-    .door-bottom { bottom: -12px; left: 20px; }
-    .door-left { left: -14px; top: 20px; writing-mode: vertical-lr; padding: 8px 2px; }
-    .door-right { right: -14px; top: 20px; writing-mode: vertical-lr; padding: 8px 2px; }
+    /* Mũi tên chỉ từ ngoài vào trong phòng */
+    .door-top { top: -14px; left: 24px; }
+    .door-bottom { bottom: -14px; left: 24px; }
+    .door-left { left: -14px; top: 24px; }
+    .door-right { right: -14px; top: 24px; }
 
     /* LƯỚI BỐ TRÍ GIƯỜNG */
     .grid-room-dynamic {
@@ -315,7 +318,7 @@
       grid-template-columns: repeat(2, 1fr);
     }
 
-    /* Ô GIƯỜNG VÀ NÚT XOAY TỪNG GIƯỜNG */
+    /* Ô GIƯỜNG VÀ NÚT XOAY */
     .bed-slot {
       position: relative;
       background: #ffffff;
@@ -326,11 +329,9 @@
       cursor: pointer;
       transition: min-height 0.2s ease;
     }
-    /* Hướng ngang: Chiều cao gọn gàng */
     .bed-slot.orient-horizontal {
       min-height: 72px;
     }
-    /* Hướng dọc: Chiều cao thuôn dài mô phỏng giường kê dọc */
     .bed-slot.orient-vertical {
       min-height: 125px;
     }
@@ -345,7 +346,6 @@
     .bed-num { font-size: 12px; font-weight: 700; color: var(--primary); }
     .bed-slot:not(.occupied) .bed-num { color: #94a3b8; }
 
-    /* NÚT XOAY TỪNG GIƯỜNG RIÊNG BIỆT */
     .btn-rotate-single-bed {
       background: rgba(255, 255, 255, 0.85);
       border: 1px solid var(--border);
@@ -825,7 +825,7 @@
 </head>
 <body>
 
-<!-- MÀN HÌNH ĐĂNG NHẬP (MẬT MÃ: 000000) -->
+<!-- MÀN HÌNH ĐĂNG NHẬP -->
 <div id="lockScreenView">
   <div class="lock-card">
     <div class="lock-avatar">🔐</div>
@@ -873,7 +873,7 @@
     </button>
   </div>
 
-  <!-- VIEW HỒ SƠ BỆNH ÁN: CHIỀU DỌC -->
+  <!-- VIEW HỒ SƠ BỆNH ÁN -->
   <div id="summaryFullView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('roomGridView')">⬅️ Sơ đồ phòng</button>
@@ -1030,7 +1030,6 @@
   const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxVVVoEdjNY5fsWGuJegc9EHAcrzTFaty4VEhMeyo5HsKdT-U89s9SlT7R-zdaXuMayzw/exec";
   const CORRECT_PIN = "000000";
 
-  // Mặc định: Mỗi giường có thêm cấu hình bedOrientations { 1: 'horizontal', 2: 'vertical', ... }
   const defaultRooms = [
     { id: '825', name: 'P 825', beds: [1, 2, 3, 4, 5, 6], door: 'bottom', bedOrientations: {} },
     { id: '817', name: 'P 817', beds: [1, 2], door: 'bottom', bedOrientations: {} },
@@ -1311,7 +1310,7 @@
   }
 
   /* ========================================================
-     QUẢN LÝ PHÒNG & XOAY TỪNG GIƯỜNG RIÊNG BIỆT
+     QUẢN LÝ PHÒNG & CỬA RA VÀO VỚI 4 MŨI TÊN
      ======================================================== */
   function renameRoom(roomId) {
     const r = roomList.find(x => x.id === roomId);
@@ -1327,11 +1326,18 @@
     }
   }
 
+  // Chọn cửa với biểu tượng 4 mũi tên rõ ràng
   function changeRoomDoor(roomId) {
     const r = roomList.find(x => x.id === roomId);
     if (!r) return;
-    const options = ["1. Dưới (mặc định)", "2. Trên", "3. Trái", "4. Phải", "5. Ẩn cửa"];
-    const choice = prompt(`CHỌN VỊ TRÍ CỬA CHO ${r.name}:\n` + options.join("\n") + "\n\nNhập số từ 1 đến 5:");
+    const options = [
+      "1. ⬆️ Cửa Dưới (chỉ vào từ dưới)",
+      "2. ⬇️ Cửa Trên (chỉ vào từ trên)",
+      "3. ➡️ Cửa Trái (chỉ vào từ bên trái)",
+      "4. ⬅️ Cửa Phải (chỉ vào từ bên phải)",
+      "5. Ẩn cửa"
+    ];
+    const choice = prompt(`CHỌN HƯỚNG CỬA VÀO CHO ${r.name}:\n\n` + options.join("\n") + "\n\nNhập số từ 1 đến 5:");
     if (!choice) return;
 
     if (choice.trim() === '1') r.door = 'bottom';
@@ -1344,9 +1350,8 @@
     syncDataToCloud();
   }
 
-  // HÀM XOAY RIÊNG TỪNG GIƯỜNG (DỌC HOẶC NGANG)
   function rotateSingleBed(event, roomId, bedNum) {
-    event.stopPropagation(); // Ngăn sự kiện mở hồ sơ khi bấm nút xoay
+    event.stopPropagation();
     const r = roomList.find(x => x.id === roomId);
     if (!r) return;
 
@@ -1406,7 +1411,7 @@
     const roomName = prompt("Nhập tên phòng mới (ví dụ: P 820, P Cấp cứu...):");
     if (!roomName || !roomName.trim()) return;
 
-    const doorChoice = prompt("Chọn vị trí cửa vào:\n1. Dưới\n2. Trên\n3. Trái\n4. Phải\n(Để trống mặc định là Dưới):");
+    const doorChoice = prompt("Chọn vị trí cửa vào:\n1. ⬆️ Dưới (mặc định)\n2. ⬇️ Trên\n3. ➡️ Trái\n4. ⬅️ Phải\n(Nhập số 1-4):");
     let doorPos = 'bottom';
     if (doorChoice === '2') doorPos = 'top';
     else if (doorChoice === '3') doorPos = 'left';
@@ -1881,7 +1886,7 @@
     setTimeout(() => { printWindow.print(); }, 400);
   }
 
-  /* RENDER SƠ ĐỒ PHÒNG VỚI NÚT XOAY RIÊNG TỪNG GIƯỜNG */
+  /* RENDER SƠ ĐỒ PHÒNG VỚI 4 MŨI TÊN CỬA VÀ XOAY GIƯỜNG */
   function renderRoomsGrid() {
     const container = document.getElementById('roomsDynamicContainer');
     if (!container) return;
@@ -1891,15 +1896,15 @@
       const door = r.door || 'bottom';
       const bedOrientations = r.bedOrientations || {};
 
+      // Hiển thị trực quan Cửa bằng Mũi tên chỉ hướng vào phòng
       let doorHtml = '';
-      if (door === 'top') doorHtml = '<div class="door-indicator door-top">🚪 Cửa vào</div>';
-      else if (door === 'bottom') doorHtml = '<div class="door-indicator door-bottom">🚪 Cửa vào</div>';
-      else if (door === 'left') doorHtml = '<div class="door-indicator door-left">🚪 Cửa</div>';
-      else if (door === 'right') doorHtml = '<div class="door-indicator door-right">🚪 Cửa</div>';
+      if (door === 'top') doorHtml = '<div class="door-indicator door-top">⬇️ Cửa</div>';
+      else if (door === 'bottom') doorHtml = '<div class="door-indicator door-bottom">⬆️ Cửa</div>';
+      else if (door === 'left') doorHtml = '<div class="door-indicator door-left">➡️ Cửa</div>';
+      else if (door === 'right') doorHtml = '<div class="door-indicator door-right">⬅️ Cửa</div>';
 
       const bedHtml = r.beds.map(bed => {
         const p = getPatientInBed(r.name, bed);
-        // Hướng riêng của giường này: 'vertical' hoặc 'horizontal' (mặc định)
         const isVert = (bedOrientations[bed] === 'vertical');
         const orientClass = isVert ? 'orient-vertical' : 'orient-horizontal';
         const rotateIcon = isVert ? '↕️ Dọc' : '↔️ Ngang';

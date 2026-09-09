@@ -43,7 +43,7 @@
     .view-section { display: none; }
     .view-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 
-    /* Sơ đồ phòng & Khớp chuẩn tỉ lệ di động */
+    /* Sơ đồ phòng & Khung sàn tự động ôm khít */
     .room-block-wrapper { margin-bottom: 30px; display: flex; flex-direction: column; align-items: center; width: 100%; }
     .room-header-bar { display: flex; justify-content: space-between; align-items: center; margin: 16px 2px 8px; flex-wrap: wrap; gap: 6px; width: 100%; max-width: 820px; }
     .room-title-name { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
@@ -52,8 +52,7 @@
     .btn-arrange-active { background: #fef08a !important; border-color: #eab308 !important; color: #854d0e !important; }
     .btn-del-room { background: #fef2f2; border: 1px solid #fca5a5; color: #dc2626; }
     
-    .room-scroll-viewport { width: 100%; display: flex; justify-content: center; overflow: hidden; padding: 4px 0; }
-    .room-scale-wrapper { display: flex; justify-content: center; transform-origin: top center; width: 100%; }
+    .room-scroll-viewport { width: 100%; overflow-x: auto; padding: 6px 4px; display: flex; justify-content: center; -webkit-overflow-scrolling: touch; }
 
     .room-floor-boundary {
       position: relative; border: 3.5px solid #334155; border-radius: 14px; box-shadow: 0 4px 14px rgba(0,0,0,0.08);
@@ -301,7 +300,7 @@
     </div>
   </div>
 
-  <!-- MODAL SỬA PHÒNG TRỰC QUAN (THAY THẾ PROMPT THÔ) -->
+  <!-- MODAL SỬA PHÒNG TRỰC QUAN -->
   <div id="editRoomModal" class="custom-modal-overlay" onclick="closeEditRoomModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()" style="text-align:left;">
       <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:14px; text-align:center;" id="editRoomModalTitle">Sửa Thông Tin Phòng</div>
@@ -842,7 +841,7 @@
     win.document.close(); win.focus(); setTimeout(() => win.print(), 400);
   }
 
-  /* RENDER SƠ ĐỒ & SCALE VỪA MÀN HÌNH DI ĐỘNG */
+  /* RENDER SƠ ĐỒ & SCALE VỪA MÀN HÌNH DI ĐỘNG KHÔNG LỖI CHIỀU CAO */
   function renderRoomsGrid() {
     const c = document.getElementById('roomsDynamicContainer'); if (!c) return;
     c.innerHTML = roomList.map(r => {
@@ -878,23 +877,29 @@
       }).join('');
       
       setTimeout(() => {
+        const wrapper = document.getElementById(`scaleWrap_${r.id}`);
         const viewport = document.getElementById(`viewport_${r.id}`);
         const boundary = document.getElementById(`floorBoundary_${r.id}`);
-        if (viewport && boundary && !isArr) {
+        if (wrapper && viewport && boundary && !isArr) {
           const availableW = viewport.clientWidth - 10;
           const roomW = tx * TILE_SIZE;
+          const roomH = ty * TILE_SIZE;
           if (roomW > availableW) {
             const scaleVal = availableW / roomW;
+            wrapper.style.width = roomW + 'px';
+            wrapper.style.height = (roomH * scaleVal) + 'px';
             boundary.style.transform = `scale(${scaleVal})`;
-            boundary.style.transformOrigin = 'top center';
-            viewport.style.height = (ty * TILE_SIZE * scaleVal) + 'px';
           } else {
+            wrapper.style.width = roomW + 'px';
+            wrapper.style.height = roomH + 'px';
             boundary.style.transform = 'scale(1)';
-            viewport.style.height = (ty * TILE_SIZE) + 'px';
           }
-        } else if (boundary && isArr) {
+        } else if (wrapper && boundary && isArr) {
+          const roomW = tx * TILE_SIZE;
+          const roomH = ty * TILE_SIZE;
+          wrapper.style.width = roomW + 'px';
+          wrapper.style.height = roomH + 'px';
           boundary.style.transform = 'scale(1)';
-          if (viewport) viewport.style.height = (ty * TILE_SIZE) + 'px';
         }
       }, 50);
 
@@ -910,7 +915,7 @@
           </div>
           ${isArr?'<div class="arrange-instruction-bar">📐 Kéo thả giường bắt dính vào ô gạch, sau đó bấm [💾 Lưu vị trí] để Fit phòng!</div>':''}
           <div class="room-scroll-viewport" id="viewport_${r.id}">
-            <div class="room-scale-wrapper">
+            <div class="room-scale-wrapper" id="scaleWrap_${r.id}">
               <div class="room-floor-boundary ${isArr?'is-arranging':''}" id="floorBoundary_${r.id}" style="width:${tx*TILE_SIZE}px; height:${ty*TILE_SIZE}px;">
                 ${doorHtml}${bedHtml || '<p style="padding:40px;text-align:center;color:#94a3b8;">Chưa có giường.</p>'}
               </div>

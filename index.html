@@ -219,7 +219,7 @@
 
     /* SƠ ĐỒ PHÒNG GIƯỜNG */
     .room-block-wrapper { 
-      margin-bottom: 28px; 
+      margin-bottom: 30px; 
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -287,28 +287,27 @@
       cursor: pointer;
     }
 
-    /* ========================================================
-       CĂN GIỮA MÀN HÌNH KHUNG SÀN PHÒNG BỆNH
-       ======================================================== */
+    /* KHUNG NHÌN CĂN GIỮA MÀN HÌNH */
     .room-scroll-viewport {
       width: 100%;
       overflow-x: auto;
-      padding: 10px 4px;
+      padding: 12px 4px;
       display: flex;
-      justify-content: center; /* TỰ ĐỘNG CĂN GIỮA MÀN HÌNH */
+      justify-content: center;
       -webkit-overflow-scrolling: touch;
     }
 
+    /* KHUNG SÀN PHÒNG BỆNH (FIT THEO DIỆN TÍCH ĐÃ DÙNG) */
     .room-floor-boundary {
       position: relative;
       border: 3.5px solid #334155;
       border-radius: 14px;
       box-shadow: 0 4px 14px rgba(0,0,0,0.08);
-      transition: width 0.2s ease, height 0.2s ease;
       background-color: #f1f5f9;
-      margin: 0 auto; /* ĐẢM BẢO LUÔN NẰM CHÍNH GIỮA */
+      margin: 0 auto;
       flex-shrink: 0;
-      /* Họa tiết ô cờ bàn vuông đặc trưng */
+      transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), height 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      /* Nền caro bàn cờ Clash of Clans */
       background-image: 
         linear-gradient(45deg, #e2e8f0 25%, transparent 25%), 
         linear-gradient(-45deg, #e2e8f0 25%, transparent 25%), 
@@ -318,6 +317,11 @@
       background-position: 0 0, 0 var(--coc-tile), var(--coc-tile) -var(--coc-tile), -var(--coc-tile) 0px;
     }
 
+    /* Khi đang Sắp xếp: Khung sàn tự mở rộng tối đa để kéo thả */
+    .room-floor-boundary.is-arranging {
+      border: 3.5px dashed #eab308;
+      box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.2), 0 8px 24px rgba(0,0,0,0.1);
+    }
     .room-floor-boundary.is-arranging::before {
       content: "";
       position: absolute;
@@ -1434,7 +1438,9 @@
     return patients.find(p => p.status === 'active' && String(p.room).trim() === String(roomName).trim() && String(p.bed).trim() === String(bedNum).trim());
   }
 
-  /* QUẢN LÝ PHÒNG */
+  /* ========================================================
+     QUẢN LÝ PHÒNG & TỰ ĐỘNG FIT DIỆN TÍCH KHI LƯU
+     ======================================================== */
   function renameRoom(roomId) {
     const r = roomList.find(x => x.id === roomId);
     if (!r) return;
@@ -1472,45 +1478,71 @@
     syncDataToCloud();
   }
 
+  // BẬT / TẮT CHẾ ĐỘ SẮP XẾP VÀ FIT CHUẨN XÁC
   function toggleArrangeMode(roomId) {
     const r = roomList.find(x => x.id === roomId);
     if (!r) return;
 
     if (arrangeModeRooms[roomId]) {
+      // Khi bấm Lưu vị trí: Tự động tính toán căn chỉnh và FIT khung phòng
       delete arrangeModeRooms[roomId];
-      fitRoomBounds(r);
+      fitAndCompactRoom(r);
       syncDataToCloud();
-      alert("Đã lưu vị trí và căn giữa phòng bệnh!");
+      alert("Đã lưu vị trí và tự động Fit khung phòng vừa khít diện tích các giường!");
     } else {
+      // Khi bấm Sắp xếp: Mở rộng khung phòng thành hình chữ nhật rộng rãi để tha hồ kéo thả
       arrangeModeRooms[roomId] = true;
     }
     renderRoomsGrid();
   }
 
-  function fitRoomBounds(r) {
+  // TÍNH TOÁN CẮT GỌT VÀ FIT KHUNG PHÒNG CHUẨN XÁC
+  function fitAndCompactRoom(r) {
     if (!r.beds || r.beds.length === 0) return;
     const bedOrientations = r.bedOrientations || {};
     const bedPositions = r.bedPositions || {};
 
-    let maxTileX = 8;
-    let maxTileY = 6;
+    let minX = 999, minY = 999;
+    let maxX = 0, maxY = 0;
 
+    // 1. Tìm tọa độ biên nhỏ nhất và lớn nhất của các giường đã xếp
     r.beds.forEach(bed => {
-      const isVert = (bedOrientations[bed] === 'vertical');
       const pos = bedPositions[bed] || { tileX: 1, tileY: 1 };
+      const isVert = (bedOrientations[bed] === 'vertical');
       const spanX = isVert ? 2 : 3;
       const spanY = isVert ? 3 : 2;
 
-      const endX = (pos.tileX || 1) + spanX + 1;
-      const endY = (pos.tileY || 1) + spanY + 1;
+      if (pos.tileX < minX) minX = pos.tileX;
+      if (pos.tileY < minY) minY = pos.tileY;
 
-      if (endX > maxTileX) maxTileX = endX;
-      if (endY > maxTileY) maxTileY = endY;
+      const endX = pos.tileX + spanX;
+      const endY = pos.tileY + spanY;
+
+      if (endX > maxX) maxX = endX;
+      if (endY > maxY) maxY = endY;
     });
 
+    if (minX === 999) minX = 1;
+    if (minY === 999) minY = 1;
+
+    // 2. Dồn toàn bộ giường về góc trên bên trái (đệm 1 ô viền)
+    const shiftX = minX - 1;
+    const shiftY = minY - 1;
+
+    r.beds.forEach(bed => {
+      if (bedPositions[bed]) {
+        bedPositions[bed].tileX = Math.max(1, bedPositions[bed].tileX - shiftX);
+        bedPositions[bed].tileY = Math.max(1, bedPositions[bed].tileY - shiftY);
+      }
+    });
+
+    // 3. Tính toán kích thước phòng vừa khít bao quanh (thêm 1 ô đệm biên phải và dưới)
+    const usedWidthTiles = (maxX - minX) + 2; 
+    const usedHeightTiles = (maxY - minY) + 2;
+
     r.roomBounds = {
-      tilesX: maxTileX,
-      tilesY: maxTileY
+      tilesX: Math.max(5, usedWidthTiles),
+      tilesY: Math.max(4, usedHeightTiles)
     };
   }
 
@@ -1523,7 +1555,6 @@
     const current = r.bedOrientations[bedNum] || 'horizontal';
     r.bedOrientations[bedNum] = (current === 'vertical') ? 'horizontal' : 'vertical';
 
-    fitRoomBounds(r);
     syncDataToCloud();
   }
 
@@ -1532,7 +1563,6 @@
     if (!r) return;
     const nextBedNum = r.beds.length > 0 ? Math.max(...r.beds) + 1 : 1;
     r.beds.push(nextBedNum);
-    fitRoomBounds(r);
     syncDataToCloud();
   }
 
@@ -1551,7 +1581,7 @@
       r.beds.pop();
       if (r.bedOrientations && r.bedOrientations[lastBed]) delete r.bedOrientations[lastBed];
       if (r.bedPositions && r.bedPositions[lastBed]) delete r.bedPositions[lastBed];
-      fitRoomBounds(r);
+      fitAndCompactRoom(r);
       syncDataToCloud();
     }
   }
@@ -1590,13 +1620,14 @@
       door: doorPos,
       bedOrientations: {},
       bedPositions: {},
-      roomBounds: { tilesX: 9, tilesY: 7 }
+      roomBounds: { tilesX: 8, tilesY: 6 }
     };
-    fitRoomBounds(newRoom);
+    fitAndCompactRoom(newRoom);
     roomList.push(newRoom);
     syncDataToCloud();
   }
 
+  /* THAO TÁC TIẾP NHẬN / THÊM NGÀY / SỬA NGÀY */
   function handleBedClick(roomName, bedNum, roomId) {
     if (arrangeModeRooms[roomId]) return;
 
@@ -2056,7 +2087,9 @@
     setTimeout(() => { printWindow.print(); }, 400);
   }
 
-  /* RENDER SƠ ĐỒ CĂN CHÍNH GIỮA MÀN HÌNH */
+  /* ========================================================
+     RENDER SƠ ĐỒ CĂN CHÍNH GIỮA MÀN HÌNH & TỰ FIT KÍCH THƯỚC
+     ======================================================== */
   function renderRoomsGrid() {
     const container = document.getElementById('roomsDynamicContainer');
     if (!container) return;
@@ -2067,11 +2100,20 @@
       const bedOrientations = r.bedOrientations || {};
       const bedPositions = r.bedPositions || {};
 
-      fitRoomBounds(r);
-      const bounds = r.roomBounds || { tilesX: 9, tilesY: 7 };
+      let bounds = r.roomBounds;
+      // Nếu chưa có thông số fit, tự động tính toán
+      if (!bounds || !bounds.tilesX) {
+        fitAndCompactRoom(r);
+        bounds = r.roomBounds || { tilesX: 8, tilesY: 6 };
+      }
 
-      const floorW = bounds.tilesX * TILE_SIZE;
-      const floorH = bounds.tilesY * TILE_SIZE;
+      // KHI ĐANG BẬT SẮP XẾP: Bung rộng sàn hình chữ nhật lớn để tha hồ kéo thả (18 x 12 ô = 720px x 480px)
+      // KHI Ở CHẾ ĐỘ XEM: Fit vừa khít số ô đã dùng
+      const effectiveTilesX = isArranging ? 18 : bounds.tilesX;
+      const effectiveTilesY = isArranging ? 12 : bounds.tilesY;
+
+      const floorW = effectiveTilesX * TILE_SIZE;
+      const floorH = effectiveTilesY * TILE_SIZE;
 
       let doorHtml = '';
       if (door === 'top') doorHtml = '<div class="door-indicator door-top">⬇️ Cửa</div>';
@@ -2089,10 +2131,11 @@
         const rotateIcon = isVert ? '↕️ Dọc' : '↔️ Ngang';
 
         const spanX = isVert ? 2 : 3;
+        const spanY = isVert ? 3 : 2;
 
         let pos = bedPositions[bed];
         if (!pos || typeof pos.tileX !== 'number') {
-          if (defTileX + spanX > bounds.tilesX - 1) {
+          if (defTileX + spanX > effectiveTilesX - 1) {
             defTileX = 1;
             defTileY += 4;
           }
@@ -2149,9 +2192,8 @@
             </div>
           </div>
 
-          ${isArranging ? '<div class="arrange-instruction-bar">⚔️ Kéo thả giường bắt dính vào từng ô lưới caro, sau đó bấm [💾 Lưu vị trí] để Fit diện tích phòng!</div>' : ''}
+          ${isArranging ? '<div class="arrange-instruction-bar">📐 Mặt sàn đang mở rộng: Kéo thả các giường đến vị trí bạn muốn, sau đó bấm [💾 Lưu vị trí] để Fit vừa khít phòng!</div>' : ''}
 
-          <!-- KHUNG CUỘN CĂN CHÍNH GIỮA MÀN HÌNH -->
           <div class="room-scroll-viewport">
             <div class="room-floor-boundary ${isArranging ? 'is-arranging' : ''}" id="floorBoundary_${r.id}" style="width: ${floorW}px; height: ${floorH}px;">
               ${doorHtml}

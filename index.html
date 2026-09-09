@@ -43,7 +43,7 @@
     .view-section { display: none; }
     .view-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 
-    /* Sơ đồ phòng & Responsive tự động Fit / Phóng to thu nhỏ trên điện thoại */
+    /* Sơ đồ phòng & Khớp chuẩn tỉ lệ di động */
     .room-block-wrapper { margin-bottom: 30px; display: flex; flex-direction: column; align-items: center; width: 100%; }
     .room-header-bar { display: flex; justify-content: space-between; align-items: center; margin: 16px 2px 8px; flex-wrap: wrap; gap: 6px; width: 100%; max-width: 820px; }
     .room-title-name { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
@@ -52,13 +52,12 @@
     .btn-arrange-active { background: #fef08a !important; border-color: #eab308 !important; color: #854d0e !important; }
     .btn-del-room { background: #fef2f2; border: 1px solid #fca5a5; color: #dc2626; }
     
-    /* Trên điện thoại: Tự động ẩn các nút sửa phòng & sắp xếp */
     @media (max-width: 767px) {
       .desktop-only-ctrl { display: none !important; }
     }
 
-    .room-scroll-viewport { width: 100%; overflow: auto; padding: 6px 4px; display: flex; justify-content: center; -webkit-overflow-scrolling: touch; }
-    .room-scale-wrapper { display: flex; justify-content: center; transform-origin: top center; }
+    .room-scroll-viewport { width: 100%; overflow: hidden; padding: 6px 4px; display: flex; justify-content: center; }
+    .room-scale-wrapper { display: flex; justify-content: center; transform-origin: top center; overflow: hidden; }
 
     .room-floor-boundary {
       position: relative; border: 3.5px solid #334155; border-radius: 14px; box-shadow: 0 4px 14px rgba(0,0,0,0.08);
@@ -668,7 +667,8 @@
 
   /* BỆNH ÁN & TIẾP NHẬN */
   function handleBedClick(room, bed, roomId) {
-    if (window.innerWidth <= 767 && arrangeModeRooms[roomId]) return;
+    const isMobile = window.innerWidth <= 767;
+    if (isMobile && arrangeModeRooms[roomId]) return;
     const existing = getPatientInBed(room, bed);
     if (existing) { currentActiveIndex = existing.entries.length - 1; openSummaryView(existing.id); }
     else {
@@ -847,7 +847,7 @@
     win.document.close(); win.focus(); setTimeout(() => win.print(), 400);
   }
 
-  /* RENDER SƠ ĐỒ & SCALE TỰ ĐỘNG KHÔNG BỊ TRÀN VIỀN, HỖ TRỢ PULL-TO-ZOOM TRÊN ĐIỆN THOẠI */
+  /* RENDER SƠ ĐỒ & SCALE CHUẨN XÁC, KHÔNG BỊ LỆCH KHUNG TRÊN MỌI THIẾT BỊ */
   function renderRoomsGrid() {
     const c = document.getElementById('roomsDynamicContainer'); if (!c) return;
     const isMobile = window.innerWidth <= 767;
@@ -889,12 +889,12 @@
         const viewport = document.getElementById(`viewport_${r.id}`);
         const boundary = document.getElementById(`floorBoundary_${r.id}`);
         if (wrapper && viewport && boundary && !isArr) {
-          const availableW = viewport.clientWidth - 4;
+          const availableW = viewport.clientWidth - 8;
           const roomW = tx * TILE_SIZE;
           const roomH = ty * TILE_SIZE;
           if (roomW > availableW) {
             const scaleVal = availableW / roomW;
-            wrapper.style.width = roomW + 'px';
+            wrapper.style.width = availableW + 'px';
             wrapper.style.height = (roomH * scaleVal) + 'px';
             boundary.style.transform = `scale(${scaleVal})`;
             boundary.style.transformOrigin = 'top left';

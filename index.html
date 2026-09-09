@@ -847,7 +847,7 @@
     win.document.close(); win.focus(); setTimeout(() => win.print(), 400);
   }
 
-  /* RENDER SƠ ĐỒ DỌC TRÊN ĐIỆN THOẠI & XOAY NGANG TRÊN MÁY TÍNH */
+  /* RENDER SƠ ĐỒ PHÒNG: TỰ ĐỘNG XOAY DỌC TRÊN ĐIỆN THOẠI KHỚP TUYỆT ĐỐI */
   function renderRoomsGrid() {
     const c = document.getElementById('roomsDynamicContainer'); if (!c) return;
     const isMobile = window.innerWidth <= 767;
@@ -855,14 +855,11 @@
     c.innerHTML = roomList.map(r => {
       const isArr = !isMobile && !!arrangeModeRooms[r.id];
       fitAndCompactRoom(r);
+      const b = r.roomBounds || { tilesX: 8, tilesY: 6 };
       
-      let b = r.roomBounds || { tilesX: 8, tilesY: 6 };
+      // TRÊN ĐIỆN THOẠI: Tự động hoán đổi chiều để sơ đồ phòng chuyển sang dáng DỌC phù hợp màn hình dọc
       let tx = isArr ? 18 : b.tilesX, ty = isArr ? 12 : b.tilesY;
-
-      // Nếu là điện thoại, tự động chuyển sơ đồ thành chiều dọc (hoán đổi width và height cho phù hợp màn hình dọc)
-      if (isMobile) {
-        const temp = tx; tx = ty; ty = temp;
-      }
+      if (isMobile) { const tmp = tx; tx = ty; ty = tmp; }
 
       const doorHtml = r.door !== 'none' ? `<div class="door-indicator door-${r.door||'bottom'}">${r.door==='top'?'⬇️':r.door==='left'?'➡️':r.door==='right'?'⬅️':'⬆️'} Cửa</div>` : '';
       let defX = 1, defY = 1;
@@ -870,20 +867,16 @@
       const bedHtml = r.beds.map(bed => {
         const p = getPatientInBed(r.name, bed);
         const isV = r.bedOrientations?.[bed] === 'vertical';
-        
+        const spanX = isV ? 2 : 3;
         let pos = r.bedPositions?.[bed];
         if (!pos?.tileX) {
-          const spanX = isV ? 2 : 3;
           if (defX + spanX > tx - 1) { defX = 1; defY += 4; }
           pos = { tileX: defX, tileY: defY }; defX += spanX + 1;
           r.bedPositions = r.bedPositions || {}; r.bedPositions[bed] = pos;
         }
 
-        // Trên điện thoại, tự động điều chỉnh tọa độ cho sơ đồ dọc
         let pX = pos.tileX, pY = pos.tileY;
-        if (isMobile) {
-          pX = pos.tileY; pY = pos.tileX; // Hoán đổi X và Y để tự động xoay dọc sơ đồ
-        }
+        if (isMobile) { pX = pos.tileY; pY = pos.tileX; } // Hoán đổi tọa độ X và Y để tự động xoay dọc cả giường lẫn phòng
 
         return `
           <div class="bed-item-draggable ${p?'occupied':''} ${isV?'orient-vertical':'orient-horizontal'} ${isArr?'arranging':''}"

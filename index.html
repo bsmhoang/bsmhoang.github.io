@@ -70,26 +70,37 @@
 
     .arrange-instruction-bar { background: #fef9c3; border: 1px solid #fde047; color: #854d0e; font-size: 11.5px; font-weight: 600; padding: 6px 14px; border-radius: 8px; margin-bottom: 8px; text-align: center; width: 100%; max-width: 820px; }
 
-    /* Kích thước chuẩn ban đầu của giường */
+    /* Thiết kế khối giường */
     .bed-item-draggable { position: absolute; cursor: pointer; user-select: none; touch-action: none; border: 2px solid #475569; border-radius: 8px; background: #fff; display: flex; box-shadow: 0 3px 6px rgba(0,0,0,0.12); overflow: hidden; z-index: 2; }
     .bed-item-draggable.arranging { cursor: grab; border-color: #eab308; box-shadow: 0 0 0 2px #fde047; }
     .bed-item-draggable.dragging { cursor: grabbing; opacity: 0.9; z-index: 99 !important; box-shadow: 0 12px 28px rgba(0,0,0,0.4); }
+    
     .bed-item-draggable.orient-horizontal { width: 120px !important; height: 80px !important; flex-direction: row; }
     .bed-item-draggable.orient-horizontal .bed-pillow { width: 18px; height: 100%; background: #cbd5e1; border-right: 2px solid #94a3b8; flex-shrink: 0; }
+    
     .bed-item-draggable.orient-vertical { width: 80px !important; height: 120px !important; flex-direction: column; }
     .bed-item-draggable.orient-vertical .bed-pillow { height: 18px; width: 100%; background: #cbd5e1; border-bottom: 2px solid #94a3b8; flex-shrink: 0; }
+
+    .bed-mattress-content { padding: 6px 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; flex-grow: 1; overflow: hidden; width: 100%; height: 100%; text-align: center; }
     
-    .bed-mattress-content { padding: 4px 6px; display: flex; flex-direction: column; justify-content: space-between; flex-grow: 1; overflow: hidden; width: 100%; height: 100%; }
-    .bed-item-draggable.orient-horizontal .patient-name-slot, .bed-item-draggable.orient-horizontal .bed-empty-tag { font-size: 12px; font-weight: 700; line-height: 1.2; word-break: break-word; color: #0f172a; }
-    
-    .bed-num-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+    /* Giường ngang: Số thứ tự góc trên, tên ở giữa */
+    .bed-item-draggable.orient-horizontal .bed-mattress-content { justify-content: space-between; align-items: stretch; }
+    .bed-item-draggable.orient-horizontal .bed-num-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+    .bed-item-draggable.orient-horizontal .bed-text-flow { display: flex; align-items: center; justify-content: center; flex-grow: 1; width: 100%; }
+
+    /* Giường dọc: Xoay toàn bộ thông tin (số thứ tự + tên) thành dọc, số ở trên tên */
+    .bed-item-draggable.orient-vertical .bed-mattress-content { writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); justify-content: center; align-items: center; gap: 6px; }
+    .bed-item-draggable.orient-vertical .bed-num-row { display: block; width: auto; }
+    .bed-item-draggable.orient-vertical .bed-text-flow { display: block; width: auto; }
+
     .bed-num { font-size: 11px; font-weight: 700; color: var(--primary); }
-    .btn-rotate-rect { background: #fff; border: 1px solid var(--border); color: #334155; border-radius: 4px; font-size: 10px; padding: 1px 4px; cursor: pointer; }
-    .bed-empty-tag { font-size: 11px; color: #94a3b8; font-style: italic; }
-    
+    .patient-name-slot, .bed-empty-tag { font-size: 12px; font-weight: 700; line-height: 1.2; word-break: break-word; color: #0f172a; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+    .bed-empty-tag { color: #94a3b8; font-style: italic; }
+
     .bed-item-draggable.occupied { background: #f0f9ff; border-color: #0284c7; }
     .bed-item-draggable.occupied .bed-pillow { background: #bae6fd; border-color: #38bdf8; }
     
+    .btn-rotate-rect { background: #fff; border: 1px solid var(--border); color: #334155; border-radius: 4px; font-size: 10px; padding: 1px 4px; cursor: pointer; }
     .btn-add-room-global { background: #fff; border: 1.5px dashed var(--primary); color: var(--primary); width: 100%; max-width: 820px; padding: 13px; border-radius: var(--radius-md); font-size: 14px; font-weight: 700; cursor: pointer; margin: 20px auto; display: flex; justify-content: center; align-items: center; gap: 6px; }
 
     .custom-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.65); z-index: 100000; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(3px); }
@@ -172,7 +183,7 @@
       <h3 style="font-size:16px; font-weight:700;">Sơ đồ phòng bệnh</h3><div style="width:40px;"></div>
     </div>
     <div id="roomsDynamicContainer"></div>
-    <button class="btn-add-room-global" onclick="addNewRoom()">➕ Thêm phòng mới</button>
+    <button class="btn-add-room-global desktop-only-ctrl" onclick="addNewRoom()">➕ Thêm phòng mới</button>
   </div>
 
   <div id="summaryFullView" class="view-section">
@@ -843,7 +854,7 @@
     win.document.close(); win.focus(); setTimeout(() => win.print(), 400);
   }
 
-  /* RENDER SƠ ĐỒ CHUẨN XÁC, KÍCH THƯỚC NGUYÊN BẢN (KHÔNG BỊ THU NHỎ) */
+  /* RENDER SƠ ĐỒ CHUẨN XÁC: NGOÀI SƠ ĐỒ CHỈ HIỆN TÊN, GIƯỜNG DỌC THÌ SỐ THỨ TỰ Ở TRÊN TÊN BỆNH NHÂN */
   function renderRoomsGrid() {
     const c = document.getElementById('roomsDynamicContainer'); if (!c) return;
 
@@ -864,17 +875,31 @@
           pos = { tileX: defX, tileY: defY }; defX += spanX + 1;
           r.bedPositions = r.bedPositions || {}; r.bedPositions[bed] = pos;
         }
+
+        // Nếu là giường dọc: Đưa số thứ tự lên trên, tên bệnh nhân ở dưới theo chiều dọc
+        let innerContent = '';
+        if (isV) {
+          innerContent = `
+            <div class="bed-num" style="writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); margin-bottom: 4px;">${bed}.</div>
+            <div class="bed-text-flow" style="writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg);">
+              <div class="${p?'patient-name-slot':'bed-empty-tag'}">${p?p.name:'+ Trống'}</div>
+            </div>`;
+        } else {
+          innerContent = `
+            <div class="bed-num-row">
+              <span class="bed-num">${bed}.</span>
+              <button type="button" class="btn-rotate-rect" onclick="rotateSingleBed(event,'${r.id}','${bed}')">↔️ Ngang</button>
+            </div>
+            <div class="bed-text-flow"><div class="${p?'patient-name-slot':'bed-empty-tag'}">${p?p.name:'+ Trống'}</div></div>`;
+        }
+
         return `
           <div class="bed-item-draggable ${p?'occupied':''} ${isV?'orient-vertical':'orient-horizontal'} ${isArr?'arranging':''}"
                id="bedEl_${r.id}_${bed}" style="left:${pos.tileX*TILE_SIZE}px; top:${pos.tileY*TILE_SIZE}px;"
                onpointerdown="startDraggingBed(event,'${r.id}','${bed}')" onclick="handleBedClick('${r.name}','${bed}','${r.id}')">
             <div class="bed-pillow"></div>
             <div class="bed-mattress-content">
-              <div class="bed-num-row">
-                <span class="bed-num">${bed}.</span>
-                <button type="button" class="btn-rotate-rect" onclick="rotateSingleBed(event,'${r.id}','${bed}')">${isV?'↕️ Dọc':'↔️ Ngang'}</button>
-              </div>
-              <div class="bed-text-flow"><div class="${p?'patient-name-slot':'bed-empty-tag'}">${p?p.name:'+ Trống'}</div></div>
+              ${innerContent}
             </div>
           </div>`;
       }).join('');

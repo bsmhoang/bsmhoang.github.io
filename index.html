@@ -26,7 +26,7 @@
       --radius-lg: 16px;
       --radius-md: 12px;
       --radius-sm: 8px;
-      --grid-cell: 70px; /* Kích thước mỗi ô vuông chuẩn */
+      --coc-tile: 40px; /* Kích thước mỗi ô vuông bản đồ kiểu Clash of Clans */
     }
     
     * { 
@@ -48,7 +48,7 @@
     }
     
     .container { 
-      max-width: 680px; 
+      max-width: 900px; 
       margin: 0 auto; 
       width: 100%; 
     }
@@ -278,28 +278,47 @@
       cursor: pointer;
     }
 
-    /* VÙNG CHỨA PHÒNG CÓ THỂ CUỘN NGANG KHI VƯỢT QUÁ MÀN HÌNH */
+    /* KHUNG NHÌN SÀN CUỘN TRÀN MÀN HÌNH */
     .room-scroll-viewport {
       width: 100%;
       overflow-x: auto;
-      padding: 10px 4px;
+      padding: 10px 2px;
       display: flex;
       justify-content: flex-start;
+      -webkit-overflow-scrolling: touch;
     }
 
-    /* SÀN PHÒNG BỆNH TỰ CO GIÃN THEO Ô ĐÃ SỬ DỤNG */
+    /* ========================================================
+       SÀN PHÒNG KIỂU CLASH OF CLANS: CÁC Ô GẠCH NỀN ĐAN XEN
+       ======================================================== */
     .room-floor-boundary {
       position: relative;
-      border: 3px solid #475569;
-      border-radius: 14px;
-      background: #f8fafc;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      transition: width 0.25s ease, height 0.25s ease;
-      /* Nền kẻ ô vuông sàn chuẩn 70px x 70px */
+      border: 3.5px solid #334155;
+      border-radius: 12px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+      transition: width 0.2s ease, height 0.2s ease;
+      background-color: #f1f5f9;
+      /* Họa tiết ô cờ bàn vuông đặc trưng */
       background-image: 
-        linear-gradient(to right, rgba(203, 213, 225, 0.7) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(203, 213, 225, 0.7) 1px, transparent 1px);
-      background-size: 70px 70px;
+        linear-gradient(45deg, #e2e8f0 25%, transparent 25%), 
+        linear-gradient(-45deg, #e2e8f0 25%, transparent 25%), 
+        linear-gradient(45deg, transparent 75%, #e2e8f0 75%), 
+        linear-gradient(-45deg, transparent 75%, #e2e8f0 75%);
+      background-size: calc(var(--coc-tile) * 2) calc(var(--coc-tile) * 2);
+      background-position: 0 0, 0 var(--coc-tile), var(--coc-tile) -var(--coc-tile), -var(--coc-tile) 0px;
+    }
+
+    /* Lớp lưới kẻ ranh giới ô khi bật Chế độ Sắp xếp */
+    .room-floor-boundary.is-arranging::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image: 
+        linear-gradient(to right, rgba(148, 163, 184, 0.45) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(148, 163, 184, 0.45) 1px, transparent 1px);
+      background-size: var(--coc-tile) var(--coc-tile);
+      pointer-events: none;
+      z-index: 1;
     }
 
     .door-indicator {
@@ -327,45 +346,44 @@
       color: #854d0e;
       font-size: 11.5px;
       font-weight: 600;
-      padding: 5px 10px;
+      padding: 6px 10px;
       border-radius: 8px;
       margin-bottom: 8px;
       text-align: center;
     }
 
     /* ========================================================
-       CHIẾC GIƯỜNG ĐẶT THEO Ô VUÔNG & KÉO THẢ HÍT Ô
+       CHIẾC GIƯỜNG ĐẶT VỪA KHÍT CÁC Ô (SNAP-TO-GRID)
        ======================================================== */
     .bed-item-draggable {
       position: absolute;
       cursor: pointer;
       user-select: none;
       touch-action: none;
-      border: 2px solid #64748b;
+      border: 2px solid #475569;
       border-radius: 8px;
       background: #ffffff;
       display: flex;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.08);
-      transition: border-color 0.15s, box-shadow 0.15s;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.12);
       overflow: hidden;
       z-index: 2;
     }
     .bed-item-draggable.arranging {
       cursor: grab;
       border-color: #eab308;
-      box-shadow: 0 6px 16px rgba(234, 179, 8, 0.3);
+      box-shadow: 0 0 0 2px #fde047, 0 8px 20px rgba(234, 179, 8, 0.35);
     }
     .bed-item-draggable.dragging {
       cursor: grabbing;
       opacity: 0.9;
       z-index: 99 !important;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.4);
     }
 
-    /* GIƯỜNG NGANG: 2 Ô NGANG (140px) x 1 Ô DỌC (70px) */
+    /* GIƯỜNG NGANG: 3 ô ngang (120px) x 2 ô dọc (80px) */
     .bed-item-draggable.orient-horizontal {
-      width: 140px !important;
-      height: 70px !important;
+      width: calc(var(--coc-tile) * 3) !important;
+      height: calc(var(--coc-tile) * 2) !important;
       flex-direction: row;
     }
     .bed-item-draggable.orient-horizontal .bed-pillow {
@@ -376,10 +394,10 @@
       flex-shrink: 0;
     }
 
-    /* GIƯỜNG DỌC: 1 Ô NGANG (70px) x 2 Ô DỌC (140px) */
+    /* GIƯỜNG DỌC: 2 ô ngang (80px) x 3 ô dọc (120px) */
     .bed-item-draggable.orient-vertical {
-      width: 70px !important;
-      height: 140px !important;
+      width: calc(var(--coc-tile) * 2) !important;
+      height: calc(var(--coc-tile) * 3) !important;
       flex-direction: column;
     }
     .bed-item-draggable.orient-vertical .bed-pillow {
@@ -420,7 +438,7 @@
     .bed-item-draggable.orient-horizontal .bed-empty-tag {
       font-size: 12px;
       font-weight: 700;
-      line-height: 1.15;
+      line-height: 1.2;
       word-break: break-word;
       color: #0f172a;
     }
@@ -442,8 +460,7 @@
     .bed-item-draggable.orient-vertical .bed-empty-tag {
       font-size: 12px;
       font-weight: 700;
-      line-height: 1.15;
-      letter-spacing: 0.5px;
+      line-height: 1.2;
       color: #0f172a;
       white-space: nowrap;
       text-overflow: ellipsis;
@@ -464,12 +481,12 @@
       color: #334155;
       border-radius: 4px;
       font-size: 10px;
-      padding: 1px 3px;
+      padding: 1px 4px;
       cursor: pointer;
       line-height: 1;
     }
 
-    .bed-empty-tag { font-size: 10.5px; color: #94a3b8; font-style: italic; }
+    .bed-empty-tag { font-size: 11px; color: #94a3b8; font-style: italic; }
 
     .btn-add-room-global {
       background: white;
@@ -1133,7 +1150,7 @@
 <script>
   const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxVVVoEdjNY5fsWGuJegc9EHAcrzTFaty4VEhMeyo5HsKdT-U89s9SlT7R-zdaXuMayzw/exec";
   const CORRECT_PIN = "000000";
-  const CELL_SIZE = 70; // 70px mỗi ô
+  const TILE_SIZE = 40; // Kích thước ô lưới Clash of Clans (40px)
 
   const defaultRooms = [
     { id: '825', name: 'P 825', beds: [1, 2, 3, 4, 5, 6], door: 'bottom', bedOrientations: {}, bedPositions: {} },
@@ -1417,7 +1434,7 @@
   }
 
   /* ========================================================
-     QUẢN LÝ PHÒNG & KÉO THẢ SẮP XẾP HÍT Ô (FIT DIỆN TÍCH)
+     QUẢN LÝ PHÒNG & SÀN BẢN ĐỒ CLASH OF CLANS
      ======================================================== */
   function renameRoom(roomId) {
     const r = roomList.find(x => x.id === roomId);
@@ -1437,13 +1454,13 @@
     const r = roomList.find(x => x.id === roomId);
     if (!r) return;
     const options = [
-      "1. ⬆️ Cửa Dưới (chỉ vào từ dưới)",
-      "2. ⬇️ Cửa Trên (chỉ vào từ trên)",
-      "3. ➡️ Cửa Trái (chỉ vào từ bên trái)",
-      "4. ⬅️ Cửa Phải (chỉ vào từ bên phải)",
+      "1. ⬆️ Cửa Dưới",
+      "2. ⬇️ Cửa Trên",
+      "3. ➡️ Cửa Trái",
+      "4. ⬅️ Cửa Phải",
       "5. Ẩn cửa"
     ];
-    const choice = prompt(`CHỌN HƯỚNG CỬA VÀO CHO ${r.name}:\n\n` + options.join("\n") + "\n\nNhập số từ 1 đến 5:");
+    const choice = prompt(`CHỌN HƯỚNG CỬA CHO ${r.name}:\n\n` + options.join("\n") + "\n\nNhập số từ 1 đến 5:");
     if (!choice) return;
 
     if (choice.trim() === '1') r.door = 'bottom';
@@ -1456,52 +1473,51 @@
     syncDataToCloud();
   }
 
-  // BẬT / TẮT CHẾ ĐỘ SẮP XẾP VÀ FIT DIỆN TÍCH PHÒNG
+  // BẬT / TẮT CHẾ ĐỘ SẮP XẾP & TỰ ĐỘNG FIT KHU VỰC
   function toggleArrangeMode(roomId) {
     const r = roomList.find(x => x.id === roomId);
     if (!r) return;
 
     if (arrangeModeRooms[roomId]) {
-      // Khi bấm Lưu vị trí: Tự động tính toán diện tích ô đã sử dụng để FIT phòng
       delete arrangeModeRooms[roomId];
       fitRoomBounds(r);
       syncDataToCloud();
-      alert("Đã lưu vị trí và tự động căn chỉnh diện tích phòng!");
+      alert("Đã lưu vị trí và căn chỉnh diện tích phòng!");
     } else {
       arrangeModeRooms[roomId] = true;
     }
     renderRoomsGrid();
   }
 
-  // TÍNH TOÁN VÀ FIT DIỆN TÍCH PHÒNG THEO CÁC Ô ĐÃ DÙNG
+  // TÍNH TOÁN BIÊN DIỆN TÍCH (FIT MAP) THEO SỐ Ô ĐÃ DÙNG
   function fitRoomBounds(r) {
     if (!r.beds || r.beds.length === 0) return;
     const bedOrientations = r.bedOrientations || {};
     const bedPositions = r.bedPositions || {};
 
-    let maxColIndex = 3; // tối thiểu 3 ô ngang
-    let maxRowIndex = 3; // tối thiểu 3 ô dọc
+    let maxTileX = 8;  // Ít nhất 8 ô ngang
+    let maxTileY = 6;  // Ít nhất 6 ô dọc
 
     r.beds.forEach(bed => {
       const isVert = (bedOrientations[bed] === 'vertical');
-      const pos = bedPositions[bed] || { col: 0, row: 0 };
-      const bedCols = isVert ? 1 : 2;
-      const bedRows = isVert ? 2 : 1;
+      const pos = bedPositions[bed] || { tileX: 1, tileY: 1 };
+      const spanX = isVert ? 2 : 3; // Ngang chiếm 3 ô, Dọc chiếm 2 ô
+      const spanY = isVert ? 3 : 2; // Ngang chiếm 2 ô, Dọc chiếm 3 ô
 
-      const endCol = pos.col + bedCols;
-      const endRow = pos.row + bedRows;
+      const endX = (pos.tileX || 1) + spanX + 1; // +1 ô hành lang đệm
+      const endY = (pos.tileY || 1) + spanY + 1;
 
-      if (endCol > maxColIndex) maxColIndex = endCol;
-      if (endRow > maxRowIndex) maxRowIndex = endRow;
+      if (endX > maxTileX) maxTileX = endX;
+      if (endY > maxTileY) maxTileY = endY;
     });
 
     r.roomBounds = {
-      cols: maxColIndex,
-      rows: maxRowIndex
+      tilesX: maxTileX,
+      tilesY: maxTileY
     };
   }
 
-  // XOAY HÌNH CHỮ NHẬT GIỮA 2x1 Ô VÀ 1x2 Ô
+  // XOAY CÔNG TRÌNH GIƯỜNG (3x2 <-> 2x3 Ô)
   function rotateSingleBed(event, roomId, bedNum) {
     event.stopPropagation();
     const r = roomList.find(x => x.id === roomId);
@@ -1578,7 +1594,7 @@
       door: doorPos,
       bedOrientations: {},
       bedPositions: {},
-      roomBounds: { cols: 4, rows: 3 }
+      roomBounds: { tilesX: 9, tilesY: 7 }
     };
     fitRoomBounds(newRoom);
     roomList.push(newRoom);
@@ -2046,7 +2062,7 @@
   }
 
   /* ========================================================
-     RENDER SƠ ĐỒ THEO TỌA ĐỘ Ô & TỰ FIT DIỆN TÍCH PHÒNG
+     RENDER SÀN LƯỚI CLASH OF CLANS & CĂN CHỈNH BIÊN Ô
      ======================================================== */
   function renderRoomsGrid() {
     const container = document.getElementById('roomsDynamicContainer');
@@ -2058,13 +2074,12 @@
       const bedOrientations = r.bedOrientations || {};
       const bedPositions = r.bedPositions || {};
 
-      // Đảm bảo tính toán fit diện tích ô phòng
+      // Cập nhật biên kích thước theo số ô đã sử dụng
       fitRoomBounds(r);
-      const bounds = r.roomBounds || { cols: 4, rows: 3 };
+      const bounds = r.roomBounds || { tilesX: 9, tilesY: 7 };
 
-      // Kích thước sàn phòng vừa vặn theo số ô
-      const floorWidth = bounds.cols * CELL_SIZE;
-      const floorHeight = bounds.rows * CELL_SIZE;
+      const floorW = bounds.tilesX * TILE_SIZE;
+      const floorH = bounds.tilesY * TILE_SIZE;
 
       let doorHtml = '';
       if (door === 'top') doorHtml = '<div class="door-indicator door-top">⬇️ Cửa</div>';
@@ -2072,9 +2087,9 @@
       else if (door === 'left') doorHtml = '<div class="door-indicator door-left">➡️ Cửa</div>';
       else if (door === 'right') doorHtml = '<div class="door-indicator door-right">⬅️ Cửa</div>';
 
-      // Tự động phân bổ ô ban đầu nếu chưa có vị trí
-      let defaultCol = 0;
-      let defaultRow = 0;
+      // Tọa độ đặt ban đầu nếu chưa kéo thả
+      let defTileX = 1;
+      let defTileY = 1;
 
       const bedHtml = r.beds.map((bed) => {
         const p = getPatientInBed(r.name, bed);
@@ -2082,24 +2097,24 @@
         const orientClass = isVert ? 'orient-vertical' : 'orient-horizontal';
         const rotateIcon = isVert ? '↕️ Dọc' : '↔️ Ngang';
 
-        const bedCols = isVert ? 1 : 2;
-        const bedRows = isVert ? 2 : 1;
+        const spanX = isVert ? 2 : 3;
+        const spanY = isVert ? 3 : 2;
 
         let pos = bedPositions[bed];
-        if (!pos || typeof pos.col !== 'number') {
-          if (defaultCol + bedCols > bounds.cols) {
-            defaultCol = 0;
-            defaultRow += 2;
+        if (!pos || typeof pos.tileX !== 'number') {
+          if (defTileX + spanX > bounds.tilesX - 1) {
+            defTileX = 1;
+            defTileY += 4;
           }
-          pos = { col: defaultCol, row: defaultRow };
-          defaultCol += bedCols;
+          pos = { tileX: defTileX, tileY: defTileY };
+          defTileX += spanX + 1;
           if (!r.bedPositions) r.bedPositions = {};
           r.bedPositions[bed] = pos;
         }
 
-        // Tọa độ pixel chính xác theo ô
-        const pxLeft = pos.col * CELL_SIZE;
-        const pxTop = pos.row * CELL_SIZE;
+        // Vị trí pixel chính xác theo lưới ô
+        const pxLeft = pos.tileX * TILE_SIZE;
+        const pxTop = pos.tileY * TILE_SIZE;
 
         const patientNameHtml = p ? 
           `<div class="patient-name-slot">${p.name}</div>` : 
@@ -2145,10 +2160,10 @@
             </div>
           </div>
 
-          ${isArranging ? '<div class="arrange-instruction-bar">✋ Kéo giường vào các ô vuông, sau đó bấm [💾 Lưu vị trí] để sàn phòng tự động Fit</div>' : ''}
+          ${isArranging ? '<div class="arrange-instruction-bar">⚔️ Kéo thả giường bắt dính vào từng ô lưới caro, sau đó bấm [💾 Lưu vị trí] để Fit diện tích phòng!</div>' : ''}
 
           <div class="room-scroll-viewport">
-            <div class="room-floor-boundary" id="floorBoundary_${r.id}" style="width: ${floorWidth}px; height: ${floorHeight}px;">
+            <div class="room-floor-boundary ${isArranging ? 'is-arranging' : ''}" id="floorBoundary_${r.id}" style="width: ${floorW}px; height: ${floorH}px;">
               ${doorHtml}
               ${bedHtml || '<p style="padding:40px;text-align:center;color:#94a3b8;">Chưa có giường nào trong phòng này.</p>'}
             </div>
@@ -2159,7 +2174,7 @@
   }
 
   /* ========================================================
-     KÉO THẢ HÍT CHÍNH XÁC VÀO CÁC Ô VUÔNG (SNAP-TO-GRID)
+     KÉO THẢ HÍT CHUẨN TỪNG Ô LƯỚI (SNAP TO 40PX TILE)
      ======================================================== */
   let activeDrag = null;
 
@@ -2197,26 +2212,26 @@
     if (!activeDrag) return;
     e.preventDefault();
 
-    let rawLeft = e.clientX - activeDrag.floorLeft - activeDrag.offsetX;
-    let rawTop = e.clientY - activeDrag.floorTop - activeDrag.offsetY;
+    let rawX = e.clientX - activeDrag.floorLeft - activeDrag.offsetX;
+    let rawY = e.clientY - activeDrag.floorTop - activeDrag.offsetY;
 
-    if (rawLeft < 0) rawLeft = 0;
-    if (rawTop < 0) rawTop = 0;
+    if (rawX < 0) rawX = 0;
+    if (rawY < 0) rawY = 0;
 
-    // Tính chỉ số cột và hàng ô vuông (Snap chính xác theo CELL_SIZE = 70px)
-    const snapCol = Math.round(rawLeft / CELL_SIZE);
-    const snapRow = Math.round(rawTop / CELL_SIZE);
+    // Hít chính xác từng ô lưới TILE_SIZE (40px)
+    const tileX = Math.round(rawX / TILE_SIZE);
+    const tileY = Math.round(rawY / TILE_SIZE);
 
-    const newLeft = snapCol * CELL_SIZE;
-    const newTop = snapRow * CELL_SIZE;
+    const snapLeft = tileX * TILE_SIZE;
+    const snapTop = tileY * TILE_SIZE;
 
-    activeDrag.bedEl.style.left = newLeft + 'px';
-    activeDrag.bedEl.style.top = newTop + 'px';
+    activeDrag.bedEl.style.left = snapLeft + 'px';
+    activeDrag.bedEl.style.top = snapTop + 'px';
 
     const r = roomList.find(x => x.id === activeDrag.roomId);
     if (r) {
       if (!r.bedPositions) r.bedPositions = {};
-      r.bedPositions[activeDrag.bedNum] = { col: snapCol, row: snapRow };
+      r.bedPositions[activeDrag.bedNum] = { tileX: tileX, tileY: tileY };
     }
   }
 

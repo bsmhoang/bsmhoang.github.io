@@ -43,7 +43,7 @@
     .view-section { display: none; }
     .view-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 
-    /* Sơ đồ phòng & Khung sàn tự động ôm khít */
+    /* Sơ đồ phòng & Tự động thu gọn không có thanh cuộn */
     .room-block-wrapper { margin-bottom: 30px; display: flex; flex-direction: column; align-items: center; width: 100%; }
     .room-header-bar { display: flex; justify-content: space-between; align-items: center; margin: 16px 2px 8px; flex-wrap: wrap; gap: 6px; width: 100%; max-width: 820px; }
     .room-title-name { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
@@ -52,7 +52,9 @@
     .btn-arrange-active { background: #fef08a !important; border-color: #eab308 !important; color: #854d0e !important; }
     .btn-del-room { background: #fef2f2; border: 1px solid #fca5a5; color: #dc2626; }
     
-    .room-scroll-viewport { width: 100%; overflow-x: auto; padding: 6px 4px; display: flex; justify-content: center; -webkit-overflow-scrolling: touch; }
+    /* Cố định khung chứa tuyệt đối không hiện thanh cuộn ngang */
+    .room-scroll-viewport { width: 100%; display: flex; justify-content: center; overflow: hidden; padding: 4px 0; }
+    .room-scale-wrapper { display: flex; justify-content: center; transform-origin: top center; width: 100%; }
 
     .room-floor-boundary {
       position: relative; border: 3.5px solid #334155; border-radius: 14px; box-shadow: 0 4px 14px rgba(0,0,0,0.08);
@@ -841,7 +843,7 @@
     win.document.close(); win.focus(); setTimeout(() => win.print(), 400);
   }
 
-  /* RENDER SƠ ĐỒ & SCALE VỪA MÀN HÌNH DI ĐỘNG KHÔNG LỖI CHIỀU CAO */
+  /* RENDER SƠ ĐỒ & AUTO-SCALE THÔNG MINH KHÔNG LỖI */
   function renderRoomsGrid() {
     const c = document.getElementById('roomsDynamicContainer'); if (!c) return;
     c.innerHTML = roomList.map(r => {

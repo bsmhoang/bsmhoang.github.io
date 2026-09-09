@@ -53,7 +53,7 @@
       width: 100%; 
     }
 
-    /* MÀN HÌNH ĐĂNG NHẬP / MÃ KHÓA PIN */
+    /* MÀN HÌNH ĐĂNG NHẬP TINH GỌN (ĐÃ BỎ CHỮ BỆNH ÁN LÂM SÀNG) */
     #lockScreenView {
       position: fixed;
       top: 0; left: 0;
@@ -68,16 +68,16 @@
     .lock-card {
       background: white;
       border: 1.5px solid var(--border);
-      border-radius: 20px;
-      padding: 36px 24px;
+      border-radius: 24px;
+      padding: 38px 24px 30px 24px;
       width: 100%;
-      max-width: 360px;
+      max-width: 350px;
       text-align: center;
       box-shadow: 0 8px 30px rgba(0,0,0,0.06);
     }
     .lock-avatar {
-      width: 68px;
-      height: 68px;
+      width: 72px;
+      height: 72px;
       background: var(--primary-light);
       color: var(--primary);
       border-radius: 50%;
@@ -85,24 +85,19 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 28px;
+      font-size: 30px;
       border: 2px solid #bae6fd;
     }
-    .lock-title {
-      font-size: 19px;
-      font-weight: 700;
-      color: #0f172a;
-      margin-bottom: 4px;
-    }
     .lock-subtitle {
-      font-size: 13px;
+      font-size: 13.5px;
       color: var(--text-muted);
       margin-bottom: 24px;
+      font-weight: 500;
     }
     .pin-input {
       width: 100%;
       padding: 14px;
-      font-size: 24px;
+      font-size: 26px;
       text-align: center;
       letter-spacing: 12px;
       border: 2px solid var(--border);
@@ -111,18 +106,20 @@
       background: #f8fafc;
       color: #0f172a;
       font-weight: 700;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
+      transition: all 0.2s;
     }
     .pin-input:focus {
       border-color: var(--primary);
       background: white;
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
     }
     .btn-unlock {
       width: 100%;
       background: var(--primary);
       color: white;
       border: none;
-      padding: 14px;
+      padding: 13px;
       border-radius: var(--radius-md);
       font-size: 15px;
       font-weight: 700;
@@ -317,7 +314,7 @@
     .patient-name-slot { font-size: 13.5px; font-weight: 700; line-height: 1.25; word-break: break-word; color: #0f172a; }
     .bed-empty-tag { font-size: 11px; color: #94a3b8; font-style: italic; }
 
-    /* HỒ SƠ BỆNH ÁN: CHIỀU DỌC */
+    /* HỒ SƠ BỆNH ÁN: CHIỀU DỌC THÔNG SUỐT */
     .summary-page-container {
       background: white;
       border: 1.5px solid var(--border);
@@ -758,13 +755,12 @@
 </head>
 <body>
 
-<!-- MÀN HÌNH ĐĂNG NHẬP (MẬT MÃ: 000000) -->
+<!-- MÀN HÌNH ĐĂNG NHẬP TINH GỌN (ĐÃ BỎ CHỮ BỆNH ÁN LÂM SÀNG, TỰ ĐỘNG MỞ KHI NHẬP 000000) -->
 <div id="lockScreenView">
   <div class="lock-card">
     <div class="lock-avatar">🔐</div>
-    <h2 class="lock-title">Bệnh Án Lâm Sàng</h2>
     <p class="lock-subtitle">Nhập mật mã 6 số để mở hệ thống</p>
-    <input type="password" id="pinInput" class="pin-input" maxlength="6" inputmode="numeric" placeholder="••••••" onkeydown="handlePinKeydown(event)">
+    <input type="password" id="pinInput" class="pin-input" maxlength="6" inputmode="numeric" placeholder="••••••" oninput="checkPinAuto(this)" onkeydown="handlePinKeydown(event)">
     <button type="button" class="btn-unlock" onclick="verifyPin()">Mở khóa</button>
     <div id="lockErrorMsg" class="lock-error-msg"></div>
   </div>
@@ -962,7 +958,7 @@
 
 <script>
   const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxVVVoEdjNY5fsWGuJegc9EHAcrzTFaty4VEhMeyo5HsKdT-U89s9SlT7R-zdaXuMayzw/exec";
-  const CORRECT_PIN = "000000"; // MẬT MÃ BẢO VỆ
+  const CORRECT_PIN = "000000";
 
   const defaultRooms = [
     { id: '825', name: 'Phòng 825', beds: [1, 2, 3, 4, 5, 6] },
@@ -979,7 +975,7 @@
   let formImages = { diag: [], tracking: [], tests: [], imaging: [] };
 
   /* ========================================================
-     BẢO MẬT: MÃ PIN & TỰ ĐỘNG THOÁT SAU 1 PHÚT
+     BẢO MẬT: MÃ PIN & TỰ ĐỘNG ĐĂNG NHẬP / KHÓA SAU 1 PHÚT
      ======================================================== */
   let inactivityTimer = null;
   let isAuthenticated = false;
@@ -987,10 +983,16 @@
   function resetInactivityTimer() {
     if (!isAuthenticated) return;
     clearTimeout(inactivityTimer);
-    // 60,000 ms = 1 phút không hoạt động
     inactivityTimer = setTimeout(() => {
       lockSystem();
     }, 60000);
+  }
+
+  // Tự động kiểm tra ngay khi gõ đủ 6 ký tự
+  function checkPinAuto(input) {
+    if (input.value.length === 6) {
+      verifyPin();
+    }
   }
 
   function handlePinKeydown(e) {
@@ -1028,7 +1030,6 @@
     document.getElementById('pinInput').focus();
   }
 
-  // Bắt các sự kiện tương tác của người dùng để tính lại 1 phút
   ['touchstart', 'mousemove', 'scroll', 'keydown', 'click'].forEach(evt => {
     window.addEventListener(evt, resetInactivityTimer, true);
   });
@@ -1308,6 +1309,7 @@
     syncDataToCloud();
   }
 
+  /* THAO TÁC TIẾP NHẬN / THÊM NGÀY / SỬA NGÀY */
   function handleBedClick(roomName, bedNum) {
     const existing = getPatientInBed(roomName, bedNum);
     if (existing) {
@@ -1526,6 +1528,7 @@
     }
   }
 
+  /* VIEW HỒ SƠ BỆNH ÁN: HIỂN THỊ CẢ TEXT VÀ HÌNH ẢNH */
   function openSummaryView(id) {
     currentViewingPatientId = id;
     const p = patients.find(x => x.id === id);
@@ -1619,6 +1622,7 @@
     }
   }
 
+  /* XUẤT BÁO CÁO FILE PDF */
   function exportPatientPDF(patientId) {
     const p = patients.find(x => x.id === patientId);
     if (!p) return;
@@ -1852,7 +1856,6 @@
     }
   }
 
-  // Tự động focus vào ô nhập mã PIN khi vừa mở trang
   window.onload = () => {
     const pin = document.getElementById('pinInput');
     if (pin) pin.focus();

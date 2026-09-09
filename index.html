@@ -45,18 +45,22 @@
     
     .beds-grid-box { display: grid; gap: 10px; }
 
-    .bed-cell-item { background: #f8fafc; border: 1.5px solid var(--border); border-radius: var(--radius-md); padding: 12px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 75px; transition: all 0.2s; position: relative; text-align: center; }
+    .bed-cell-item { background: #f8fafc; border: 1.5px solid var(--border); border-radius: var(--radius-md); padding: 10px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 75px; transition: all 0.2s; position: relative; text-align: center; }
     .bed-cell-item:hover { border-color: var(--primary); background: #f0f9ff; }
     .bed-cell-item.occupied { background: #f0f9ff; border-color: #0284c7; }
     .bed-cell-item.is-empty-slot { background: #f1f5f9; border: 1.5px dashed var(--border); cursor: default; opacity: 0.3; pointer-events: none; }
     
-    .bed-cell-name { font-size: 13.5px; font-weight: 700; color: #0f172a; word-break: break-word; }
-    .bed-cell-empty { font-size: 12.5px; color: #94a3b8; font-style: italic; }
+    .bed-cell-name { font-size: 13px; font-weight: 700; color: #0f172a; word-break: break-word; }
+    .bed-cell-empty { font-size: 12px; color: #94a3b8; font-style: italic; }
 
     .room-action-group { display: flex; gap: 6px; align-items: center; }
     .btn-bed-ctrl { background: #fff; border: 1px solid var(--border); font-size: 11.5px; font-weight: 600; padding: 5px 10px; border-radius: 6px; cursor: pointer; color: #334155; }
     
-    .del-bed-list { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; max-height: 220px; overflow-y: auto; text-align: left; }
+    /* Các nút nhỏ trong modal sửa phòng */
+    .btn-small-action { background: #f0f9ff; border: 1px solid #7dd3fc; color: #0369a1; font-size: 11.5px; font-weight: 600; padding: 5px 10px; border-radius: 6px; cursor: pointer; }
+    .btn-small-action:hover { background: #e0f2fe; }
+
+    .del-bed-list { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; max-height: 200px; overflow-y: auto; text-align: left; }
     .del-bed-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-weight: 600; gap: 8px; }
     .del-bed-item input[type="text"] { width: 70px; padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px; text-align: center; font-weight: 700; font-size: 13px; }
 
@@ -234,17 +238,21 @@
 
   <div id="imageModalViewer" onclick="this.style.display='none'"><img id="modalViewerImg" src="" alt="Ảnh bệnh án"></div>
 
-  <!-- MODAL SỬA PHÒNG (THÊM GIƯỜNG, ĐỔI SỐ THỨ TỰ, XÓA) -->
+  <!-- MODAL SỬA PHÒNG (THÊM GIƯỜNG LẤP ĐẦY, THÊM CỘT/HÀNG NHỎ, ĐỔI SỐ THỨ TỰ, XÓA) -->
   <div id="editRoomModal" class="custom-modal-overlay" onclick="closeEditRoomModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()">
       <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:4px;" id="editRoomModalTitle">Sửa Phòng Bệnh</div>
-      <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">Thêm giường mới hoặc chỉnh sửa số giường:</p>
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">Quản lý và tùy chỉnh giường:</p>
       
-      <div style="display:flex; gap:8px; margin-bottom:14px;">
-        <button type="button" class="btn-confirm-submit" style="flex:1; padding:10px; font-size:13px;" onclick="addNewBedToRoom()">➕ Thêm giường</button>
+      <div style="display:flex; gap:6px; margin-bottom:12px;">
+        <button type="button" class="btn-confirm-submit" style="flex:1; padding:8px; font-size:12px;" onclick="addNewBedToRoom()">➕ Thêm giường</button>
+      </div>
+      <div style="display:flex; gap:6px; margin-bottom:14px;">
+        <button type="button" class="btn-small-action" style="flex:1;" onclick="addColToRoom()">➕ Thêm cột</button>
+        <button type="button" class="btn-small-action" style="flex:1;" onclick="addRowToRoom()">➕ Thêm hàng</button>
       </div>
 
-      <div style="font-size:13px; font-weight:600; color:var(--text-muted); text-align:left; margin-bottom:6px;">Danh sách giường (có thể đổi số thứ tự hoặc tích chọn xóa):</div>
+      <div style="font-size:13px; font-weight:600; color:var(--text-muted); text-align:left; margin-bottom:6px;">Danh sách giường:</div>
       <div class="del-bed-list" id="editRoomBedListContainer"></div>
 
       <div style="display:flex; gap:8px; margin-top:16px;">
@@ -297,7 +305,7 @@
     { id: '819', name: 'P 819', cols: 3, beds: [1, 2] }
   ];
 
-  let roomList = JSON.parse(localStorage.getItem('bs_room_configs_v7')) || defaultRooms;
+  let roomList = JSON.parse(localStorage.getItem('bs_room_configs_v8')) || defaultRooms;
   let patients = JSON.parse(localStorage.getItem('bs_patients_scroll_v3')) || [];
   let doctorProfile = JSON.parse(localStorage.getItem('bs_doctor_profile_v1')) || {
     name: "Bác sĩ Minh Hoàng",
@@ -400,7 +408,7 @@
     }
   }
 
-  /* QUẢN LÝ SỬA PHÒNG: THÊM GIƯỜNG LẤP ĐẦY, ĐỔI SỐ THỨ TỰ, XÓA */
+  /* QUẢN LÝ SỬA PHÒNG: THÊM GIƯỜNG LẤP ĐẦY, THÊM CỘT/HÀNG, ĐỔI SỐ VÀ XÓA */
   function openEditRoomModal(roomId) {
     const r = roomList.find(x => x.id === roomId);
     if (!r) return;
@@ -408,7 +416,7 @@
     document.getElementById('editRoomModalTitle').textContent = `Sửa phòng - ${r.name}`;
     
     const container = document.getElementById('editRoomBedListContainer');
-    container.innerHTML = r.beds.map((bed, idx) => {
+    container.innerHTML = r.beds.map(bed => {
       const p = getPatientInBed(r.name, bed);
       return `
         <div class="del-bed-item">
@@ -427,7 +435,7 @@
     const r = roomList.find(x => x.id === currentEditingRoomId);
     if (!r) return;
     
-    // Tìm ô trống nhỏ nhất (lấp đầy chỗ trống trước)
+    // Tự động lấp đầy ô trống nhỏ nhất có thể
     let newBedNum = 1;
     while (r.beds.includes(newBedNum)) {
       newBedNum++;
@@ -436,14 +444,38 @@
     r.beds.push(newBedNum);
     r.beds.sort((a, b) => a - b);
     syncDataToCloud();
-    openEditRoomModal(r.id); // Refresh lại modal
+    openEditRoomModal(r.id);
+  }
+
+  function addColToRoom() {
+    const r = roomList.find(x => x.id === currentEditingRoomId);
+    if (!r) return;
+    r.cols = (r.cols || 3) + 1;
+    syncDataToCloud();
+    openEditRoomModal(r.id);
+  }
+
+  function addRowToRoom() {
+    const r = roomList.find(x => x.id === currentEditingRoomId);
+    if (!r) return;
+    const colCount = r.cols || 3;
+    for (let i = 0; i < colCount; i++) {
+      let newBedNum = 1;
+      while (r.beds.includes(newBedNum)) {
+        newBedNum++;
+      }
+      r.beds.push(newBedNum);
+    }
+    r.beds.sort((a, b) => a - b);
+    syncDataToCloud();
+    openEditRoomModal(r.id);
   }
 
   function saveRoomChangesFromModal() {
     const r = roomList.find(x => x.id === currentEditingRoomId);
     if (!r) { closeEditRoomModal(); return; }
     
-    // 1. Xử lý đổi số thứ tự giường
+    // 1. Đổi số thứ tự giường
     const bedInputs = document.querySelectorAll('input[name="editBedNumInput"]');
     let newBeds = [...r.beds];
     let hasError = false;
@@ -458,11 +490,9 @@
           hasError = true;
           return;
         }
-        // Cập nhật số giường trong danh sách phòng
         const idx = newBeds.indexOf(oldVal);
         if (idx !== -1) newBeds[idx] = newVal;
         
-        // Cập nhật cả tên giường của bệnh nhân đang nằm nếu có
         patients.forEach(pat => {
           if (pat.status === 'active' && String(pat.room).trim() === String(r.name).trim() && String(pat.bed).trim() === String(oldVal)) {
             pat.bed = String(newVal);
@@ -475,7 +505,7 @@
     newBeds.sort((a, b) => a - b);
     r.beds = newBeds;
 
-    // 2. Xử lý xóa giường được tích chọn
+    // 2. Xóa giường được tích chọn
     const checkboxes = document.querySelectorAll('input[name="editRoomDelCheckbox"]:checked');
     const bedsToRemove = Array.from(checkboxes).map(cb => parseInt(cb.value));
     
@@ -490,6 +520,23 @@
         return;
       }
       r.beds = r.beds.filter(b => !bedsToRemove.includes(b));
+    }
+
+    // Tự động thu gọn cột ngoài cùng nếu trống sạch
+    const colCount = r.cols || 3;
+    let maxBedVal = r.beds.length ? Math.max(...r.beds) : 0;
+    let totalRows = Math.ceil((maxBedVal || 1) / colCount);
+
+    let rightColEmpty = true;
+    for (let row = 0; row < totalRows; row++) {
+      let bedIndex = row * colCount + colCount;
+      if (r.beds.includes(bedIndex)) {
+        rightColEmpty = false;
+        break;
+      }
+    }
+    if (rightColEmpty && colCount > 1) {
+      r.cols = colCount - 1;
     }
 
     syncDataToCloud();
@@ -574,7 +621,7 @@
       if (data?.patients && data?.rooms) {
         patients = data.patients; roomList = data.rooms;
         localStorage.setItem('bs_patients_scroll_v3', JSON.stringify(patients));
-        localStorage.setItem('bs_room_configs_v7', JSON.stringify(roomList));
+        localStorage.setItem('bs_room_configs_v5', JSON.stringify(roomList));
       }
       updateSyncUI('success', 'Đã đồng bộ');
       renderDashboardCounts();
@@ -582,7 +629,7 @@
   }
   async function syncDataToCloud() {
     localStorage.setItem('bs_patients_scroll_v3', JSON.stringify(patients));
-    localStorage.setItem('bs_room_configs_v7', JSON.stringify(roomList));
+    localStorage.setItem('bs_room_configs_v5', JSON.stringify(roomList));
     renderDashboardCounts();
     if (!GOOGLE_SCRIPT_URL) return;
     updateSyncUI('syncing', 'Đang lưu...');
@@ -772,7 +819,7 @@
     win.document.close(); win.focus(); setTimeout(() => win.print(), 400);
   }
 
-  /* RENDER GIAO DIỆN PHÒNG & LƯỚI 3 CỘT */
+  /* RENDER DANH SÁCH PHÒNG CỘT DỌC VÀ LƯỚI TỰ ĐỘNG THEO SỐ CỘT (COLS) */
   function renderRoomsGrid() {
     const c = document.getElementById('roomsDynamicContainer'); if (!c) return;
 
@@ -786,7 +833,6 @@
           const p = getPatientInBed(r.name, i);
           bedsHtml += `
             <div class="bed-cell-item ${p ? 'occupied' : ''}" onclick="handleBedClick('${r.name}', '${i}')">
-              <span class="bed-cell-num">Giường ${i}</span>
               ${p ? `<span class="bed-cell-name">👤 ${p.name}</span>` : `<span class="bed-cell-empty">+ Trống</span>`}
             </div>`;
         } else {

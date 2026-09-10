@@ -64,7 +64,7 @@
     .mode-panel.active { display: flex; }
 
     .custom-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.65); z-index: 100000; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(3px); }
-    .custom-modal-card { background: #fff; border-radius: 20px; padding: 24px; width: 100%; max-width: 480px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; max-height: 90vh; overflow-y: auto; }
+    .custom-modal-card { background: #fff; border-radius: 20px; padding: 24px; width: 100%; max-width: 420px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; max-height: 90vh; overflow-y: auto; }
     .btn-modal-cancel { width: 100%; background: #f1f5f9; border: none; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #64748b; cursor: pointer; margin-top: 12px; }
 
     .summary-page-container, .form-fullpage-card { background: #fff; border: 1.5px solid var(--border); border-radius: var(--radius-lg); box-shadow: 0 4px 16px rgba(0,0,0,0.04); overflow: hidden; margin-bottom: 20px; }
@@ -128,7 +128,7 @@
       </div>
       <div class="big-btn btn-purple" onclick="showView('medicationView')">
         <h2>💊 Thuốc</h2><p>Danh mục và tra cứu thuốc điều trị</p>
-        <span class="count-tag" id="homeMedCount">Danh mục thuốc</span>
+        <span class="count-tag" id="homeMedCount">0 Danh mục</span>
       </div>
     </div>
   </div>
@@ -141,15 +141,14 @@
     <div class="rooms-column-list" id="roomsDynamicContainer"></div>
   </div>
 
+  <!-- TRANG QUẢN LÝ THUỐC -->
   <div id="medicationView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('homeView')">⬅️ Trang chủ</button>
       <h3 style="font-size:16px; font-weight:700;">Danh Mục Thuốc</h3>
-      <button class="btn-top" onclick="alert('Tính năng thêm thuốc đang phát triển')">➕ Thêm thuốc</button>
+      <button class="btn-top" onclick="openAddMedCategoryModal()">➕ Thêm danh mục</button>
     </div>
-    <div style="background:#fff; border-radius:var(--radius-lg); padding:20px; border:1.5px solid var(--border);">
-      <p style="color:var(--text-muted); text-align:center; padding:30px;">Chưa có danh mục thuốc nào được lưu.</p>
-    </div>
+    <div id="medCategoryContainer" style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;"></div>
   </div>
 
   <div id="summaryFullView" class="view-section">
@@ -252,23 +251,35 @@
 
   <div id="imageModalViewer" onclick="this.style.display='none'"><img id="modalViewerImg" src="" alt="Ảnh bệnh án"></div>
 
-  <!-- MODAL SỬA PHÒNG VỚI 3 CHẾ ĐỘ: HÀNG, CỘT, Ô -->
+  <!-- MODAL THÊM DANH MỤC THUỐC -->
+  <div id="addMedCategoryModal" class="custom-modal-overlay" onclick="closeAddMedCategoryModal()">
+    <div class="custom-modal-card" onclick="event.stopPropagation()">
+      <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:12px;">Thêm Danh Mục Thuốc</div>
+      <div style="margin-bottom:14px; text-align:left;">
+        <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Tên danh mục:</label>
+        <input type="text" id="medCategoryNameInput" placeholder="Ví dụ: Kháng sinh, Giảm đau..." style="width:100%; padding:9px; border:1px solid var(--border); border-radius:8px; margin-top:4px; font-size:14px; font-weight:600;">
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="btn-modal-cancel" style="margin-top:0;" onclick="closeAddMedCategoryModal()">Hủy</button>
+        <button type="button" class="btn-confirm-submit" style="flex:1; padding:10px;" onclick="saveMedCategory()">Tạo mới</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL SỬA PHÒNG -->
   <div id="editRoomModal" class="custom-modal-overlay" onclick="closeEditRoomModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()">
       <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:12px;" id="editRoomModalTitle">Sửa Phòng Bệnh</div>
       
-      <!-- Thanh chuyển đổi chế độ -->
       <div class="mode-tab-group">
         <button type="button" id="tabRow" class="btn-mode-tab active" onclick="switchEditMode('row')">Hàng</button>
         <button type="button" id="tabCol" class="btn-mode-tab" onclick="switchEditMode('col')">Cột</button>
         <button type="button" id="tabCell" class="btn-mode-tab" onclick="switchEditMode('cell')">Ô</button>
       </div>
 
-      <!-- CHẾ ĐỘ HÀNG -->
       <div id="panelModeRow" class="mode-panel active">
-        <p style="font-size:12.5px; color:var(--text-muted);">Thêm hàng mới hoặc chọn hàng (ký hiệu chữ A, B, C...) để xóa:</p>
+        <p style="font-size:12.5px; color:var(--text-muted);">Thêm hàng mới hoặc chọn hàng để xóa:</p>
         <button type="button" class="btn-confirm-submit" style="padding:9px; font-size:12.5px;" onclick="addRowToRoom()">➕ Thêm hàng</button>
-        
         <div style="margin-top:6px; font-size:12.5px; font-weight:600; color:var(--text-muted);">Chọn hàng để xóa:</div>
         <div style="display:flex; gap:8px;">
           <select id="selectRowToRemove" class="select-styled" style="flex:1; padding:8px; border:1px solid var(--border); border-radius:8px; font-weight:600; background:#fff;"></select>
@@ -276,11 +287,9 @@
         </div>
       </div>
 
-      <!-- CHẾ ĐỘ CỘT -->
       <div id="panelModeCol" class="mode-panel">
-        <p style="font-size:12.5px; color:var(--text-muted);">Thêm cột mới hoặc chọn cột (ký hiệu số 1, 2, 3...) để xóa:</p>
+        <p style="font-size:12.5px; color:var(--text-muted);">Thêm cột mới hoặc chọn cột để xóa:</p>
         <button type="button" class="btn-confirm-submit" style="padding:9px; font-size:12.5px;" onclick="addColToRoom()">➕ Thêm cột</button>
-        
         <div style="margin-top:6px; font-size:12.5px; font-weight:600; color:var(--text-muted);">Chọn cột để xóa:</div>
         <div style="display:flex; gap:8px;">
           <select id="selectColToRemove" class="select-styled" style="flex:1; padding:8px; border:1px solid var(--border); border-radius:8px; font-weight:600; background:#fff;"></select>
@@ -288,9 +297,8 @@
         </div>
       </div>
 
-      <!-- CHẾ ĐỘ Ô -->
       <div id="panelModeCell" class="mode-panel">
-        <p style="font-size:12.5px; color:var(--text-muted);">Ẩn hoặc hiện từng ô riêng lẻ theo ma trận bảng:</p>
+        <p style="font-size:12.5px; color:var(--text-muted);">Ẩn hoặc hiện từng ô riêng lẻ:</p>
         <div id="cellVisibilityMatrixContainer" style="max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--border-light); padding: 8px; border-radius: 8px; background: #fafafa;"></div>
       </div>
 
@@ -298,14 +306,12 @@
     </div>
   </div>
 
-  <!-- MODAL BẢNG CHỌN CHUYỂN VỊ TRÍ GIỐNG MỤC ẨN HIỆN Ô -->
+  <!-- MODAL CHUYỂN VỊ TRÍ -->
   <div id="transferBedModal" class="custom-modal-overlay" onclick="closeTransferBedModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()">
-      <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:6px;">Chuyển Vị Trí Bệnh Nhân</div>
-      <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:12px;" id="transferBedSubtitle">Chọn vị trí trống trên sơ đồ phòng:</p>
-      
+      <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:4px;">Chuyển Vị Trí Bệnh Nhân</div>
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:10px;" id="transferBedSubtitle">Chọn vị trí trống để chuyển đến:</p>
       <div id="transferRoomMatrixContainer" style="max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; border: 1px solid var(--border-light); padding: 10px; border-radius: 12px; background: #fafafa; text-align: left;"></div>
-
       <button type="button" class="btn-modal-cancel" style="margin-top:16px;" onclick="closeTransferBedModal()">Hủy</button>
     </div>
   </div>
@@ -345,8 +351,9 @@
     { id: '819', name: 'P 819', rows: 1, cols: 2, hiddenBeds: [] }
   ];
 
-  let roomList = JSON.parse(localStorage.getItem('bs_room_configs_v20')) || defaultRooms;
+  let roomList = JSON.parse(localStorage.getItem('bs_room_configs_v21')) || defaultRooms;
   let patients = JSON.parse(localStorage.getItem('bs_patients_scroll_v3')) || [];
+  let medCategories = JSON.parse(localStorage.getItem('bs_med_categories_v1')) || [];
   let doctorProfile = JSON.parse(localStorage.getItem('bs_doctor_profile_v1')) || {
     name: "Bác sĩ Minh Hoàng",
     title: "Bác sĩ Điều trị",
@@ -449,7 +456,51 @@
     }
   }
 
-  /* QUẢN LÝ 3 CHẾ ĐỘ TRONG SỬA PHÒNG */
+  /* QUẢN LÝ DANH MỤC THUỐC */
+  function openAddMedCategoryModal() {
+    document.getElementById('medCategoryNameInput').value = '';
+    document.getElementById('addMedCategoryModal').style.display = 'flex';
+  }
+  const closeAddMedCategoryModal = () => { document.getElementById('addMedCategoryModal').style.display = 'none'; };
+
+  function saveMedCategory() {
+    const name = document.getElementById('medCategoryNameInput').value.trim();
+    if (!name) return alert("Vui lòng nhập tên danh mục thuốc!");
+    medCategories.push({ id: Date.now(), name, items: [] });
+    localStorage.setItem('bs_med_categories_v1', JSON.stringify(medCategories));
+    renderMedCategoriesUI();
+    closeAddMedCategoryModal();
+  }
+
+  function deleteMedCategory(id) {
+    if (confirm("Xóa danh mục thuốc này?")) {
+      medCategories = medCategories.filter(c => c.id !== id);
+      localStorage.setItem('bs_med_categories_v1', JSON.stringify(medCategories));
+      renderMedCategoriesUI();
+    }
+  }
+
+  function renderMedCategoriesUI() {
+    const container = document.getElementById('medCategoryContainer');
+    document.getElementById('homeMedCount').textContent = `${medCategories.length} Danh mục`;
+    if (!container) return;
+
+    if (!medCategories.length) {
+      container.innerHTML = `<div style="background:#fff; border-radius:var(--radius-lg); padding:20px; border:1.5px solid var(--border); text-align:center; color:var(--text-muted);">Chưa có danh mục thuốc nào được lưu.</div>`;
+      return;
+    }
+
+    container.innerHTML = medCategories.map(cat => `
+      <div style="background:#fff; border:1.5px solid var(--border); border-radius:var(--radius-lg); padding:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-light); padding-bottom:8px; margin-bottom:10px;">
+          <h3 style="font-size:16px; font-weight:700; color:var(--primary);">💊 ${cat.name}</h3>
+          <button type="button" class="btn-bed-ctrl" style="background:#fef2f2; border-color:#fca5a5; color:#dc2626;" onclick="deleteMedCategory(${cat.id})">🗑️ Xóa danh mục</button>
+        </div>
+        <p style="font-size:13px; color:var(--text-muted); font-style:italic;">Chưa có loại thuốc nào trong danh mục này.</p>
+      </div>`).join('');
+  }
+
+  /* QUẢN LÝ SỬA PHÒNG */
   function openEditRoomModal(roomId) {
     const r = roomList.find(x => x.id === roomId);
     if (!r) return;
@@ -652,74 +703,6 @@
     renderCellVisibilityMatrix();
   }
 
-  /* MODAL CHUYỂN VỊ TRÍ (HIỆN SƠ ĐỒ GIỐNG MỤC ẨN HIỆN Ô) */
-  function openTransferBedModal() {
-    const p = patients.find(x => x.id === currentViewingPatientId); 
-    if (!p) return;
-
-    document.getElementById('transferBedSubtitle').textContent = `Đang chuyển: ${p.name} (Hiện tại: ${p.room} - ${p.bed}). Chọn vị trí trống:`;
-    
-    const container = document.getElementById('transferRoomMatrixContainer');
-    container.innerHTML = roomList.map(r => {
-      const rowCount = r.rows || 2;
-      const colCount = r.cols || 2;
-      r.hiddenBeds = r.hiddenBeds || [];
-      
-      let roomCellsHtml = '';
-      for (let i = 0; i < rowCount; i++) {
-        const rowChar = ROW_LABELS[i];
-        for (let j = 1; j <= colCount; j++) {
-          const cellName = `${rowChar}${j}`;
-          const isHidden = r.hiddenBeds.includes(cellName);
-          if (isHidden) continue; // Bỏ qua ô bị ẩn
-
-          const occupant = getPatientInBed(r.name, cellName);
-          const isCurrent = (String(r.name).trim() === String(p.room).trim() && String(cellName).trim() === String(p.bed).trim());
-
-          if (isCurrent) {
-            roomCellsHtml += `
-              <div style="background:#e0f2fe; border:1px solid #0284c7; border-radius:6px; padding:6px; text-align:center; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-                <span style="font-size:11px; font-weight:700; color:#0369a1;">${cellName} (Hiện tại)</span>
-              </div>`;
-          } else if (occupant) {
-            roomCellsHtml += `
-              <div style="background:#f1f5f9; border:1px solid var(--border); border-radius:6px; padding:6px; text-align:center; display:flex; flex-direction:column; justify-content:center; align-items:center; opacity:0.4;">
-                <span style="font-size:11px; font-weight:700; color:#64748b;">${cellName}</span>
-                <span style="font-size:10px; color:#64748b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; width:100%;">${occupant.name}</span>
-              </div>`;
-          } else {
-            roomCellsHtml += `
-              <div style="background:#f0fdf4; border:1px solid #86efac; border-radius:6px; padding:6px; text-align:center; display:flex; flex-direction:column; justify-content:center; align-items:center; cursor:pointer;" onclick="executeTransferBed('${r.name}', '${cellName}')">
-                <span style="font-size:11px; font-weight:700; color:#15803d;">${cellName}</span>
-                <span style="font-size:10px; font-weight:600; color:#16a34a;">+ Chọn</span>
-              </div>`;
-          }
-        }
-      }
-
-      return `
-        <div style="border-bottom: 1px solid var(--border-light); padding-bottom: 8px; margin-bottom: 4px;">
-          <div style="font-size:13px; font-weight:700; color:var(--primary); margin-bottom:6px;">🚪 ${r.name}</div>
-          <div style="display:grid; grid-template-columns: repeat(${colCount}, 1fr); gap:6px;">
-            ${roomCellsHtml}
-          </div>
-        </div>`;
-    }).join('');
-
-    document.getElementById('transferBedModal').style.display = 'flex';
-  }
-  const closeTransferBedModal = () => { document.getElementById('transferBedModal').style.display = 'none'; };
-
-  function executeTransferBed(targetRoom, targetBed) {
-    const p = patients.find(x => x.id === currentViewingPatientId);
-    if (p && confirm(`Xác nhận chuyển bệnh nhân "${p.name}" sang [${targetRoom} - Vị trí ${targetBed}]?`)) {
-      p.room = targetRoom; p.bed = targetBed;
-      syncDataToCloud();
-      closeTransferBedModal();
-      openSummaryView(p.id);
-    }
-  }
-
   /* UI UTILS */
   const autoExpandTextarea = el => { if(el){ el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; } };
   const resizeAllTextareas = () => setTimeout(() => ['recordDiagnosis','recordTracking','recordTests','recordImagingText'].forEach(id => autoExpandTextarea(document.getElementById(id))), 50);
@@ -791,15 +774,16 @@
       if (data?.patients && data?.rooms) {
         patients = data.patients; roomList = data.rooms;
         localStorage.setItem('bs_patients_scroll_v3', JSON.stringify(patients));
-        localStorage.setItem('bs_room_configs_v20', JSON.stringify(roomList));
+        localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
       }
       updateSyncUI('success', 'Đã đồng bộ');
       renderDashboardCounts();
+      renderMedCategoriesUI();
     } catch { updateSyncUI('error', 'Lỗi kết nối'); }
   }
   async function syncDataToCloud() {
     localStorage.setItem('bs_patients_scroll_v3', JSON.stringify(patients));
-    localStorage.setItem('bs_room_configs_v20', JSON.stringify(roomList));
+    localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
     renderDashboardCounts();
     if (!GOOGLE_SCRIPT_URL) return;
     updateSyncUI('syncing', 'Đang lưu...');
@@ -903,6 +887,74 @@
     if (p && confirm(`XÓA HOÀN TOÀN hồ sơ bệnh nhân "${p.name}"?`)) {
       patients = patients.filter(x => x.id !== p.id);
       syncDataToCloud(); showView('roomGridView');
+    }
+  }
+
+  /* BẢNG CHỌN CHUYỂN VỊ TRÍ */
+  function openTransferBedModal() {
+    const p = patients.find(x => x.id === currentViewingPatientId); 
+    if (!p) return;
+
+    document.getElementById('transferBedSubtitle').textContent = `Đang chuyển: ${p.name} (Hiện tại: ${p.room} - ${p.bed}). Chọn vị trí trống:`;
+    
+    const container = document.getElementById('transferRoomMatrixContainer');
+    container.innerHTML = roomList.map(r => {
+      const rowCount = r.rows || 2;
+      const colCount = r.cols || 2;
+      r.hiddenBeds = r.hiddenBeds || [];
+      
+      let roomCellsHtml = '';
+      for (let i = 0; i < rowCount; i++) {
+        const rowChar = ROW_LABELS[i];
+        for (let j = 1; j <= colCount; j++) {
+          const cellName = `${rowChar}${j}`;
+          const isHidden = r.hiddenBeds.includes(cellName);
+          if (isHidden) continue;
+
+          const occupant = getPatientInBed(r.name, cellName);
+          const isCurrent = (String(r.name).trim() === String(p.room).trim() && String(cellName).trim() === String(p.bed).trim());
+
+          if (isCurrent) {
+            roomCellsHtml += `
+              <div style="background:#e0f2fe; border:1px solid #0284c7; border-radius:6px; padding:6px; text-align:center; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+                <span style="font-size:11px; font-weight:700; color:#0369a1;">${cellName} (Hiện tại)</span>
+              </div>`;
+          } else if (occupant) {
+            roomCellsHtml += `
+              <div style="background:#f1f5f9; border:1px solid var(--border); border-radius:6px; padding:6px; text-align:center; display:flex; flex-direction:column; justify-content:center; align-items:center; opacity:0.4;">
+                <span style="font-size:11px; font-weight:700; color:#64748b;">${cellName}</span>
+                <span style="font-size:10px; color:#64748b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; width:100%;">${occupant.name}</span>
+              </div>`;
+          } else {
+            roomCellsHtml += `
+              <div style="background:#f0fdf4; border:1px solid #86efac; border-radius:6px; padding:6px; text-align:center; display:flex; flex-direction:column; justify-content:center; align-items:center; cursor:pointer;" onclick="executeTransferBed('${r.name}', '${cellName}')">
+                <span style="font-size:11px; font-weight:700; color:#15803d;">${cellName}</span>
+                <span style="font-size:10px; font-weight:600; color:#16a34a;">+ Chọn</span>
+              </div>`;
+          }
+        }
+      }
+
+      return `
+        <div style="border-bottom: 1px solid var(--border-light); padding-bottom: 8px; margin-bottom: 4px;">
+          <div style="font-size:13px; font-weight:700; color:var(--primary); margin-bottom:6px;">🚪 ${r.name}</div>
+          <div style="display:grid; grid-template-columns: repeat(${colCount}, 1fr); gap:6px;">
+            ${roomCellsHtml}
+          </div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('transferBedModal').style.display = 'flex';
+  }
+  const closeTransferBedModal = () => { document.getElementById('transferBedModal').style.display = 'none'; };
+
+  function executeTransferBed(targetRoom, targetBed) {
+    const p = patients.find(x => x.id === currentViewingPatientId);
+    if (p && confirm(`Xác nhận chuyển bệnh nhân "${p.name}" sang [${targetRoom} - Vị trí ${targetBed}]?`)) {
+      p.room = targetRoom; p.bed = targetBed;
+      syncDataToCloud();
+      closeTransferBedModal();
+      openSummaryView(p.id);
     }
   }
 
@@ -1027,6 +1079,7 @@
     document.getElementById('homeDischargedCount').textContent = `${dis.length} Đã ra viện`;
     document.getElementById('dischargedSummaryText').textContent = `Tổng: ${dis.length} hồ sơ`;
     renderRoomsGrid();
+    renderMedCategoriesUI();
     document.getElementById('dischargedListContainer').innerHTML = dis.length ? dis.map(p => `
       <div class="discharged-card">
         <div style="font-size:16px; font-weight:700;">${p.name}</div>

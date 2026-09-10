@@ -49,7 +49,9 @@
     .bed-cell-item { background: #f8fafc; border: 1.5px solid var(--border); border-radius: var(--radius-md); padding: 10px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 75px; transition: all 0.2s; position: relative; text-align: center; }
     .bed-cell-item:hover { border-color: var(--primary); background: #f0f9ff; }
     .bed-cell-item.occupied { background: #f0f9ff; border-color: #0284c7; }
-    .bed-cell-item.is-hidden-slot { display: none !important; }
+    
+    /* Ô bị ẩn giữ nguyên khoảng trống, trong suốt hoặc vô hiệu hóa bấm */
+    .bed-cell-item.is-hidden-slot { background: transparent; border: 1.5px dashed var(--border-light); cursor: default; opacity: 0.25; pointer-events: none; box-shadow: none; }
     
     .bed-cell-name { font-size: 13.5px; font-weight: 700; color: #0f172a; word-break: break-word; }
     .bed-cell-empty { font-size: 12.5px; color: #94a3b8; font-style: italic; }
@@ -257,7 +259,7 @@
     <div class="custom-modal-card" onclick="event.stopPropagation()">
       <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:12px;" id="editRoomModalTitle">Sửa Phòng Bệnh</div>
       
-      <!-- Thanh chọn chế độ -->
+      <!-- Thanh chuyển đổi chế độ -->
       <div class="mode-tab-group">
         <button type="button" class="btn-mode-tab active" onclick="switchEditMode('row', this)">Hàng</button>
         <button type="button" class="btn-mode-tab" onclick="switchEditMode('col', this)">Cột</button>
@@ -271,7 +273,7 @@
         
         <div style="margin-top:6px; font-size:12.5px; font-weight:600; color:var(--text-muted);">Chọn hàng để xóa:</div>
         <div style="display:flex; gap:8px;">
-          <select id="selectRowToRemove" style="flex:1; padding:8px; border:1px solid var(--border); border-radius:8px; font-weight:600;"></select>
+          <select id="selectRowToRemove" class="select-styled" style="flex:1; padding:8px; border:1px solid var(--border); border-radius:8px; font-weight:600; background:#fff;"></select>
           <button type="button" class="btn-confirm-submit" style="padding:9px 14px; font-size:12.5px; background:#dc2626;" onclick="removeRowFromRoom()">Xóa</button>
         </div>
       </div>
@@ -283,14 +285,14 @@
         
         <div style="margin-top:6px; font-size:12.5px; font-weight:600; color:var(--text-muted);">Chọn cột để xóa:</div>
         <div style="display:flex; gap:8px;">
-          <select id="selectColToRemove" style="flex:1; padding:8px; border:1px solid var(--border); border-radius:8px; font-weight:600;"></select>
+          <select id="selectColToRemove" class="select-styled" style="flex:1; padding:8px; border:1px solid var(--border); border-radius:8px; font-weight:600; background:#fff;"></select>
           <button type="button" class="btn-confirm-submit" style="padding:9px 14px; font-size:12.5px; background:#dc2626;" onclick="removeColFromRoom()">Xóa</button>
         </div>
       </div>
 
       <!-- CHẾ ĐỘ Ô -->
       <div id="panelModeCell" class="mode-panel">
-        <p style="font-size:12.5px; color:var(--text-muted);">Ẩn hoặc hiện từng ô riêng lẻ theo ma trận bảng:</p>
+        <p style="font-size:12.5px; color:var(--text-muted);">Ẩn hoặc hiện từng ô riêng lẻ theo ma trận bảng (giữ nguyên khoảng trống):</p>
         <div id="cellVisibilityMatrixContainer" style="max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--border-light); padding: 8px; border-radius: 8px; background: #fafafa;"></div>
       </div>
 
@@ -343,7 +345,7 @@
     { id: '819', name: 'P 819', rows: 1, cols: 2, hiddenBeds: [] }
   ];
 
-  let roomList = JSON.parse(localStorage.getItem('bs_room_configs_v16')) || defaultRooms;
+  let roomList = JSON.parse(localStorage.getItem('bs_room_configs_v17')) || defaultRooms;
   let patients = JSON.parse(localStorage.getItem('bs_patients_scroll_v3')) || [];
   let doctorProfile = JSON.parse(localStorage.getItem('bs_doctor_profile_v1')) || {
     name: "Bác sĩ Minh Hoàng",
@@ -446,7 +448,7 @@
     }
   }
 
-  /* QUẢN LÝ 3 CHẾ ĐỘ TRONG SỬA PHÒNG THEO MA TRẬN ĐỐI XỨNG */
+  /* QUẢN LÝ 3 CHẾ ĐỘ TRONG SỬA PHÒNG CHUẨN XÁC KHÔNG NHẦM LẪN HÀNG/CỘT */
   function openEditRoomModal(roomId) {
     const r = roomList.find(x => x.id === roomId);
     if (!r) return;
@@ -508,7 +510,6 @@
     const rowChar = ROW_LABELS[rowIndex];
     const colCount = r.cols || 2;
 
-    // Kiểm tra xem hàng định xóa có chứa bệnh nhân đang điều trị không
     let hasPatient = false;
     for (let j = 1; j <= colCount; j++) {
       let cellName = `${rowChar}${j}`;
@@ -523,9 +524,7 @@
       return;
     }
 
-    // Nếu xóa hàng ở giữa hoặc cuối, giảm số lượng hàng
     r.rows = rowCount - 1;
-    // Dọn dẹp hiddenBeds liên quan
     r.hiddenBeds = (r.hiddenBeds || []).filter(b => !b.startsWith(rowChar));
     syncDataToCloud();
     openEditRoomModal(r.id);
@@ -549,7 +548,7 @@
     }
 
     const sel = document.getElementById('selectColToRemove');
-    const colIndex = sel.value; // string number
+    const colIndex = sel.value;
     const rowCount = r.rows || 2;
 
     let hasPatient = false;
@@ -698,7 +697,7 @@
       if (data?.patients && data?.rooms) {
         patients = data.patients; roomList = data.rooms;
         localStorage.setItem('bs_patients_scroll_v3', JSON.stringify(patients));
-        localStorage.setItem('bs_room_configs_v16', JSON.stringify(roomList));
+        localStorage.setItem('bs_room_configs_v17', JSON.stringify(roomList));
       }
       updateSyncUI('success', 'Đã đồng bộ');
       renderDashboardCounts();
@@ -706,7 +705,7 @@
   }
   async function syncDataToCloud() {
     localStorage.setItem('bs_patients_scroll_v3', JSON.stringify(patients));
-    localStorage.setItem('bs_room_configs_v16', JSON.stringify(roomList));
+    localStorage.setItem('bs_room_configs_v17', JSON.stringify(roomList));
     renderDashboardCounts();
     if (!GOOGLE_SCRIPT_URL) return;
     updateSyncUI('syncing', 'Đang lưu...');
@@ -918,7 +917,7 @@
     win.document.close(); win.focus(); setTimeout(() => win.print(), 400);
   }
 
-  /* RENDER DANH SÁCH PHÒNG THEO MA TRẬN CHUẨN */
+  /* RENDER DANH SÁCH PHÒNG THEO MA TRẬN CHUẨN ĐÚNG KÝ HIỆU HÀNG (CHỮ) CỘT (SỐ) */
   function renderRoomsGrid() {
     const c = document.getElementById('roomsDynamicContainer'); if (!c) return;
 

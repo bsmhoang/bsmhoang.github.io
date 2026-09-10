@@ -160,16 +160,17 @@
     <div id="medCategoryContainer" style="display: flex; flex-direction: column; gap: 14px; margin-top: 10px;"></div>
   </div>
 
-  <!-- TRANG CHI TIẾT NHÓM THUỐC VỚI PHÍM ĐÓNG KHUNG, ẤN 2 LẦN ĐỂ SỬA -->
+  <!-- TRANG CHI TIẾT NHÓM THUỐC VỚI PHÍM ĐỔI TÊN Ở CUỐI TRANG -->
   <div id="medGroupDetailView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('medicationView')">⬅️ Danh mục thuốc</button>
-      <div id="medGroupDetailTitleBox" style="background:#fff; border:1.5px solid var(--border); padding:6px 14px; border-radius:10px; cursor:pointer; user-select:none;" onclick="openEditFromDetailTitle()" title="Bấm vào để đổi tên nhóm">
+      <div style="background:#fff; border:1.5px solid var(--border); padding:6px 14px; border-radius:10px;">
         <span style="font-size:13.5px; font-weight:700; color:var(--primary);" id="medGroupDetailTitle">Nhóm Thuốc</span>
       </div>
       <button class="btn-top" onclick="openAddMedicineModal()">➕ Thêm thuốc vào nhóm</button>
     </div>
-    <div style="background:#fff; border-radius:var(--radius-lg); padding:20px; border:1.5px solid var(--border); overflow-x:auto;">
+
+    <div style="background:#fff; border-radius:var(--radius-lg); padding:20px; border:1.5px solid var(--border); overflow-x:auto; margin-bottom:14px;">
       <table class="med-table">
         <thead>
           <tr>
@@ -183,6 +184,11 @@
         </thead>
         <tbody id="medTableBody"></tbody>
       </table>
+    </div>
+
+    <!-- PHÍM ĐỔI TÊN NHÓM Ở CUỐI TRANG -->
+    <div style="display:flex; justify-content:flex-end;">
+      <button type="button" class="btn-top" style="background:#f0f9ff; border-color:#7dd3fc; color:#0369a1;" onclick="openEditFromDetailTitle()">✏️ Đổi tên nhóm thuốc</button>
     </div>
   </div>
 
@@ -224,7 +230,7 @@
     <input type="file" id="fileInput_imaging" accept="image/*" style="display:none" onchange="handleImageFileSelected(this,'imaging')">
     <div class="form-fullpage-card">
       <div class="form-fullpage-header" style="display:flex; justify-content:space-between; gap:10px; align-items:center;">
-        <div><span id="crumbPrefix" style="font-size:11px; color:var::text-muted);">Vị trí ></span><input type="text" id="recordName" placeholder="Nhập tên bệnh nhân..." style="border:none; outline:none; font-size:16px; font-weight:700; color:var(--primary); width:100%;"></div>
+        <div><span id="crumbPrefix" style="font-size:11px; color:var(--text-muted);">Vị trí ></span><input type="text" id="recordName" placeholder="Nhập tên bệnh nhân..." style="border:none; outline:none; font-size:16px; font-weight:700; color:var(--primary); width:100%;"></div>
         <div><input type="datetime-local" id="recordDateTimeInput" style="border:1px solid var(--border); border-radius:8px; padding:6px; font-size:12px;"></div>
       </div>
       <div class="form-fullpage-content">
@@ -1001,80 +1007,7 @@
       </div>`).join('');
   }
 
-  /* QUẢN LÝ SỬA PHÒNG VÀ CÀI ĐẶT PHÒNG */
-  function openRoomSettingsModal() {
-    renderRoomSettingsList();
-    document.getElementById('roomSettingsModal').style.display = 'flex';
-  }
-  const closeRoomSettingsModal = () => { document.getElementById('roomSettingsModal').style.display = 'none'; };
-
-  function renderRoomSettingsList() {
-    const c = document.getElementById('roomSettingsListContainer');
-    if (!c) return;
-    c.innerHTML = roomList.map((r) => `
-      <div style="display:flex; gap:6px; align-items:center; background:#f8fafc; padding:8px; border:1px solid var(--border-light); border-radius:8px;">
-        <input type="text" id="roomNameEdit_${r.id}" value="${r.name}" style="flex:1; padding:6px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-weight:600;">
-        <button type="button" class="btn-bed-ctrl" style="background:#e0f2fe; color:#0369a1; border-color:#7dd3fc; padding:6px 10px;" onclick="saveRoomName('${r.id}')">Lưu</button>
-        <button type="button" class="btn-bed-ctrl" style="background:#fef2f2; color:#dc2626; border-color:#fca5a5; padding:6px 10px;" onclick="deleteRoom('${r.id}')">Xóa</button>
-      </div>`).join('');
-  }
-
-  function addNewRoom() {
-    const input = document.getElementById('newRoomNameInput');
-    const name = input.value.trim();
-    if (!name) return alert("Vui lòng nhập tên phòng!");
-    const newId = String(Date.now());
-    roomList.push({ id: newId, name, rows: 2, cols: 2, hiddenBeds: [] });
-    input.value = '';
-    syncDataToCloud();
-    renderRoomSettingsList();
-  }
-
-  function saveRoomName(roomId) {
-    const input = document.getElementById(`roomNameEdit_${roomId}`);
-    const newName = input.value.trim();
-    if (!newName) return alert("Tên phòng không được để trống!");
-    const r = roomList.find(x => x.id === roomId);
-    if (r) {
-      r.name = newName;
-      syncDataToCloud();
-      alert("Đã đổi tên phòng thành công!");
-    }
-  }
-
-  function deleteRoom(roomId) {
-    const r = roomList.find(x => x.id === roomId);
-    if (!r) return;
-    
-    const rowCount = r.rows || 2;
-    const colCount = r.cols || 2;
-    r.hiddenBeds = r.hiddenBeds || [];
-    let hasPatient = false;
-
-    for (let i = 0; i < rowCount; i++) {
-      let rowChar = ROW_LABELS[i];
-      for (let j = 1; j <= colCount; j++) {
-        let cellName = `${rowChar}${j}`;
-        if (!r.hiddenBeds.includes(cellName) && getPatientInBed(r.name, cellName)) {
-          hasPatient = true;
-          break;
-        }
-      }
-      if (hasPatient) break;
-    }
-
-    if (hasPatient) {
-      alert("Không thể xóa phòng đang có bệnh nhân điều trị!");
-      return;
-    }
-
-    if (confirm(`Xóa phòng ${r.name}?`)) {
-      roomList = roomList.filter(x => x.id !== roomId);
-      syncDataToCloud();
-      renderRoomSettingsList();
-    }
-  }
-
+  /* QUẢN LÝ SỬA PHÒNG */
   function openEditRoomModal(roomId) {
     const r = roomList.find(x => x.id === roomId);
     if (!r) return;

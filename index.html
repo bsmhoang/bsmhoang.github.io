@@ -56,7 +56,6 @@
 
     .btn-bed-ctrl { background: #fff; border: 1px solid var(--border); font-size: 11.5px; font-weight: 600; padding: 5px 10px; border-radius: 6px; cursor: pointer; color: #334155; }
     
-    /* Giao diện 3 chế độ trong Sửa phòng */
     .mode-tab-group { display: flex; gap: 6px; margin-bottom: 14px; }
     .btn-mode-tab { flex: 1; padding: 8px; background: #f1f5f9; border: 1px solid var(--border); border-radius: 8px; font-size: 12.5px; font-weight: 700; color: #475569; cursor: pointer; text-align: center; }
     .btn-mode-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
@@ -258,7 +257,7 @@
     <div class="custom-modal-card" onclick="event.stopPropagation()">
       <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:12px;" id="editRoomModalTitle">Sửa Phòng Bệnh</div>
       
-      <!-- Thanh chuyển đổi chế độ -->
+      <!-- Thanh chọn chế độ -->
       <div class="mode-tab-group">
         <button type="button" class="btn-mode-tab active" onclick="switchEditMode('row', this)">Hàng</button>
         <button type="button" class="btn-mode-tab" onclick="switchEditMode('col', this)">Cột</button>
@@ -267,31 +266,31 @@
 
       <!-- CHẾ ĐỘ HÀNG -->
       <div id="panelModeRow" class="mode-panel active">
-        <p style="font-size:12.5px; color:var(--text-muted);">Thêm hàng mới hoặc chọn hàng cần xóa:</p>
-        <button type="button" class="btn-confirm-submit" style="padding:9px; font-size:12.5px;" onclick="addRowToRoom()">➕ Thêm hàng mới</button>
+        <p style="font-size:12.5px; color:var(--text-muted);">Thêm hàng mới hoặc chọn hàng (ký hiệu chữ A, B, C...) để xóa:</p>
+        <button type="button" class="btn-confirm-submit" style="padding:9px; font-size:12.5px;" onclick="addRowToRoom()">➕ Thêm hàng</button>
         
         <div style="margin-top:6px; font-size:12.5px; font-weight:600; color:var(--text-muted);">Chọn hàng để xóa:</div>
         <div style="display:flex; gap:8px;">
-          <select id="selectRowToRemove" class="select-styled"></select>
+          <select id="selectRowToRemove" style="flex:1; padding:8px; border:1px solid var(--border); border-radius:8px; font-weight:600;"></select>
           <button type="button" class="btn-confirm-submit" style="padding:9px 14px; font-size:12.5px; background:#dc2626;" onclick="removeRowFromRoom()">Xóa</button>
         </div>
       </div>
 
       <!-- CHẾ ĐỘ CỘT -->
       <div id="panelModeCol" class="mode-panel">
-        <p style="font-size:12.5px; color:var(--text-muted);">Thêm cột mới hoặc chọn cột cần xóa:</p>
-        <button type="button" class="btn-confirm-submit" style="padding:9px; font-size:12.5px;" onclick="addColToRoom()">➕ Thêm cột mới</button>
+        <p style="font-size:12.5px; color:var(--text-muted);">Thêm cột mới hoặc chọn cột (ký hiệu số 1, 2, 3...) để xóa:</p>
+        <button type="button" class="btn-confirm-submit" style="padding:9px; font-size:12.5px;" onclick="addColToRoom()">➕ Thêm cột</button>
         
         <div style="margin-top:6px; font-size:12.5px; font-weight:600; color:var(--text-muted);">Chọn cột để xóa:</div>
         <div style="display:flex; gap:8px;">
-          <select id="selectColToRemove" class="select-styled"></select>
+          <select id="selectColToRemove" style="flex:1; padding:8px; border:1px solid var(--border); border-radius:8px; font-weight:600;"></select>
           <button type="button" class="btn-confirm-submit" style="padding:9px 14px; font-size:12.5px; background:#dc2626;" onclick="removeColFromRoom()">Xóa</button>
         </div>
       </div>
 
-      <!-- CHẾ ĐỘ Ô (SẮP XẾP THEO MA TRẬN HÀNG VÀ CỘT) -->
+      <!-- CHẾ ĐỘ Ô -->
       <div id="panelModeCell" class="mode-panel">
-        <p style="font-size:12.5px; color:var(--text-muted);">Chọn ô để ẩn hoặc hiện (sắp xếp theo sơ đồ phòng):</p>
+        <p style="font-size:12.5px; color:var(--text-muted);">Ẩn hoặc hiện từng ô riêng lẻ theo ma trận bảng:</p>
         <div id="cellVisibilityMatrixContainer" style="max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--border-light); padding: 8px; border-radius: 8px; background: #fafafa;"></div>
       </div>
 
@@ -336,13 +335,15 @@
 <script>
   const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxVVVoEdjNY5fsWGuJegc9EHAcrzTFaty4VEhMeyo5HsKdT-U89s9SlT7R-zdaXuMayzw/exec";
   const CORRECT_PIN = "000000";
+  const ROW_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P'];
+
   const defaultRooms = [
-    { id: '825', name: 'P 825', rows: 2, cols: 2, beds: ['1.1', '1.2', '2.1', '2.2'], hiddenBeds: [] },
-    { id: '817', name: 'P 817', rows: 1, cols: 2, beds: ['1.1', '1.2'], hiddenBeds: [] },
-    { id: '819', name: 'P 819', rows: 1, cols: 2, beds: ['1.1', '1.2'], hiddenBeds: [] }
+    { id: '825', name: 'P 825', rows: 2, cols: 2, hiddenBeds: [] },
+    { id: '817', name: 'P 817', rows: 1, cols: 2, hiddenBeds: [] },
+    { id: '819', name: 'P 819', rows: 1, cols: 2, hiddenBeds: [] }
   ];
 
-  let roomList = JSON.parse(localStorage.getItem('bs_room_configs_v14')) || defaultRooms;
+  let roomList = JSON.parse(localStorage.getItem('bs_room_configs_v16')) || defaultRooms;
   let patients = JSON.parse(localStorage.getItem('bs_patients_scroll_v3')) || [];
   let doctorProfile = JSON.parse(localStorage.getItem('bs_doctor_profile_v1')) || {
     name: "Bác sĩ Minh Hoàng",
@@ -354,8 +355,6 @@
   let currentEditing = { room: null, bed: null, id: null, mode: 'create', entryIndex: null };
   let currentViewingPatientId = null, currentActiveIndex = 0, currentEditingRoomId = null;
   let inactivityTimer = null, isAuthenticated = false;
-
-  const ROW_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P'];
 
   /* AUTH & TỰ ĐỘNG KHÓA */
   function resetInactivityTimer() {
@@ -447,7 +446,7 @@
     }
   }
 
-  /* QUẢN LÝ 3 CHẾ ĐỘ TRONG SỬA PHÒNG */
+  /* QUẢN LÝ 3 CHẾ ĐỘ TRONG SỬA PHÒNG THEO MA TRẬN ĐỐI XỨNG */
   function openEditRoomModal(roomId) {
     const r = roomList.find(x => x.id === roomId);
     if (!r) return;
@@ -466,8 +465,8 @@
 
     const r = roomList.find(x => x.id === currentEditingRoomId);
     if (!r) return;
+    const rowCount = r.rows || 2;
     const colCount = r.cols || 2;
-    const rowCount = r.rows || Math.ceil(r.beds.length / colCount);
 
     if (mode === 'row') {
       const sel = document.getElementById('selectRowToRemove');
@@ -490,14 +489,7 @@
   function addRowToRoom() {
     const r = roomList.find(x => x.id === currentEditingRoomId);
     if (!r) return;
-    const colCount = r.cols || 2;
-    const rowCount = (r.rows || Math.ceil(r.beds.length / colCount)) + 1;
-    r.rows = rowCount;
-    const newRowChar = ROW_LABELS[rowCount - 1] || `R${rowCount}`;
-    
-    for (let c = 1; c <= colCount; c++) {
-      r.beds.push(`${newRowChar}${c}`);
-    }
+    r.rows = (r.rows || 2) + 1;
     syncDataToCloud();
     openEditRoomModal(r.id);
   }
@@ -505,8 +497,7 @@
   function removeRowFromRoom() {
     const r = roomList.find(x => x.id === currentEditingRoomId);
     if (!r) return;
-    const colCount = r.cols || 2;
-    const rowCount = r.rows || Math.ceil(r.beds.length / colCount);
+    const rowCount = r.rows || 2;
     if (rowCount <= 1) {
       alert("Phòng phải còn ít nhất một hàng!");
       return;
@@ -515,19 +506,27 @@
     const sel = document.getElementById('selectRowToRemove');
     const rowIndex = parseInt(sel.value);
     const rowChar = ROW_LABELS[rowIndex];
+    const colCount = r.cols || 2;
 
-    const bedsToRemove = r.beds.filter(b => b.startsWith(rowChar));
-
+    // Kiểm tra xem hàng định xóa có chứa bệnh nhân đang điều trị không
     let hasPatient = false;
-    bedsToRemove.forEach(b => { if (getPatientInBed(r.name, b)) hasPatient = true; });
+    for (let j = 1; j <= colCount; j++) {
+      let cellName = `${rowChar}${j}`;
+      if (getPatientInBed(r.name, cellName)) {
+        hasPatient = true;
+        break;
+      }
+    }
+
     if (hasPatient) {
       alert("Không thể xóa hàng đang có bệnh nhân điều trị!");
       return;
     }
 
-    r.beds = r.beds.filter(b => !b.startsWith(rowChar));
+    // Nếu xóa hàng ở giữa hoặc cuối, giảm số lượng hàng
     r.rows = rowCount - 1;
-    r.hiddenBeds = (r.hiddenBeds || []).filter(b => !bedsToRemove.includes(b));
+    // Dọn dẹp hiddenBeds liên quan
+    r.hiddenBeds = (r.hiddenBeds || []).filter(b => !b.startsWith(rowChar));
     syncDataToCloud();
     openEditRoomModal(r.id);
   }
@@ -535,20 +534,7 @@
   function addColToRoom() {
     const r = roomList.find(x => x.id === currentEditingRoomId);
     if (!r) return;
-    const colCount = (r.cols || 2) + 1;
-    r.cols = colCount;
-    const rowCount = r.rows || Math.ceil(r.beds.length / (colCount - 1));
-
-    let newBeds = [];
-    for (let i = 0; i < rowCount; i++) {
-      const rowChar = ROW_LABELS[i] || `R${i+1}`;
-      for (let j = 1; j < colCount; j++) {
-        let existingBed = r.beds.find(b => b === `${rowChar}${j}`);
-        newBeds.push(existingBed || `${rowChar}${j}`);
-      }
-      newBeds.push(`${rowChar}${colCount}`);
-    }
-    r.beds = newBeds;
+    r.cols = (r.cols || 2) + 1;
     syncDataToCloud();
     openEditRoomModal(r.id);
   }
@@ -563,56 +549,57 @@
     }
 
     const sel = document.getElementById('selectColToRemove');
-    const colIndex = sel.value;
-
-    let bedsToRemove = r.beds.filter(b => {
-      let match = b.match(/[0-9]+$/);
-      return match && match[0] === colIndex;
-    });
+    const colIndex = sel.value; // string number
+    const rowCount = r.rows || 2;
 
     let hasPatient = false;
-    bedsToRemove.forEach(b => { if (getPatientInBed(r.name, b)) hasPatient = true; });
+    for (let i = 0; i < rowCount; i++) {
+      let rowChar = ROW_LABELS[i];
+      let cellName = `${rowChar}${colIndex}`;
+      if (getPatientInBed(r.name, cellName)) {
+        hasPatient = true;
+        break;
+      }
+    }
+
     if (hasPatient) {
       alert("Không thể xóa cột đang có bệnh nhân điều trị!");
       return;
     }
 
     r.cols = colCount - 1;
-    r.beds = r.beds.filter(b => !bedsToRemove.includes(b));
-    r.hiddenBeds = (r.hiddenBeds || []).filter(b => !bedsToRemove.includes(b));
+    r.hiddenBeds = (r.hiddenBeds || []).filter(b => {
+      let match = b.match(/[0-9]+$/);
+      return !match || match[0] !== colIndex;
+    });
     syncDataToCloud();
     openEditRoomModal(r.id);
   }
 
-  /* Hiển thị mục ẩn/hiện ô theo đúng ma trận hàng và cột giống sơ đồ phòng */
   function renderCellVisibilityMatrix() {
     const r = roomList.find(x => x.id === currentEditingRoomId);
     if (!r) return;
     r.hiddenBeds = r.hiddenBeds || [];
     const colCount = r.cols || 2;
-    const rowCount = r.rows || Math.ceil(r.beds.length / colCount);
+    const rowCount = r.rows || 2;
 
     const container = document.getElementById('cellVisibilityMatrixContainer');
     let html = '';
 
     for (let i = 0; i < rowCount; i++) {
-      const rowChar = ROW_LABELS[i] || `R${i+1}`;
+      const rowChar = ROW_LABELS[i] || `Hàng ${i+1}`;
       html += `<div style="font-size:11.5px; font-weight:700; color:var(--primary); margin-top:4px;">Hàng ${rowChar}:</div>`;
       html += `<div style="display:grid; grid-template-columns: repeat(${colCount}, 1fr); gap:6px; margin-bottom:6px;">`;
 
       for (let j = 1; j <= colCount; j++) {
-        const bedName = `${rowChar}${j}`;
-        // Nếu giường chưa có trong mảng beds, tự động bổ sung ngầm để hiển thị đồng bộ
-        if (!r.beds.includes(bedName)) {
-          r.beds.push(bedName);
-        }
-        const isHidden = r.hiddenBeds.includes(bedName);
-        const p = getPatientInBed(r.name, bedName);
+        const cellName = `${rowChar}${j}`;
+        const isHidden = r.hiddenBeds.includes(cellName);
+        const p = getPatientInBed(r.name, cellName);
 
         html += `
           <div style="background:#fff; border:1px solid var(--border); border-radius:6px; padding:6px; text-align:center; display:flex; flex-direction:column; gap:4px; align-items:center;">
-            <span style="font-size:11px; font-weight:700;">${bedName}</span>
-            <button type="button" class="btn-bed-ctrl" style="width:100%; font-size:11px; padding:3px; background:${isHidden?'#dcfce7':'#fee2e2'}; color:${isHidden?'#15803d':'#991b1b'};" onclick="toggleCellVisibility('${r.id}', '${bedName}')">
+            <span style="font-size:11px; font-weight:700;">${cellName}</span>
+            <button type="button" class="btn-bed-ctrl" style="width:100%; font-size:11px; padding:3px; background:${isHidden?'#dcfce7':'#fee2e2'}; color:${isHidden?'#15803d':'#991b1b'};" onclick="toggleCellVisibility('${r.id}', '${cellName}')">
               ${isHidden ? '👁️ Hiện' : '🔒 Ẩn'}
             </button>
           </div>`;
@@ -622,19 +609,19 @@
     container.innerHTML = html;
   }
 
-  function toggleCellVisibility(roomId, bed) {
+  function toggleCellVisibility(roomId, cellName) {
     const r = roomList.find(x => x.id === roomId);
     if (!r) return;
     r.hiddenBeds = r.hiddenBeds || [];
     
-    if (r.hiddenBeds.includes(bed)) {
-      r.hiddenBeds = r.hiddenBeds.filter(b => b !== bed);
+    if (r.hiddenBeds.includes(cellName)) {
+      r.hiddenBeds = r.hiddenBeds.filter(b => b !== cellName);
     } else {
-      if (getPatientInBed(r.name, bed)) {
+      if (getPatientInBed(r.name, cellName)) {
         alert("Không thể ẩn ô đang có bệnh nhân điều trị!");
         return;
       }
-      r.hiddenBeds.push(bed);
+      r.hiddenBeds.push(cellName);
     }
     syncDataToCloud();
     renderCellVisibilityMatrix();
@@ -702,13 +689,6 @@
   }
 
   /* ĐỒNG BỘ */
-  function updateSyncUI(st, txt) {
-    const el = document.getElementById('syncStatus');
-    if (!el) return;
-    el.textContent = (st === 'syncing' ? '🔄 ' : st === 'success' ? '☁️ ' : '⚠️ ') + txt;
-    el.style.background = st === 'syncing' ? '#fef3c7' : st === 'success' ? '#e0f2fe' : '#fee2e2';
-    el.style.color = st === 'syncing' ? '#92400e' : st === 'success' ? '#0369a1' : '#991b1b';
-  }
   async function loadDataFromCloud() {
     if (!GOOGLE_SCRIPT_URL) return;
     updateSyncUI('syncing', 'Đang nạp...');
@@ -718,7 +698,7 @@
       if (data?.patients && data?.rooms) {
         patients = data.patients; roomList = data.rooms;
         localStorage.setItem('bs_patients_scroll_v3', JSON.stringify(patients));
-        localStorage.setItem('bs_room_configs_v14', JSON.stringify(roomList));
+        localStorage.setItem('bs_room_configs_v16', JSON.stringify(roomList));
       }
       updateSyncUI('success', 'Đã đồng bộ');
       renderDashboardCounts();
@@ -726,7 +706,7 @@
   }
   async function syncDataToCloud() {
     localStorage.setItem('bs_patients_scroll_v3', JSON.stringify(patients));
-    localStorage.setItem('bs_room_configs_v14', JSON.stringify(roomList));
+    localStorage.setItem('bs_room_configs_v16', JSON.stringify(roomList));
     renderDashboardCounts();
     if (!GOOGLE_SCRIPT_URL) return;
     updateSyncUI('syncing', 'Đang lưu...');
@@ -734,6 +714,13 @@
       await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ patients, rooms: roomList }) });
       updateSyncUI('success', 'Đã lưu');
     } catch { updateSyncUI('error', 'Không thể lưu'); }
+  }
+  function updateSyncUI(st, txt) {
+    const el = document.getElementById('syncStatus');
+    if (!el) return;
+    el.textContent = (st === 'syncing' ? '🔄 ' : st === 'success' ? '☁️ ' : '⚠️ ') + txt;
+    el.style.background = st === 'syncing' ? '#fef3c7' : st === 'success' ? '#e0f2fe' : '#fee2e2';
+    el.style.color = st === 'syncing' ? '#92400e' : st === 'success' ? '#0369a1' : '#991b1b';
   }
 
   /* BỆNH ÁN & TIẾP NHẬN */
@@ -810,17 +797,7 @@
         openSummaryView(p.id);
       }
     } else {
-      const oldBed = currentEditing.bed;
-      const r = roomList.find(x => String(x.name).trim() === String(currentEditing.room).trim());
-      
-      if (r) {
-        const idx = r.beds.indexOf(oldBed);
-        if (idx !== -1) {
-          r.beds[idx] = name;
-        }
-      }
-
-      const newP = { id: Date.now(), room: currentEditing.room, bed: name, name, initialDiag: entry.diag, status: 'active', entries: [entry] };
+      const newP = { id: Date.now(), room: currentEditing.room, bed: currentEditing.bed, name, initialDiag: entry.diag, status: 'active', entries: [entry] };
       patients.unshift(newP); 
       syncDataToCloud();
       currentActiveIndex = 0; 
@@ -840,7 +817,20 @@
   function openTransferBedModal() {
     const p = patients.find(x => x.id === currentViewingPatientId); if (!p) return;
     const empties = [];
-    roomList.forEach(r => r.beds.forEach(b => { if (!getPatientInBed(r.name, b)) empties.push({ room: r.name, bed: String(b) }); }));
+    roomList.forEach(r => {
+      const rowCount = r.rows || 2;
+      const colCount = r.cols || 2;
+      r.hiddenBeds = r.hiddenBeds || [];
+      for (let i = 0; i < rowCount; i++) {
+        let rowChar = ROW_LABELS[i];
+        for (let j = 1; j <= colCount; j++) {
+          let cellName = `${rowChar}${j}`;
+          if (!r.hiddenBeds.includes(cellName) && !getPatientInBed(r.name, cellName)) {
+            empties.push({ room: r.name, bed: cellName });
+          }
+        }
+      }
+    });
     
     const container = document.getElementById('transferBedListContainer');
     document.getElementById('transferBedSubtitle').textContent = `Chọn vị trí trống để chuyển đến: ${p.name} (Hiện tại: ${p.room} - Vị trí ${p.bed})`;
@@ -928,31 +918,40 @@
     win.document.close(); win.focus(); setTimeout(() => win.print(), 400);
   }
 
-  /* RENDER DANH SÁCH PHÒNG VÀ LƯỚI TỰ ĐỘNG THEO SỐ CỘT (COLS) */
+  /* RENDER DANH SÁCH PHÒNG THEO MA TRẬN CHUẨN */
   function renderRoomsGrid() {
     const c = document.getElementById('roomsDynamicContainer'); if (!c) return;
 
     c.innerHTML = roomList.map(r => {
-      const colNum = r.cols || 2;
+      const rowCount = r.rows || 2;
+      const colCount = r.cols || 2;
       r.hiddenBeds = r.hiddenBeds || [];
+      let totalVisibleBeds = 0;
       
-      const bedsHtml = r.beds.map(bed => {
-        const p = getPatientInBed(r.name, bed);
-        const isHidden = r.hiddenBeds.includes(bed);
-        return `
-          <div class="bed-cell-item ${p ? 'occupied' : ''} ${isHidden ? 'is-hidden-slot' : ''}" onclick="handleBedClick('${r.name}', '${bed}')">
-            ${p ? `<span class="bed-cell-name">👤 ${p.name}</span>` : `<span class="bed-cell-empty">+ Trống</span>`}
-          </div>`;
-      }).join('');
+      let cellsHtml = '';
+      for (let i = 0; i < rowCount; i++) {
+        const rowChar = ROW_LABELS[i];
+        for (let j = 1; j <= colCount; j++) {
+          const cellName = `${rowChar}${j}`;
+          const isHidden = r.hiddenBeds.includes(cellName);
+          if (!isHidden) totalVisibleBeds++;
+
+          const p = getPatientInBed(r.name, cellName);
+          cellsHtml += `
+            <div class="bed-cell-item ${p ? 'occupied' : ''} ${isHidden ? 'is-hidden-slot' : ''}" onclick="handleBedClick('${r.name}', '${cellName}')">
+              ${p ? `<span class="bed-cell-name">👤 ${p.name}</span>` : `<span class="bed-cell-empty">+ Trống (${cellName})</span>`}
+            </div>`;
+        }
+      }
 
       return `
         <div class="room-box-card">
           <div class="room-box-title">
-            <span>🚪 ${r.name} (${r.beds.length} Vị trí)</span>
+            <span>🚪 ${r.name} (${totalVisibleBeds} Vị trí)</span>
             <button type="button" class="btn-bed-ctrl" onclick="openEditRoomModal('${r.id}')">✏️ Sửa phòng</button>
           </div>
-          <div class="beds-grid-box" style="grid-template-columns: repeat(${colNum}, 1fr);">
-            ${bedsHtml}
+          <div class="beds-grid-box" style="grid-template-columns: repeat(${colCount}, 1fr);">
+            ${cellsHtml}
           </div>
         </div>`;
     }).join('');
@@ -960,7 +959,21 @@
 
   function renderDashboardCounts() {
     let count = 0;
-    roomList.forEach(r => r.beds.forEach(b => { if (getPatientInBed(r.name, b)) count++; }));
+    roomList.forEach(r => {
+      const rowCount = r.rows || 2;
+      const colCount = r.cols || 2;
+      r.hiddenBeds = r.hiddenBeds || [];
+      for (let i = 0; i < rowCount; i++) {
+        let rowChar = ROW_LABELS[i];
+        for (let j = 1; j <= colCount; j++) {
+          let cellName = `${rowChar}${j}`;
+          if (!r.hiddenBeds.includes(cellName) && getPatientInBed(r.name, cellName)) {
+            count++;
+          }
+        }
+      }
+    });
+
     const dis = patients.filter(p => p.status === 'discharged');
     document.getElementById('homeActiveCount').textContent = `${count} Đang điều trị`;
     document.getElementById('homeDischargedCount').textContent = `${dis.length} Đã ra viện`;

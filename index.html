@@ -159,7 +159,7 @@
     <div id="medCategoryContainer" style="display: flex; flex-direction: column; gap: 14px; margin-top: 10px;"></div>
   </div>
 
-  <!-- TRANG CHI TIẾT NHÓM THUỐC (BẢNG THÔNG TIN TĂNG CHIỀU RỘNG) -->
+  <!-- TRANG CHI TIẾT NHÓM THUỐC (BẢNG THÔNG TIN) -->
   <div id="medGroupDetailView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('medicationView')">⬅️ Danh mục thuốc</button>
@@ -769,7 +769,7 @@
         cat.groups = cat.groups.filter(g => g.id !== activeMedGroupId);
         localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
         renderMedCategoriesUI();
-        closeAddMedGroupModal();
+        closeEditMedGroupModal();
       }
     }
   }
@@ -924,7 +924,7 @@
     container.innerHTML = medCategories.map((cat, catIdx) => `
       <div style="background:#fff; border:1.5px solid var(--border); border-radius:var(--radius-lg); padding:16px;">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-light); padding-bottom:8px; margin-bottom:10px; flex-wrap:wrap; gap:6px;">
-          <h3 style="font-size:16px; font-weight:700; color:var(--primary);">💊 ${cat.name}</h3>
+          <h3 style="font-size:16px; font-weight:700; color:var(--primary); cursor:pointer;" onclick="openEditMedCategoryModal(${cat.id})" title="Bấm vào để sửa danh mục">💊 ${cat.name}</h3>
           <div style="display:flex; gap:6px; align-items:center;">
             <button type="button" class="btn-bed-ctrl" onclick="moveMedCategory(${catIdx}, -1)" title="Lên">⬆️</button>
             <button type="button" class="btn-bed-ctrl" onclick="moveMedCategory(${catIdx}, 1)" title="Xuống">⬇️</button>
@@ -936,7 +936,7 @@
           ${cat.groups?.length ? cat.groups.map((g, gIdx) => `
             <div style="background:#f8fafc; border:1px solid var(--border-light); padding:10px 12px; border-radius:8px;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                <span style="font-size:13.5px; font-weight:700; color:#1e293b; cursor:pointer;" onclick="openMedGroupDetail(${cat.id}, ${g.id})">📁 ${g.name} (${g.medicines?.length || 0} thuốc)</span>
+                <span style="font-size:13.5px; font-weight:700; color:#1e293b; cursor:pointer;" onclick="openMedGroupDetail(${cat.id}, ${g.id})" title="Bấm vào để xem bảng thuốc">📁 ${g.name} (${g.medicines?.length || 0} thuốc)</span>
                 <div style="display:flex; gap:4px; align-items:center;">
                   <button type="button" class="btn-bed-ctrl" style="padding:2px 5px;" onclick="moveMedGroup(${cat.id}, ${gIdx}, -1)">⬆️</button>
                   <button type="button" class="btn-bed-ctrl" style="padding:2px 5px;" onclick="moveMedGroup(${cat.id}, ${gIdx}, 1)">⬇️</button>
@@ -948,9 +948,9 @@
                   <div style="display:flex; justify-content:space-between; align-items:center; background:#e0f2fe; color:#0369a1; font-size:12px; font-weight:600; padding:4px 8px; border-radius:6px;">
                     <span style="cursor:pointer; flex:1;" onclick="openMedGroupDetail(${cat.id}, ${g.id})">• ${m.name} <span style="font-weight:400; color:#475569;">(${m.dose || 'Chưa rõ liều'})</span></span>
                     <button type="button" class="btn-bed-ctrl" style="background:#fff; color:#0369a1; padding:1px 5px; font-size:11px;" onclick="activeMedCatId=${cat.id}; activeMedGroupId=${g.id}; openEditMedicineModal(${m.id});">✏️ Sửa</button>
-                  </div>`).join('') : '<span style="font-size:12px; color:var(--text-muted); font-style:italic;">Chưa có thuốc nào.</span>'}
+                  </div>`).join('') : '<span style="font-size:12px; color:var(--text-muted); font-style:italic;">Chưa có thuốc nào. Bấm Sửa nhóm để thêm.</span>'}
               </div>
-            </div>`).join('') : '<p style="font-size:13px; color:var(--text-muted); font-style:italic;">Chưa có nhóm thuốc nào.</p>'}
+            </div>`).join('') : '<p style="font-size:13px; color:var(--text-muted); font-style:italic;">Chưa có nhóm thuốc nào. Bấm Sửa danh mục để thêm nhóm.</p>'}
         </div>
       </div>`).join('');
   }
@@ -1470,7 +1470,7 @@
             <div style="white-space:pre-wrap;"><strong>Hình ảnh:</strong> ${e.imaging || '—'}${makeImgs(e.images?.imaging)}</div>
           </div>`).join('')}
       </div>`).join('');
-    win.document.write(`<!DOCTYPE html><html><head><title>${title}</title><style>body{font-family:sans-serif;padding:20px;color:#1e293b;font-size:13px;line-height:1.4;}@media print{body{padding:0;}}</style></head><body><h2 style="text-align:center;color:#0284c7;margin-bottom:20px;">${title.toUpperCase()}</h2>${body}</body></html>`);
+    win.document.write(`<!DOCTYPE html><html><head><title>${title}</title><style>body{font-family:sans-serif;padding:20px;color:#0f172a;font-size:13px;line-height:1.4;}@media print{body{padding:0;}}</style></head><body><h2 style="text-align:center;color:#0284c7;margin-bottom:20px;">${title.toUpperCase()}</h2>${body}</body></html>`);
     win.document.close();
     win.focus();
     setTimeout(() => win.print(), 400);

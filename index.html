@@ -64,7 +64,7 @@
     .mode-panel.active { display: flex; }
 
     .custom-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.65); z-index: 100000; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(3px); }
-    .custom-modal-card { background: #fff; border-radius: 20px; padding: 24px; width: 100%; max-width: 420px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; max-height: 90vh; overflow-y: auto; }
+    .custom-modal-card { background: #fff; border-radius: 20px; padding: 24px; width: 100%; max-width: 440px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; max-height: 90vh; overflow-y: auto; }
     .btn-modal-cancel { width: 100%; background: #f1f5f9; border: none; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #64748b; cursor: pointer; margin-top: 12px; }
 
     .summary-page-container, .form-fullpage-card { background: #fff; border: 1.5px solid var(--border); border-radius: var(--radius-lg); box-shadow: 0 4px 16px rgba(0,0,0,0.04); overflow: hidden; margin-bottom: 20px; }
@@ -101,6 +101,12 @@
 
     #imageModalViewer { display: none; position: fixed; inset: 0; z-index: 99999; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; padding: 10px; }
     #imageModalViewer img { max-width: 95%; max-height: 90vh; border-radius: 8px; }
+
+    /* Bảng thuốc styling */
+    .med-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+    .med-table th, .med-table td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; }
+    .med-table th { background: #f8fafc; font-weight: 700; color: #1e293b; }
+    .med-table tr:hover { background: #f0f9ff; }
   </style>
 </head>
 <body>
@@ -149,6 +155,30 @@
       <button class="btn-top" onclick="openAddMedCategoryModal()">➕ Thêm danh mục</button>
     </div>
     <div id="medCategoryContainer" style="display: flex; flex-direction: column; gap: 14px; margin-top: 10px;"></div>
+  </div>
+
+  <!-- TRANG CHI TIẾT NHÓM THUỐC (BẢNG THÔNG TIN) -->
+  <div id="medGroupDetailView" class="view-section">
+    <div class="view-header">
+      <button class="btn-back" onclick="showView('medicationView')">⬅️ Danh mục thuốc</button>
+      <h3 style="font-size:16px; font-weight:700;" id="medGroupDetailTitle">Nhóm Thuốc</h3>
+      <button class="btn-top" onclick="openAddMedicineModal()">➕ Thêm thuốc vào nhóm</button>
+    </div>
+    <div style="background:#fff; border-radius:var(--radius-lg); padding:16px; border:1.5px solid var(--border); overflow-x:auto;">
+      <table class="med-table">
+        <thead>
+          <tr>
+            <th>Tên thuốc</th>
+            <th>Chỉ định</th>
+            <th>Chống chỉ định</th>
+            <th>TDKM</th>
+            <th>Liều dùng</th>
+            <th style="width:50px; text-align:center;">Xóa</th>
+          </tr>
+        </thead>
+        <tbody id="medTableBody"></tbody>
+      </table>
+    </div>
   </div>
 
   <div id="summaryFullView" class="view-section">
@@ -257,7 +287,7 @@
       <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:12px;">Thêm Danh Mục Thuốc</div>
       <div style="margin-bottom:14px; text-align:left;">
         <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Tên danh mục:</label>
-        <input type="text" id="medCategoryNameInput" placeholder="Ví dụ: Kháng sinh, Giảm đau..." style="width:100%; padding:9px; border:1px solid var(--border); border-radius:8px; margin-top:4px; font-size:14px; font-weight:600;">
+        <input type="text" id="medCategoryNameInput" placeholder="Ví dụ: Tim mạch, Kháng sinh..." style="width:100%; padding:9px; border:1px solid var(--border); border-radius:8px; margin-top:4px; font-size:14px; font-weight:600;">
       </div>
       <div style="display:flex; gap:8px;">
         <button type="button" class="btn-modal-cancel" style="margin-top:0;" onclick="closeAddMedCategoryModal()">Hủy</button>
@@ -266,17 +296,48 @@
     </div>
   </div>
 
-  <!-- MODAL THÊM NHÓM HOẶC THUỐC -->
-  <div id="addMedItemModal" class="custom-modal-overlay" onclick="closeAddMedItemModal()">
+  <!-- MODAL THÊM NHÓM THUỐC -->
+  <div id="addMedGroupModal" class="custom-modal-overlay" onclick="closeAddMedGroupModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()">
-      <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:12px;" id="medItemModalTitle">Thêm mới</div>
+      <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:12px;">Thêm Nhóm Thuốc</div>
       <div style="margin-bottom:14px; text-align:left;">
-        <label style="font-size:12px; font-weight:600; color:var(--text-muted);" id="medItemLabel">Tên:</label>
-        <input type="text" id="medItemNameInput" placeholder="Nhập tên..." style="width:100%; padding:9px; border:1px solid var(--border); border-radius:8px; margin-top:4px; font-size:14px; font-weight:600;">
+        <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Tên nhóm thuốc:</label>
+        <input type="text" id="medGroupNameInput" placeholder="Ví dụ: Beta-blocker..." style="width:100%; padding:9px; border:1px solid var(--border); border-radius:8px; margin-top:4px; font-size:14px; font-weight:600;">
       </div>
       <div style="display:flex; gap:8px;">
-        <button type="button" class="btn-modal-cancel" style="margin-top:0;" onclick="closeAddMedItemModal()">Hủy</button>
-        <button type="button" class="btn-confirm-submit" style="flex:1; padding:10px;" onclick="saveMedItem()">Xác nhận</button>
+        <button type="button" class="btn-modal-cancel" style="margin-top:0;" onclick="closeAddMedGroupModal()">Hủy</button>
+        <button type="button" class="btn-confirm-submit" style="flex:1; padding:10px;" onclick="saveMedGroup()">Tạo nhóm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL THÊM THUỐC CHI TIẾT -->
+  <div id="addMedicineModal" class="custom-modal-overlay" onclick="closeAddMedicineModal()">
+    <div class="custom-modal-card" onclick="event.stopPropagation()" style="text-align:left;">
+      <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:14px; text-align:center;">Thêm Thuốc Mới</div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Tên thuốc:</label>
+        <input type="text" id="medNameInput" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; margin-top:2px; font-size:13.5px; font-weight:600;">
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Chỉ định:</label>
+        <input type="text" id="medIndicationInput" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; margin-top:2px; font-size:13.5px;">
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Chống chỉ định:</label>
+        <input type="text" id="medContraindicationInput" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; margin-top:2px; font-size:13.5px;">
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Tác dụng không mong muốn (TDKM):</label>
+        <input type="text" id="medSideEffectsInput" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; margin-top:2px; font-size:13.5px;">
+      </div>
+      <div style="margin-bottom:16px;">
+        <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Liều dùng:</label>
+        <input type="text" id="medDoseInput" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; margin-top:2px; font-size:13.5px;">
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="btn-modal-cancel" style="margin-top:0;" onclick="closeAddMedicineModal()">Hủy</button>
+        <button type="button" class="btn-confirm-submit" style="flex:1; padding:10px;" onclick="saveMedicineItem()">Thêm vào bảng</button>
       </div>
     </div>
   </div>
@@ -285,13 +346,11 @@
   <div id="editRoomModal" class="custom-modal-overlay" onclick="closeEditRoomModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()">
       <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:12px;" id="editRoomModalTitle">Sửa Phòng Bệnh</div>
-      
       <div class="mode-tab-group">
         <button type="button" id="tabRow" class="btn-mode-tab active" onclick="switchEditMode('row')">Hàng</button>
         <button type="button" id="tabCol" class="btn-mode-tab" onclick="switchEditMode('col')">Cột</button>
         <button type="button" id="tabCell" class="btn-mode-tab" onclick="switchEditMode('cell')">Ô</button>
       </div>
-
       <div id="panelModeRow" class="mode-panel active">
         <p style="font-size:12.5px; color:var(--text-muted);">Thêm hàng mới hoặc chọn hàng để xóa:</p>
         <button type="button" class="btn-confirm-submit" style="padding:9px; font-size:12.5px;" onclick="addRowToRoom()">➕ Thêm hàng</button>
@@ -301,7 +360,6 @@
           <button type="button" class="btn-confirm-submit" style="padding:9px 14px; font-size:12.5px; background:#dc2626;" onclick="removeRowFromRoom()">Xóa</button>
         </div>
       </div>
-
       <div id="panelModeCol" class="mode-panel">
         <p style="font-size:12.5px; color:var(--text-muted);">Thêm cột mới hoặc chọn cột để xóa:</p>
         <button type="button" class="btn-confirm-submit" style="padding:9px; font-size:12.5px;" onclick="addColToRoom()">➕ Thêm cột</button>
@@ -311,12 +369,10 @@
           <button type="button" class="btn-confirm-submit" style="padding:9px 14px; font-size:12.5px; background:#dc2626;" onclick="removeColFromRoom()">Xóa</button>
         </div>
       </div>
-
       <div id="panelModeCell" class="mode-panel">
         <p style="font-size:12.5px; color:var(--text-muted);">Ẩn hoặc hiện từng ô riêng lẻ:</p>
         <div id="cellVisibilityMatrixContainer" style="max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--border-light); padding: 8px; border-radius: 8px; background: #fafafa;"></div>
       </div>
-
       <button type="button" class="btn-modal-cancel" style="margin-top:16px;" onclick="closeEditRoomModal()">Đóng</button>
     </div>
   </div>
@@ -368,7 +424,7 @@
 
   let roomList = JSON.parse(localStorage.getItem('bs_room_configs_v21')) || defaultRooms;
   let patients = JSON.parse(localStorage.getItem('bs_patients_scroll_v3')) || [];
-  let medCategories = JSON.parse(localStorage.getItem('bs_med_categories_v2')) || [];
+  let medCategories = JSON.parse(localStorage.getItem('bs_med_categories_v3')) || [];
   let doctorProfile = JSON.parse(localStorage.getItem('bs_doctor_profile_v1')) || {
     name: "Bác sĩ Minh Hoàng",
     title: "Bác sĩ Điều trị",
@@ -379,7 +435,7 @@
   let currentEditing = { room: null, bed: null, id: null, mode: 'create', entryIndex: null };
   let currentViewingPatientId = null, currentActiveIndex = 0, currentEditingRoomId = null;
   let currentActiveTab = 'row';
-  let activeMedCatId = null, medItemType = 'group'; // 'group' hoặc 'med'
+  let activeMedCatId = null, activeMedGroupId = null;
   let inactivityTimer = null, isAuthenticated = false;
 
   /* AUTH & TỰ ĐỘNG KHÓA */
@@ -472,7 +528,7 @@
     }
   }
 
-  /* QUẢN LÝ THUỐC & DANH MỤC */
+  /* QUẢN LÝ THUỐC CHI TIẾT */
   function openAddMedCategoryModal() {
     document.getElementById('medCategoryNameInput').value = '';
     document.getElementById('addMedCategoryModal').style.display = 'flex';
@@ -482,8 +538,8 @@
   function saveMedCategory() {
     const name = document.getElementById('medCategoryNameInput').value.trim();
     if (!name) return alert("Vui lòng nhập tên danh mục thuốc!");
-    medCategories.push({ id: Date.now(), name, groups: [], medicines: [] });
-    localStorage.setItem('bs_med_categories_v2', JSON.stringify(medCategories));
+    medCategories.push({ id: Date.now(), name, groups: [] });
+    localStorage.setItem('bs_med_categories_v3', JSON.stringify(medCategories));
     renderMedCategoriesUI();
     closeAddMedCategoryModal();
   }
@@ -491,42 +547,118 @@
   function deleteMedCategory(id) {
     if (confirm("Xóa danh mục thuốc này?")) {
       medCategories = medCategories.filter(c => c.id !== id);
-      localStorage.setItem('bs_med_categories_v2', JSON.stringify(medCategories));
+      localStorage.setItem('bs_med_categories_v3', JSON.stringify(medCategories));
       renderMedCategoriesUI();
     }
   }
 
-  function openAddMedItemModal(catId, type) {
+  function openAddMedGroupModal(catId) {
     activeMedCatId = catId;
-    medItemType = type;
-    document.getElementById('medItemModalTitle').textContent = type === 'group' ? 'Thêm nhóm thuốc' : 'Thêm tên thuốc';
-    document.getElementById('medItemLabel').textContent = type === 'group' ? 'Tên nhóm thuốc:' : 'Tên thuốc:';
-    document.getElementById('medItemNameInput').value = '';
-    document.getElementById('addMedItemModal').style.display = 'flex';
+    document.getElementById('medGroupNameInput').value = '';
+    document.getElementById('addMedGroupModal').style.display = 'flex';
   }
-  const closeAddMedItemModal = () => { document.getElementById('addMedItemModal').style.display = 'none'; };
+  const closeAddMedGroupModal = () => { document.getElementById('addMedGroupModal').style.display = 'none'; };
 
-  function saveMedItem() {
-    const val = document.getElementById('medItemNameInput').value.trim();
-    if (!val) return alert("Vui lòng nhập tên!");
+  function saveMedGroup() {
+    const name = document.getElementById('medGroupNameInput').value.trim();
+    if (!name) return alert("Vui lòng nhập tên nhóm thuốc!");
     const cat = medCategories.find(c => c.id === activeMedCatId);
     if (cat) {
-      if (medItemType === 'group') {
-        cat.groups = cat.groups || [];
-        cat.groups.push(val);
-      } else {
-        cat.medicines = cat.medicines || [];
-        cat.medicines.push(val);
-      }
-      localStorage.setItem('bs_med_categories_v2', JSON.stringify(medCategories));
+      cat.groups = cat.groups || [];
+      cat.groups.push({ id: Date.now(), name, medicines: [] });
+      localStorage.setItem('bs_med_categories_v3', JSON.stringify(medCategories));
       renderMedCategoriesUI();
     }
-    closeAddMedItemModal();
+    closeAddMedGroupModal();
+  }
+
+  function deleteMedGroup(catId, groupId) {
+    if (confirm("Xóa nhóm thuốc này?")) {
+      const cat = medCategories.find(c => c.id === catId);
+      if (cat) {
+        cat.groups = cat.groups.filter(g => g.id !== groupId);
+        localStorage.setItem('bs_med_categories_v3', JSON.stringify(medCategories));
+        renderMedCategoriesUI();
+      }
+    }
+  }
+
+  function openMedGroupDetail(catId, groupId) {
+    activeMedCatId = catId;
+    activeMedGroupId = groupId;
+    const cat = medCategories.find(c => c.id === catId);
+    const group = cat?.groups.find(g => g.id === groupId);
+    if (!group) return;
+
+    document.getElementById('medGroupDetailTitle').textContent = `${cat.name} > ${group.name}`;
+    renderMedTable(group.medicines || []);
+    showView('medGroupDetailView');
+  }
+
+  function openAddMedicineModal() {
+    document.getElementById('medNameInput').value = '';
+    document.getElementById('medIndicationInput').value = '';
+    document.getElementById('medContraindicationInput').value = '';
+    document.getElementById('medSideEffectsInput').value = '';
+    document.getElementById('medDoseInput').value = '';
+    document.getElementById('addMedicineModal').style.display = 'flex';
+  }
+  const closeAddMedicineModal = () => { document.getElementById('addMedicineModal').style.display = 'none'; };
+
+  function saveMedicineItem() {
+    const name = document.getElementById('medNameInput').value.trim();
+    if (!name) return alert("Vui lòng nhập tên thuốc!");
+    const indication = document.getElementById('medIndicationInput').value.trim();
+    const contraindication = document.getElementById('medContraindicationInput').value.trim();
+    const sideEffects = document.getElementById('medSideEffectsInput').value.trim();
+    const dose = document.getElementById('medDoseInput').value.trim();
+
+    const cat = medCategories.find(c => c.id === activeMedCatId);
+    const group = cat?.groups.find(g => g.id === activeMedGroupId);
+    if (group) {
+      group.medicines = group.medicines || [];
+      group.medicines.push({ id: Date.now(), name, indication, contraindication, sideEffects, dose });
+      localStorage.setItem('bs_med_categories_v3', JSON.stringify(medCategories));
+      renderMedTable(group.medicines);
+    }
+    closeAddMedicineModal();
+  }
+
+  function deleteMedicineItem(medId) {
+    if (confirm("Xóa thuốc này khỏi bảng?")) {
+      const cat = medCategories.find(c => c.id === activeMedCatId);
+      const group = cat?.groups.find(g => g.id === activeMedGroupId);
+      if (group) {
+        group.medicines = group.medicines.filter(m => m.id !== medId);
+        localStorage.setItem('bs_med_categories_v3', JSON.stringify(medCategories));
+        renderMedTable(group.medicines);
+      }
+    }
+  }
+
+  function renderMedTable(medicines) {
+    const tbody = document.getElementById('medTableBody');
+    if (!tbody) return;
+    if (!medicines.length) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); font-style:italic; padding:16px;">Chưa có loại thuốc nào trong nhóm này.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = medicines.map(m => `
+      <tr>
+        <td style="font-weight:700; color:var(--primary);">${m.name}</td>
+        <td>${m.indication || '—'}</td>
+        <td>${m.contraindication || '—'}</td>
+        <td>${m.sideEffects || '—'}</td>
+        <td>${m.dose || '—'}</td>
+        <td style="text-align:center;"><button type="button" class="btn-bed-ctrl" style="background:#fef2f2; border-color:#fca5a5; color:#dc2626; padding:3px 6px;" onclick="deleteMedicineItem(${m.id})">🗑️</button></td>
+      </tr>`).join('');
   }
 
   function renderMedCategoriesUI() {
     const container = document.getElementById('medCategoryContainer');
-    document.getElementById('homeMedCount').textContent = `${medCategories.length} Danh mục`;
+    let totalGroups = 0;
+    medCategories.forEach(c => totalGroups += (c.groups?.length || 0));
+    document.getElementById('homeMedCount').textContent = `${totalGroups} Nhóm thuốc`;
     if (!container) return;
 
     if (!medCategories.length) {
@@ -539,16 +671,20 @@
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-light); padding-bottom:8px; margin-bottom:10px;">
           <h3 style="font-size:16px; font-weight:700; color:var(--primary);">💊 ${cat.name}</h3>
           <div style="display:flex; gap:6px;">
-            <button type="button" class="btn-bed-ctrl" style="background:#e0f2fe; border-color:#7dd3fc; color:#0369a1;" onclick="openAddMedItemModal(${cat.id}, 'group')">➕ Thêm nhóm</button>
-            <button type="button" class="btn-bed-ctrl" style="background:#f0fdf4; border-color:#86efac; color:#15803d;" onclick="openAddMedItemModal(${cat.id}, 'med')">➕ Thêm thuốc</button>
-            <button type="button" class="btn-bed-ctrl" style="background:#fef2f2; border-color:#fca5a5; color:#dc2626;" onclick="deleteMedCategory(${cat.id})">🗑️ Xóa</button>
+            <button type="button" class="btn-bed-ctrl" style="background:#e0f2fe; border-color:#7dd3fc; color:#0369a1;" onclick="openAddMedGroupModal(${cat.id})">➕ Thêm nhóm</button>
+            <button type="button" class="btn-bed-ctrl" style="background:#fef2f2; border-color:#fca5a5; color:#dc2626;" onclick="deleteMedCategory(${cat.id})">🗑️ Xóa danh mục</button>
           </div>
         </div>
         
-        <div style="display:flex; flex-direction:column; gap:8px;">
-          ${cat.groups?.length ? `<div style="font-size:13px; font-weight:600; color:#334155;">📁 Nhóm: ${cat.groups.join(', ')}</div>` : ''}
-          ${cat.medicines?.length ? `<div style="font-size:13px; font-weight:600; color:#0f172a;">🏷️ Thuốc: ${cat.medicines.join(', ')}</div>` : ''}
-          ${(!cat.groups?.length && !cat.medicines?.length) ? `<p style="font-size:13px; color:var(--text-muted); font-style:italic;">Chưa có nhóm hoặc thuốc nào trong danh mục này.</p>` : ''}
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          ${cat.groups?.length ? cat.groups.map(g => `
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid var(--border-light); padding:8px 12px; border-radius:8px; cursor:pointer;" onclick="openMedGroupDetail(${cat.id}, ${g.id})">
+              <span style="font-size:13.5px; font-weight:600; color:#1e293b;">📁 ${g.name} (${g.medicines?.length || 0} thuốc)</span>
+              <div style="display:flex; gap:6px; align-items:center;">
+                <span style="font-size:12px; color:var(--primary); font-weight:600;">Xem bảng ➔</span>
+                <button type="button" class="btn-bed-ctrl" style="background:#fff; color:#dc2626; padding:2px 6px;" onclick="event.stopPropagation(); deleteMedGroup(${cat.id}, ${g.id})">✕</button>
+              </div>
+            </div>`).join('') : '<p style="font-size:13px; color:var(--text-muted); font-style:italic;">Chưa có nhóm thuốc nào.</p>'}
         </div>
       </div>`).join('');
   }
@@ -766,7 +902,7 @@
     return isNaN(d) ? iso : `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} ${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}`;
   };
   function showView(viewId) {
-    ['homeView', 'roomGridView', 'medicationView', 'summaryFullView', 'patientFormView', 'dischargedView', 'profileView'].forEach(v => {
+    ['homeView', 'roomGridView', 'medicationView', 'medGroupDetailView', 'summaryFullView', 'patientFormView', 'dischargedView', 'profileView'].forEach(v => {
       const el = document.getElementById(v); if (el) el.style.display = 'none';
     });
     document.getElementById(viewId).style.display = 'block';
@@ -837,6 +973,7 @@
   async function syncDataToCloud() {
     localStorage.setItem('bs_patients_scroll_v3', JSON.stringify(patients));
     localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
+    localStorage.setItem('bs_med_categories_v3', JSON.stringify(medCategories));
     renderDashboardCounts();
     if (!GOOGLE_SCRIPT_URL) return;
     updateSyncUI('syncing', 'Đang lưu...');

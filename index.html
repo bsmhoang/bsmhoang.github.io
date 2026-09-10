@@ -49,8 +49,6 @@
     .bed-cell-item { background: #f8fafc; border: 1.5px solid var(--border); border-radius: var(--radius-md); padding: 10px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 75px; transition: all 0.2s; position: relative; text-align: center; }
     .bed-cell-item:hover { border-color: var(--primary); background: #f0f9ff; }
     .bed-cell-item.occupied { background: #f0f9ff; border-color: #0284c7; }
-    
-    /* Ô bị ẩn giữ nguyên khoảng trống, trong suốt hoặc vô hiệu hóa bấm */
     .bed-cell-item.is-hidden-slot { background: transparent; border: 1.5px dashed var(--border-light); cursor: default; opacity: 0.25; pointer-events: none; box-shadow: none; }
     
     .bed-cell-name { font-size: 13.5px; font-weight: 700; color: #0f172a; word-break: break-word; }
@@ -261,9 +259,9 @@
       
       <!-- Thanh chuyển đổi chế độ -->
       <div class="mode-tab-group">
-        <button type="button" class="btn-mode-tab active" onclick="switchEditMode('row', this)">Hàng</button>
-        <button type="button" class="btn-mode-tab" onclick="switchEditMode('col', this)">Cột</button>
-        <button type="button" class="btn-mode-tab" onclick="switchEditMode('cell', this)">Ô</button>
+        <button type="button" id="tabRow" class="btn-mode-tab active" onclick="switchEditMode('row')">Hàng</button>
+        <button type="button" id="tabCol" class="btn-mode-tab" onclick="switchEditMode('col')">Cột</button>
+        <button type="button" id="tabCell" class="btn-mode-tab" onclick="switchEditMode('cell')">Ô</button>
       </div>
 
       <!-- CHẾ ĐỘ HÀNG -->
@@ -292,7 +290,7 @@
 
       <!-- CHẾ ĐỘ Ô -->
       <div id="panelModeCell" class="mode-panel">
-        <p style="font-size:12.5px; color:var(--text-muted);">Ẩn hoặc hiện từng ô riêng lẻ theo ma trận bảng (giữ nguyên khoảng trống):</p>
+        <p style="font-size:12.5px; color:var(--text-muted);">Ẩn hoặc hiện từng ô riêng lẻ theo ma trận bảng:</p>
         <div id="cellVisibilityMatrixContainer" style="max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--border-light); padding: 8px; border-radius: 8px; background: #fafafa;"></div>
       </div>
 
@@ -345,7 +343,7 @@
     { id: '819', name: 'P 819', rows: 1, cols: 2, hiddenBeds: [] }
   ];
 
-  let roomList = JSON.parse(localStorage.getItem('bs_room_configs_v17')) || defaultRooms;
+  let roomList = JSON.parse(localStorage.getItem('bs_room_configs_v19')) || defaultRooms;
   let patients = JSON.parse(localStorage.getItem('bs_patients_scroll_v3')) || [];
   let doctorProfile = JSON.parse(localStorage.getItem('bs_doctor_profile_v1')) || {
     name: "Bác sĩ Minh Hoàng",
@@ -356,6 +354,7 @@
 
   let currentEditing = { room: null, bed: null, id: null, mode: 'create', entryIndex: null };
   let currentViewingPatientId = null, currentActiveIndex = 0, currentEditingRoomId = null;
+  let currentActiveTab = 'row';
   let inactivityTimer = null, isAuthenticated = false;
 
   /* AUTH & TỰ ĐỘNG KHÓA */
@@ -448,22 +447,25 @@
     }
   }
 
-  /* QUẢN LÝ 3 CHẾ ĐỘ TRONG SỬA PHÒNG CHUẨN XÁC KHÔNG NHẦM LẪN HÀNG/CỘT */
+  /* QUẢN LÝ 3 CHẾ ĐỘ TRONG SỬA PHÒNG */
   function openEditRoomModal(roomId) {
     const r = roomList.find(x => x.id === roomId);
     if (!r) return;
     currentEditingRoomId = roomId;
     document.getElementById('editRoomModalTitle').textContent = `Sửa phòng - ${r.name}`;
-    switchEditMode('row', document.querySelector('.btn-mode-tab'));
+    switchEditMode(currentActiveTab);
     document.getElementById('editRoomModal').style.display = 'flex';
   }
   const closeEditRoomModal = () => { document.getElementById('editRoomModal').style.display = 'none'; currentEditingRoomId = null; };
 
-  function switchEditMode(mode, btnEl) {
-    document.querySelectorAll('.btn-mode-tab').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.mode-panel').forEach(p => p.classList.remove('active'));
-    btnEl.classList.add('active');
-    document.getElementById('panelMode' + mode.charAt(0).toUpperCase() + mode.slice(1)).classList.add('active');
+  function switchEditMode(mode) {
+    currentActiveTab = mode;
+    ['row', 'col', 'cell'].forEach(m => {
+      const btn = document.getElementById('tab' + m.charAt(0).toUpperCase() + m.slice(1));
+      const panel = document.getElementById('panelMode' + m.charAt(0).toUpperCase() + m.slice(1));
+      if (btn) btn.classList.toggle('active', m === mode);
+      if (panel) panel.classList.toggle('active', m === mode);
+    });
 
     const r = roomList.find(x => x.id === currentEditingRoomId);
     if (!r) return;
@@ -548,7 +550,7 @@
     }
 
     const sel = document.getElementById('selectColToRemove');
-    const colIndex = sel.value;
+    const colIndex = parseInt(sel.value); // Lấy số thứ tự cột cần xóa (ví dụ: 2)
     const rowCount = r.rows || 2;
 
     let hasPatient = false;
@@ -566,11 +568,36 @@
       return;
     }
 
-    r.cols = colCount - 1;
-    r.hiddenBeds = (r.hiddenBeds || []).filter(b => {
-      let match = b.match(/[0-9]+$/);
-      return !match || match[0] !== colIndex;
-    });
+    // Thuật toán dịch chuyển các cột bên phải đè lên cột bị xóa để các cột khác giữ nguyên, chỉ xóa đúng cột được chọn
+    let newCols = colCount - 1;
+    let newHiddenBeds = [];
+
+    for (let i = 0; i < rowCount; i++) {
+      let rowChar = ROW_LABELS[i];
+      let targetNewCol = 1;
+      for (let j = 1; j <= colCount; j++) {
+        if (j === colIndex) continue; // Bỏ qua cột bị xóa
+        let oldCellName = `${rowChar}${j}`;
+        let newCellName = `${rowChar}${targetNewCol}`;
+        
+        // Nếu ô cũ bị ẩn thì chuyển trạng thái ẩn sang ô mới
+        if ((r.hiddenBeds || []).includes(oldCellName)) {
+          newHiddenBeds.push(newCellName);
+        }
+        
+        // Nếu có bệnh nhân ở ô cũ thì cập nhật vị trí cho bệnh nhân
+        patients.forEach(pat => {
+          if (pat.status === 'active' && String(pat.room).trim() === String(r.name).trim() && String(pat.bed).trim() === oldCellName) {
+            pat.bed = newCellName;
+          }
+        });
+
+        targetNewCol++;
+      }
+    }
+
+    r.cols = newCols;
+    r.hiddenBeds = newHiddenBeds;
     syncDataToCloud();
     openEditRoomModal(r.id);
   }
@@ -697,7 +724,7 @@
       if (data?.patients && data?.rooms) {
         patients = data.patients; roomList = data.rooms;
         localStorage.setItem('bs_patients_scroll_v3', JSON.stringify(patients));
-        localStorage.setItem('bs_room_configs_v17', JSON.stringify(roomList));
+        localStorage.setItem('bs_room_configs_v19', JSON.stringify(roomList));
       }
       updateSyncUI('success', 'Đã đồng bộ');
       renderDashboardCounts();
@@ -705,7 +732,7 @@
   }
   async function syncDataToCloud() {
     localStorage.setItem('bs_patients_scroll_v3', JSON.stringify(patients));
-    localStorage.setItem('bs_room_configs_v17', JSON.stringify(roomList));
+    localStorage.setItem('bs_room_configs_v19', JSON.stringify(roomList));
     renderDashboardCounts();
     if (!GOOGLE_SCRIPT_URL) return;
     updateSyncUI('syncing', 'Đang lưu...');
@@ -917,7 +944,7 @@
     win.document.close(); win.focus(); setTimeout(() => win.print(), 400);
   }
 
-  /* RENDER DANH SÁCH PHÒNG THEO MA TRẬN CHUẨN ĐÚNG KÝ HIỆU HÀNG (CHỮ) CỘT (SỐ) */
+  /* RENDER DANH SÁCH PHÒNG THEO MA TRẬN CHUẨN */
   function renderRoomsGrid() {
     const c = document.getElementById('roomsDynamicContainer'); if (!c) return;
 

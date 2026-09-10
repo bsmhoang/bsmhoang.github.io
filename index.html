@@ -35,6 +35,7 @@
     .count-tag { display: inline-block; margin-top: 8px; padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; }
     .btn-blue { border-color: #7dd3fc; } .btn-blue .count-tag { background: #bae6fd; color: #0369a1; }
     .btn-green { border-color: #86efac; } .btn-green .count-tag { background: #bbf7d0; color: #15803d; }
+    .btn-purple { border-color: #d8b4fe; } .btn-purple .count-tag { background: #f3e8ff; color: #7e22ce; }
 
     .view-section { display: none; }
     .view-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
@@ -45,23 +46,22 @@
     
     .beds-grid-box { display: grid; gap: 10px; }
 
-    .bed-cell-item { background: #f8fafc; border: 1.5px solid var(--border); border-radius: var(--radius-md); padding: 12px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 75px; transition: all 0.2s; position: relative; text-align: center; }
+    .bed-cell-item { background: #f8fafc; border: 1.5px solid var(--border); border-radius: var(--radius-md); padding: 10px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 75px; transition: all 0.2s; position: relative; text-align: center; }
     .bed-cell-item:hover { border-color: var(--primary); background: #f0f9ff; }
     .bed-cell-item.occupied { background: #f0f9ff; border-color: #0284c7; }
-    .bed-cell-item.is-empty-slot { background: #f1f5f9; border: 1.5px dashed var(--border); cursor: default; opacity: 0.3; pointer-events: none; }
     
     .bed-cell-name { font-size: 13.5px; font-weight: 700; color: #0f172a; word-break: break-word; }
     .bed-cell-empty { font-size: 12.5px; color: #94a3b8; font-style: italic; }
 
-    .room-action-group { display: flex; gap: 6px; align-items: center; }
     .btn-bed-ctrl { background: #fff; border: 1px solid var(--border); font-size: 11.5px; font-weight: 600; padding: 5px 10px; border-radius: 6px; cursor: pointer; color: #334155; }
+    .btn-small-action { background: #f0f9ff; border: 1px solid #7dd3fc; color: #0369a1; font-size: 11.5px; font-weight: 600; padding: 5px 10px; border-radius: 6px; cursor: pointer; }
     
-    .del-bed-list { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; max-height: 220px; overflow-y: auto; text-align: left; }
+    .del-bed-list { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; max-height: 200px; overflow-y: auto; text-align: left; }
     .del-bed-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-weight: 600; gap: 8px; }
     .del-bed-item input[type="text"] { width: 70px; padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px; text-align: center; font-weight: 700; font-size: 13px; }
 
     .custom-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.65); z-index: 100000; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(3px); }
-    .custom-modal-card { background: #fff; border-radius: 20px; padding: 24px; width: 100%; max-width: 420px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; max-height: 90vh; overflow-y: auto; }
+    .custom-modal-card { background: #fff; border-radius: 20px; padding: 24px; width: 100%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; max-height: 90vh; overflow-y: auto; }
     .btn-modal-cancel { width: 100%; background: #f1f5f9; border: none; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #64748b; cursor: pointer; margin-top: 8px; }
 
     .summary-page-container, .form-fullpage-card { background: #fff; border: 1.5px solid var(--border); border-radius: var(--radius-lg); box-shadow: 0 4px 16px rgba(0,0,0,0.04); overflow: hidden; margin-bottom: 20px; }
@@ -123,6 +123,10 @@
         <h2>🏥 Ra viện</h2><p>Lưu trữ bệnh nhân đã xuất viện</p>
         <span class="count-tag" id="homeDischargedCount">0 Đã ra viện</span>
       </div>
+      <div class="big-btn btn-purple" onclick="showView('medicationView')">
+        <h2>💊 Thuốc</h2><p>Danh mục và tra cứu thuốc điều trị</p>
+        <span class="count-tag" id="homeMedCount">Danh mục thuốc</span>
+      </div>
     </div>
   </div>
 
@@ -132,6 +136,17 @@
       <h3 style="font-size:16px; font-weight:700;">Danh Sách Phòng Bệnh</h3><div style="width:40px;"></div>
     </div>
     <div class="rooms-column-list" id="roomsDynamicContainer"></div>
+  </div>
+
+  <div id="medicationView" class="view-section">
+    <div class="view-header">
+      <button class="btn-back" onclick="showView('homeView')">⬅️ Trang chủ</button>
+      <h3 style="font-size:16px; font-weight:700;">Danh Mục Thuốc</h3>
+      <button class="btn-top" onclick="alert('Tính năng thêm thuốc đang phát triển')">➕ Thêm thuốc</button>
+    </div>
+    <div style="background:#fff; border-radius:var(--radius-lg); padding:20px; border:1.5px solid var(--border);">
+      <p style="color:var(--text-muted); text-align:center; padding:30px;">Chưa có danh mục thuốc nào được lưu.</p>
+    </div>
   </div>
 
   <div id="summaryFullView" class="view-section">
@@ -292,12 +307,12 @@
   const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxVVVoEdjNY5fsWGuJegc9EHAcrzTFaty4VEhMeyo5HsKdT-U89s9SlT7R-zdaXuMayzw/exec";
   const CORRECT_PIN = "000000";
   const defaultRooms = [
-    { id: '825', name: 'P 825', cols: 3, beds: ['1', '2', '3', '4', '5', '6'] },
-    { id: '817', name: 'P 817', cols: 3, beds: ['1', '2'] },
-    { id: '819', name: 'P 819', cols: 3, beds: ['1', '2'] }
+    { id: '825', name: 'P 825', cols: 2, beds: ['1.1', '1.2', '2.1', '2.2'] },
+    { id: '817', name: 'P 817', cols: 2, beds: ['1.1', '1.2'] },
+    { id: '819', name: 'P 819', cols: 2, beds: ['1.1', '1.2'] }
   ];
 
-  let roomList = JSON.parse(localStorage.getItem('bs_room_configs_v10')) || defaultRooms;
+  let roomList = JSON.parse(localStorage.getItem('bs_room_configs_v11')) || defaultRooms;
   let patients = JSON.parse(localStorage.getItem('bs_patients_scroll_v3')) || [];
   let doctorProfile = JSON.parse(localStorage.getItem('bs_doctor_profile_v1')) || {
     name: "Bác sĩ Minh Hoàng",
@@ -400,7 +415,7 @@
     }
   }
 
-  /* QUẢN LÝ SỬA PHÒNG: THÊM GIƯỜNG, ĐỔI TÊN NẾU CÓ BỆNH NHÂN, XÓA */
+  /* QUẢN LÝ SỬA PHÒNG */
   function openEditRoomModal(roomId) {
     const r = roomList.find(x => x.id === roomId);
     if (!r) return;
@@ -413,7 +428,7 @@
       return `
         <div class="del-bed-item">
           <input type="checkbox" name="editRoomDelCheckbox" value="${bed}" ${p ? 'disabled' : ''}>
-          <span style="flex:1;">Giường: <b>${p ? p.name : 'Trống'}</b></span>
+          <span style="flex:1; font-size:12.5px;">Vị trí: <b>${bed}</b> ${p ? `(BN: ${p.name})` : ''}</span>
           ${p ? `<span>Đổi số:</span><input type="text" name="editBedNumInput" data-old="${bed}" value="${bed}">` : ``}
         </div>`;
     }).join('');
@@ -426,9 +441,11 @@
     const r = roomList.find(x => x.id === currentEditingRoomId);
     if (!r) return;
     
-    let newBedName = `G${r.beds.length + 1}`;
+    let newBedName = `Vị trí ${r.beds.length + 1}`;
+    let counter = 1;
     while (r.beds.includes(newBedName)) {
-      newBedName = `G${Math.floor(Math.random() * 1000)}`;
+      newBedName = `Vị trí ${r.beds.length + counter}`;
+      counter++;
     }
     
     r.beds.push(newBedName);
@@ -440,7 +457,7 @@
     const r = roomList.find(x => x.id === currentEditingRoomId);
     if (!r) { closeEditRoomModal(); return; }
     
-    // 1. Đổi số giường cho những giường có bệnh nhân
+    // 1. Đổi số giường cho những vị trí có bệnh nhân
     const bedInputs = document.querySelectorAll('input[name="editBedNumInput"]');
     let newBeds = [...r.beds];
     let hasError = false;
@@ -450,7 +467,7 @@
       const newVal = inp.value.trim();
       if (newVal && newVal !== oldVal) {
         if (newBeds.includes(newVal)) {
-          alert(`Số giường ${newVal} đã tồn tại trong phòng!`);
+          alert(`Vị trí ${newVal} đã tồn tại trong phòng!`);
           hasError = true;
           return;
         }
@@ -490,7 +507,7 @@
     return isNaN(d) ? iso : `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} ${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}`;
   };
   function showView(viewId) {
-    ['homeView', 'roomGridView', 'summaryFullView', 'patientFormView', 'dischargedView', 'profileView'].forEach(v => {
+    ['homeView', 'roomGridView', 'medicationView', 'summaryFullView', 'patientFormView', 'dischargedView', 'profileView'].forEach(v => {
       const el = document.getElementById(v); if (el) el.style.display = 'none';
     });
     document.getElementById(viewId).style.display = 'block';
@@ -558,7 +575,7 @@
       if (data?.patients && data?.rooms) {
         patients = data.patients; roomList = data.rooms;
         localStorage.setItem('bs_patients_scroll_v3', JSON.stringify(patients));
-        localStorage.setItem('bs_room_configs_v10', JSON.stringify(roomList));
+        localStorage.setItem('bs_room_configs_v11', JSON.stringify(roomList));
       }
       updateSyncUI('success', 'Đã đồng bộ');
       renderDashboardCounts();
@@ -566,7 +583,7 @@
   }
   async function syncDataToCloud() {
     localStorage.setItem('bs_patients_scroll_v3', JSON.stringify(patients));
-    localStorage.setItem('bs_room_configs_v10', JSON.stringify(roomList));
+    localStorage.setItem('bs_room_configs_v11', JSON.stringify(roomList));
     renderDashboardCounts();
     if (!GOOGLE_SCRIPT_URL) return;
     updateSyncUI('syncing', 'Đang lưu...');
@@ -582,8 +599,8 @@
     if (existing) { currentActiveIndex = existing.entries.length - 1; openSummaryView(existing.id); }
     else {
       currentEditing = { room: String(room).trim(), bed: String(bed).trim(), id: null, mode: 'create', entryIndex: null };
-      document.getElementById('formViewTitle').textContent = `Tiếp nhận ${room} - Giường ${bed}`;
-      document.getElementById('crumbPrefix').textContent = `G.${bed}.`;
+      document.getElementById('formViewTitle').textContent = `Tiếp nhận ${room} - Vị trí ${bed}`;
+      document.getElementById('crumbPrefix').textContent = `Vị trí ${bed} >`;
       document.getElementById('recordName').value = ''; document.getElementById('recordName').readOnly = false;
       document.getElementById('recordDateTimeInput').value = getNowForInput();
       ['recordDiagnosis','recordTracking','recordTests','recordImagingText'].forEach(id => document.getElementById(id).value = '');
@@ -596,7 +613,7 @@
     const p = patients.find(x => x.id === currentViewingPatientId); if (!p) return;
     currentEditing = { room: p.room, bed: p.bed, id: p.id, mode: 'add_day', entryIndex: null };
     document.getElementById('formViewTitle').textContent = `Thêm ngày mới: ${p.name}`;
-    document.getElementById('crumbPrefix').textContent = `${p.room} - G.${p.bed}`;
+    document.getElementById('crumbPrefix').textContent = `${p.room} - Vị trí ${p.bed}`;
     document.getElementById('recordName').value = p.name; document.getElementById('recordName').readOnly = true;
     document.getElementById('recordDateTimeInput').value = getNowForInput();
     document.getElementById('recordDiagnosis').value = p.entries[p.entries.length - 1]?.diag || p.initialDiag || '';
@@ -610,7 +627,7 @@
     const entry = p?.entries[currentActiveIndex]; if (!entry) return;
     currentEditing = { room: p.room, bed: p.bed, id: p.id, mode: 'edit_day', entryIndex: currentActiveIndex };
     document.getElementById('formViewTitle').textContent = `Sửa Ngày ${currentActiveIndex + 1}: ${p.name}`;
-    document.getElementById('crumbPrefix').textContent = `${p.room} - G.${p.bed}`;
+    document.getElementById('crumbPrefix').textContent = `${p.room} - Vị trí ${p.bed}`;
     document.getElementById('recordName').value = p.name; document.getElementById('recordName').readOnly = false;
     document.getElementById('recordDateTimeInput').value = entry.isoTime || getNowForInput();
     document.getElementById('recordDiagnosis').value = entry.diag || '';
@@ -671,14 +688,14 @@
     roomList.forEach(r => r.beds.forEach(b => { if (!getPatientInBed(r.name, b)) empties.push({ room: r.name, bed: String(b) }); }));
     
     const container = document.getElementById('transferBedListContainer');
-    document.getElementById('transferBedSubtitle').textContent = `Chọn giường trống để chuyển đến: ${p.name} (Hiện tại: ${p.room} - G.${p.bed})`;
+    document.getElementById('transferBedSubtitle').textContent = `Chọn vị trí trống để chuyển đến: ${p.name} (Hiện tại: ${p.room} - Vị trí ${p.bed})`;
     
     if (!empties.length) {
-      container.innerHTML = '<p style="color:#94a3b8; padding:12px; text-align:center;">Hiện không còn giường trống nào!</p>';
+      container.innerHTML = '<p style="color:#94a3b8; padding:12px; text-align:center;">Hiện không còn vị trí trống nào!</p>';
     } else {
       container.innerHTML = empties.map(it => `
         <button type="button" class="btn-transfer-item" onclick="executeTransferBed('${it.room}', '${it.bed}')">
-          <span>📍 ${it.room} - Giường ${it.bed}</span>
+          <span>📍 ${it.room} - Vị trí ${it.bed}</span>
           <span style="color:var(--primary); font-size:12px;">Chọn ➔</span>
         </button>`).join('');
     }
@@ -688,7 +705,7 @@
 
   function executeTransferBed(targetRoom, targetBed) {
     const p = patients.find(x => x.id === currentViewingPatientId);
-    if (p && confirm(`Xác nhận chuyển bệnh nhân "${p.name}" sang [${targetRoom} - Giường ${targetBed}]?`)) {
+    if (p && confirm(`Xác nhận chuyển bệnh nhân "${p.name}" sang [${targetRoom} - Vị trí ${targetBed}]?`)) {
       p.room = targetRoom; p.bed = targetBed;
       syncDataToCloud();
       closeTransferBedModal();
@@ -708,7 +725,7 @@
     currentViewingPatientId = id;
     const p = patients.find(x => x.id === id); if (!p) return;
     p.entries.sort((a, b) => a.timestamp - b.timestamp);
-    document.getElementById('summaryBedBadge').textContent = `${p.room} - Giường ${p.bed}`;
+    document.getElementById('summaryBedBadge').textContent = `${p.room} - Vị trí ${p.bed}`;
     document.getElementById('summaryPatientTitle').textContent = p.name;
     document.getElementById('dayTabsContainer').innerHTML = p.entries.map((item, idx) => `
       <button class="day-tab-btn ${idx === currentActiveIndex ? 'active' : ''}" onclick="currentActiveIndex=${idx};openSummaryView(${id})">
@@ -741,7 +758,7 @@
       <div style="page-break-after:always; margin-bottom:24px;">
         <div style="background:#f1f5f9; padding:10px 14px; border-left:5px solid #0284c7; margin-bottom:12px;">
           <h3 style="margin:0;">${pi + 1}. Bệnh nhân: ${p.name}</h3>
-          <div style="font-size:12px; color:#475569;">📍 ${p.room} - Giường ${p.bed} | Ra viện: ${p.dateOut || '—'}</div>
+          <div style="font-size:12px; color:#475569;">📍 ${p.room} - Vị trí ${p.bed} | Ra viện: ${p.dateOut || '—'}</div>
         </div>
         ${p.entries.map((e, ei) => `
           <div style="margin-bottom:10px; border:1px solid #e2e8f0; border-radius:6px; padding:8px;">
@@ -756,23 +773,13 @@
     win.document.close(); win.focus(); setTimeout(() => win.print(), 400);
   }
 
-  /* RENDER DANH SÁCH PHÒNG VÀ LƯỚI KHÔNG HIỂN THỊ SỐ THỨ TỰ BÊN NGOÀI */
+  /* RENDER DANH SÁCH PHÒNG VÀ LƯỚI TỰ ĐỘNG THEO SỐ CỘT (COLS) */
   function renderRoomsGrid() {
     const c = document.getElementById('roomsDynamicContainer'); if (!c) return;
 
     c.innerHTML = roomList.map(r => {
-      const colNum = r.cols || 3;
-      const maxBed = r.beds.length ? Math.max(...r.beds) : 0;
-      let bedsHtml = '';
-
-      for (let i = 1; i <= maxBed; i++) {
-        // Kiểm tra xem tên giường có tồn tại trong r.beds không
-        const bedName = String(i); // Hoặc tìm theo giá trị trong mảng beds
-        // Để linh hoạt với mảng bed dạng số hoặc chữ, ta render duyệt qua mảng r.beds:
-      }
-
-      // Render trực tiếp dựa trên mảng r.beds đã sắp xếp
-      bedsHtml = r.beds.map(bed => {
+      const colNum = r.cols || 2;
+      const bedsHtml = r.beds.map(bed => {
         const p = getPatientInBed(r.name, bed);
         return `
           <div class="bed-cell-item ${p ? 'occupied' : ''}" onclick="handleBedClick('${r.name}', '${bed}')">
@@ -783,7 +790,7 @@
       return `
         <div class="room-box-card">
           <div class="room-box-title">
-            <span>🚪 ${r.name} (${r.beds.length} Giường)</span>
+            <span>🚪 ${r.name} (${r.beds.length} Vị trí)</span>
             <button type="button" class="btn-bed-ctrl" onclick="openEditRoomModal('${r.id}')">✏️ Sửa phòng</button>
           </div>
           <div class="beds-grid-box" style="grid-template-columns: repeat(${colNum}, 1fr);">
@@ -805,7 +812,7 @@
       <div class="discharged-card">
         <div style="font-size:16px; font-weight:700;">${p.name}</div>
         <div style="font-size:13px; color:#166534; font-weight:600;">📅 Ra viện: ${p.dateOut || '—'}</div>
-        <div style="font-size:12.5px; color:#64748b;">📍 ${p.room} - Giường ${p.bed} | ${p.entries.length} ngày theo dõi</div>
+        <div style="font-size:12.5px; color:#64748b;">📍 ${p.room} - Vị trí ${p.bed} | ${p.entries.length} ngày theo dõi</div>
         <div class="discharged-actions">
           <button class="btn-del-patient-discharged" onclick="patients=patients.filter(x=>x.id!==${p.id});syncDataToCloud();">🗑️ Xóa</button>
           <button class="btn-export-pdf" onclick="exportPatientPDF(${p.id})">📄 Xuất file PDF</button>

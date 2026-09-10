@@ -928,7 +928,6 @@
           <div style="display:flex; gap:6px; align-items:center;">
             <button type="button" class="btn-bed-ctrl" onclick="moveMedCategory(${catIdx}, -1)" title="Lên">⬆️</button>
             <button type="button" class="btn-bed-ctrl" onclick="moveMedCategory(${catIdx}, 1)" title="Xuống">⬇️</button>
-            <button type="button" class="btn-bed-ctrl" style="background:#f0f9ff; border-color:#7dd3fc; color:#0369a1;" onclick="openEditMedCategoryModal(${cat.id})">✏️ Sửa</button>
           </div>
         </div>
         
@@ -940,17 +939,16 @@
                 <div style="display:flex; gap:4px; align-items:center;">
                   <button type="button" class="btn-bed-ctrl" style="padding:2px 5px;" onclick="moveMedGroup(${cat.id}, ${gIdx}, -1)">⬆️</button>
                   <button type="button" class="btn-bed-ctrl" style="padding:2px 5px;" onclick="moveMedGroup(${cat.id}, ${gIdx}, 1)">⬇️</button>
-                  <button type="button" class="btn-bed-ctrl" style="background:#f0f9ff; color:#0369a1; border-color:#7dd3fc; padding:3px 6px;" onclick="openEditMedGroupModal(${cat.id}, ${g.id})">✏️ Sửa</button>
+                  <button type="button" class="btn-bed-ctrl" style="background:#f0f9ff; color:#0369a1; border-color:#7dd3fc; padding:3px 6px;" onclick="openEditMedGroupModal(${cat.id}, ${g.id})">✏️ Sửa nhóm</button>
                 </div>
               </div>
               <div style="display:flex; flex-direction:column; gap:4px; margin-top:4px;">
                 ${g.medicines?.length ? g.medicines.map(m => `
                   <div style="display:flex; justify-content:space-between; align-items:center; background:#e0f2fe; color:#0369a1; font-size:12px; font-weight:600; padding:4px 8px; border-radius:6px;">
                     <span style="cursor:pointer; flex:1;" onclick="openMedGroupDetail(${cat.id}, ${g.id})">• ${m.name} <span style="font-weight:400; color:#475569;">(${m.dose || 'Chưa rõ liều'})</span></span>
-                    <button type="button" class="btn-bed-ctrl" style="background:#fff; color:#0369a1; padding:1px 5px; font-size:11px;" onclick="activeMedCatId=${cat.id}; activeMedGroupId=${g.id}; openEditMedicineModal(${m.id});">✏️ Sửa</button>
-                  </div>`).join('') : '<span style="font-size:12px; color:var(--text-muted); font-style:italic;">Chưa có thuốc nào. Bấm Sửa nhóm để thêm.</span>'}
+                  </div>`).join('') : '<span style="font-size:12px; color:var(--text-muted); font-style:italic;">Chưa có thuốc nào. Bấm Sửa nhóm để vào thêm thuốc.</span>'}
               </div>
-            </div>`).join('') : '<p style="font-size:13px; color:var(--text-muted); font-style:italic;">Chưa có nhóm thuốc nào. Bấm Sửa danh mục để thêm nhóm.</p>'}
+            </div>`).join('') : '<p style="font-size:13px; color:var(--text-muted); font-style:italic;">Chưa có nhóm thuốc nào. Bấm vào tên danh mục để thêm nhóm.</p>'}
         </div>
       </div>`).join('');
   }
@@ -1470,7 +1468,7 @@
             <div style="white-space:pre-wrap;"><strong>Hình ảnh:</strong> ${e.imaging || '—'}${makeImgs(e.images?.imaging)}</div>
           </div>`).join('')}
       </div>`).join('');
-    win.document.write(`<!DOCTYPE html><html><head><title>${title}</title><style>body{font-family:sans-serif;padding:20px;color:#0f172a;font-size:13px;line-height:1.4;}@media print{body{padding:0;}}</style></head><body><h2 style="text-align:center;color:#0284c7;margin-bottom:20px;">${title.toUpperCase()}</h2>${body}</body></html>`);
+    win.document.write(`<!DOCTYPE html><html><head><title>${title}</title><style>body{font-family:sans-serif;padding:20px;color:#1e293b;font-size:13px;line-height:1.4;}@media print{body{padding:0;}}</style></head><body><h2 style="text-align:center;color:#0284c7;margin-bottom:20px;">${title.toUpperCase()}</h2>${body}</body></html>`);
     win.document.close();
     win.focus();
     setTimeout(() => win.print(), 400);

@@ -64,8 +64,8 @@
     .mode-panel.active { display: flex; }
 
     .custom-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.65); z-index: 100000; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(3px); }
-    .custom-modal-card { background: #fff; border-radius: 20px; padding: 24px; width: 100%; max-width: 420px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; max-height: 90vh; overflow-y: auto; }
-    .btn-modal-cancel { width: 100%; background: #f1f5f9; border: none; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #64748b; cursor: pointer; margin-top: 8px; }
+    .custom-modal-card { background: #fff; border-radius: 20px; padding: 24px; width: 100%; max-width: 480px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; max-height: 90vh; overflow-y: auto; }
+    .btn-modal-cancel { width: 100%; background: #f1f5f9; border: none; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #64748b; cursor: pointer; margin-top: 12px; }
 
     .summary-page-container, .form-fullpage-card { background: #fff; border: 1.5px solid var(--border); border-radius: var(--radius-lg); box-shadow: 0 4px 16px rgba(0,0,0,0.04); overflow: hidden; margin-bottom: 20px; }
     .summary-page-header, .form-fullpage-header { padding: 14px; border-bottom: 1px solid var(--border-light); }
@@ -298,13 +298,15 @@
     </div>
   </div>
 
-  <!-- MODAL BẢNG CHỌN CHUYỂN GIƯỜNG -->
+  <!-- MODAL BẢNG CHỌN CHUYỂN VỊ TRÍ GIỐNG MỤC ẨN HIỆN Ô -->
   <div id="transferBedModal" class="custom-modal-overlay" onclick="closeTransferBedModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()">
-      <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:4px;">Chuyển Vị Trí Bệnh Nhân</div>
-      <p style="font-size:13px; color:var(--text-muted); margin-bottom:10px;" id="transferBedSubtitle">Chọn vị trí trống để chuyển đến:</p>
-      <div class="transfer-list-box" id="transferBedListContainer"></div>
-      <button type="button" class="btn-modal-cancel" onclick="closeTransferBedModal()">Hủy</button>
+      <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:6px;">Chuyển Vị Trí Bệnh Nhân</div>
+      <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:12px;" id="transferBedSubtitle">Chọn vị trí trống trên sơ đồ phòng:</p>
+      
+      <div id="transferRoomMatrixContainer" style="max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; border: 1px solid var(--border-light); padding: 10px; border-radius: 12px; background: #fafafa; text-align: left;"></div>
+
+      <button type="button" class="btn-modal-cancel" style="margin-top:16px;" onclick="closeTransferBedModal()">Hủy</button>
     </div>
   </div>
 
@@ -343,7 +345,7 @@
     { id: '819', name: 'P 819', rows: 1, cols: 2, hiddenBeds: [] }
   ];
 
-  let roomList = JSON.parse(localStorage.getItem('bs_room_configs_v19')) || defaultRooms;
+  let roomList = JSON.parse(localStorage.getItem('bs_room_configs_v20')) || defaultRooms;
   let patients = JSON.parse(localStorage.getItem('bs_patients_scroll_v3')) || [];
   let doctorProfile = JSON.parse(localStorage.getItem('bs_doctor_profile_v1')) || {
     name: "Bác sĩ Minh Hoàng",
@@ -550,7 +552,7 @@
     }
 
     const sel = document.getElementById('selectColToRemove');
-    const colIndex = parseInt(sel.value); // Lấy số thứ tự cột cần xóa (ví dụ: 2)
+    const colIndex = parseInt(sel.value);
     const rowCount = r.rows || 2;
 
     let hasPatient = false;
@@ -568,7 +570,6 @@
       return;
     }
 
-    // Thuật toán dịch chuyển các cột bên phải đè lên cột bị xóa để các cột khác giữ nguyên, chỉ xóa đúng cột được chọn
     let newCols = colCount - 1;
     let newHiddenBeds = [];
 
@@ -576,16 +577,14 @@
       let rowChar = ROW_LABELS[i];
       let targetNewCol = 1;
       for (let j = 1; j <= colCount; j++) {
-        if (j === colIndex) continue; // Bỏ qua cột bị xóa
+        if (j === colIndex) continue;
         let oldCellName = `${rowChar}${j}`;
         let newCellName = `${rowChar}${targetNewCol}`;
         
-        // Nếu ô cũ bị ẩn thì chuyển trạng thái ẩn sang ô mới
         if ((r.hiddenBeds || []).includes(oldCellName)) {
           newHiddenBeds.push(newCellName);
         }
         
-        // Nếu có bệnh nhân ở ô cũ thì cập nhật vị trí cho bệnh nhân
         patients.forEach(pat => {
           if (pat.status === 'active' && String(pat.room).trim() === String(r.name).trim() && String(pat.bed).trim() === oldCellName) {
             pat.bed = newCellName;
@@ -651,6 +650,74 @@
     }
     syncDataToCloud();
     renderCellVisibilityMatrix();
+  }
+
+  /* MODAL CHUYỂN VỊ TRÍ (HIỆN SƠ ĐỒ GIỐNG MỤC ẨN HIỆN Ô) */
+  function openTransferBedModal() {
+    const p = patients.find(x => x.id === currentViewingPatientId); 
+    if (!p) return;
+
+    document.getElementById('transferBedSubtitle').textContent = `Đang chuyển: ${p.name} (Hiện tại: ${p.room} - ${p.bed}). Chọn vị trí trống:`;
+    
+    const container = document.getElementById('transferRoomMatrixContainer');
+    container.innerHTML = roomList.map(r => {
+      const rowCount = r.rows || 2;
+      const colCount = r.cols || 2;
+      r.hiddenBeds = r.hiddenBeds || [];
+      
+      let roomCellsHtml = '';
+      for (let i = 0; i < rowCount; i++) {
+        const rowChar = ROW_LABELS[i];
+        for (let j = 1; j <= colCount; j++) {
+          const cellName = `${rowChar}${j}`;
+          const isHidden = r.hiddenBeds.includes(cellName);
+          if (isHidden) continue; // Bỏ qua ô bị ẩn
+
+          const occupant = getPatientInBed(r.name, cellName);
+          const isCurrent = (String(r.name).trim() === String(p.room).trim() && String(cellName).trim() === String(p.bed).trim());
+
+          if (isCurrent) {
+            roomCellsHtml += `
+              <div style="background:#e0f2fe; border:1px solid #0284c7; border-radius:6px; padding:6px; text-align:center; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+                <span style="font-size:11px; font-weight:700; color:#0369a1;">${cellName} (Hiện tại)</span>
+              </div>`;
+          } else if (occupant) {
+            roomCellsHtml += `
+              <div style="background:#f1f5f9; border:1px solid var(--border); border-radius:6px; padding:6px; text-align:center; display:flex; flex-direction:column; justify-content:center; align-items:center; opacity:0.4;">
+                <span style="font-size:11px; font-weight:700; color:#64748b;">${cellName}</span>
+                <span style="font-size:10px; color:#64748b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; width:100%;">${occupant.name}</span>
+              </div>`;
+          } else {
+            roomCellsHtml += `
+              <div style="background:#f0fdf4; border:1px solid #86efac; border-radius:6px; padding:6px; text-align:center; display:flex; flex-direction:column; justify-content:center; align-items:center; cursor:pointer;" onclick="executeTransferBed('${r.name}', '${cellName}')">
+                <span style="font-size:11px; font-weight:700; color:#15803d;">${cellName}</span>
+                <span style="font-size:10px; font-weight:600; color:#16a34a;">+ Chọn</span>
+              </div>`;
+          }
+        }
+      }
+
+      return `
+        <div style="border-bottom: 1px solid var(--border-light); padding-bottom: 8px; margin-bottom: 4px;">
+          <div style="font-size:13px; font-weight:700; color:var(--primary); margin-bottom:6px;">🚪 ${r.name}</div>
+          <div style="display:grid; grid-template-columns: repeat(${colCount}, 1fr); gap:6px;">
+            ${roomCellsHtml}
+          </div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('transferBedModal').style.display = 'flex';
+  }
+  const closeTransferBedModal = () => { document.getElementById('transferBedModal').style.display = 'none'; };
+
+  function executeTransferBed(targetRoom, targetBed) {
+    const p = patients.find(x => x.id === currentViewingPatientId);
+    if (p && confirm(`Xác nhận chuyển bệnh nhân "${p.name}" sang [${targetRoom} - Vị trí ${targetBed}]?`)) {
+      p.room = targetRoom; p.bed = targetBed;
+      syncDataToCloud();
+      closeTransferBedModal();
+      openSummaryView(p.id);
+    }
   }
 
   /* UI UTILS */
@@ -724,7 +791,7 @@
       if (data?.patients && data?.rooms) {
         patients = data.patients; roomList = data.rooms;
         localStorage.setItem('bs_patients_scroll_v3', JSON.stringify(patients));
-        localStorage.setItem('bs_room_configs_v19', JSON.stringify(roomList));
+        localStorage.setItem('bs_room_configs_v20', JSON.stringify(roomList));
       }
       updateSyncUI('success', 'Đã đồng bộ');
       renderDashboardCounts();
@@ -732,7 +799,7 @@
   }
   async function syncDataToCloud() {
     localStorage.setItem('bs_patients_scroll_v3', JSON.stringify(patients));
-    localStorage.setItem('bs_room_configs_v19', JSON.stringify(roomList));
+    localStorage.setItem('bs_room_configs_v20', JSON.stringify(roomList));
     renderDashboardCounts();
     if (!GOOGLE_SCRIPT_URL) return;
     updateSyncUI('syncing', 'Đang lưu...');
@@ -836,51 +903,6 @@
     if (p && confirm(`XÓA HOÀN TOÀN hồ sơ bệnh nhân "${p.name}"?`)) {
       patients = patients.filter(x => x.id !== p.id);
       syncDataToCloud(); showView('roomGridView');
-    }
-  }
-
-  /* BẢNG CHỌN CHUYỂN GIƯỜNG */
-  function openTransferBedModal() {
-    const p = patients.find(x => x.id === currentViewingPatientId); if (!p) return;
-    const empties = [];
-    roomList.forEach(r => {
-      const rowCount = r.rows || 2;
-      const colCount = r.cols || 2;
-      r.hiddenBeds = r.hiddenBeds || [];
-      for (let i = 0; i < rowCount; i++) {
-        let rowChar = ROW_LABELS[i];
-        for (let j = 1; j <= colCount; j++) {
-          let cellName = `${rowChar}${j}`;
-          if (!r.hiddenBeds.includes(cellName) && !getPatientInBed(r.name, cellName)) {
-            empties.push({ room: r.name, bed: cellName });
-          }
-        }
-      }
-    });
-    
-    const container = document.getElementById('transferBedListContainer');
-    document.getElementById('transferBedSubtitle').textContent = `Chọn vị trí trống để chuyển đến: ${p.name} (Hiện tại: ${p.room} - Vị trí ${p.bed})`;
-    
-    if (!empties.length) {
-      container.innerHTML = '<p style="color:#94a3b8; padding:12px; text-align:center;">Hiện không còn vị trí trống nào!</p>';
-    } else {
-      container.innerHTML = empties.map(it => `
-        <button type="button" class="btn-transfer-item" onclick="executeTransferBed('${it.room}', '${it.bed}')">
-          <span>📍 ${it.room} - Vị trí ${it.bed}</span>
-          <span style="color:var(--primary); font-size:12px;">Chọn ➔</span>
-        </button>`).join('');
-    }
-    document.getElementById('transferBedModal').style.display = 'flex';
-  }
-  const closeTransferBedModal = () => { document.getElementById('transferBedModal').style.display = 'none'; };
-
-  function executeTransferBed(targetRoom, targetBed) {
-    const p = patients.find(x => x.id === currentViewingPatientId);
-    if (p && confirm(`Xác nhận chuyển bệnh nhân "${p.name}" sang [${targetRoom} - Vị trí ${targetBed}]?`)) {
-      p.room = targetRoom; p.bed = targetBed;
-      syncDataToCloud();
-      closeTransferBedModal();
-      openSummaryView(p.id);
     }
   }
 

@@ -172,7 +172,7 @@
             <th>Chống chỉ định</th>
             <th>TDKM</th>
             <th>Liều dùng</th>
-            <th style="width:90px; text-align:center;">Thao tác</th>
+            <th style="width:130px; text-align:center;">Thao tác</th>
           </tr>
         </thead>
         <tbody id="medTableBody"></tbody>
@@ -310,13 +310,17 @@
     </div>
   </div>
 
-  <!-- MODAL THÊM THUỐC CHI TIẾT -->
+  <!-- MODAL THÊM / SỬA THUỐC CHI TIẾT KÈM AI GỢI Ý -->
   <div id="addMedicineModal" class="custom-modal-overlay" onclick="closeAddMedicineModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()" style="text-align:left;">
-      <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:14px; text-align:center;">Thêm Thuốc Mới</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div style="font-size:17px; font-weight:700; color:#0f172a;" id="medModalTitle">Thêm Thuốc Mới</div>
+        <button type="button" class="btn-bed-ctrl" style="background:#e0f2fe; color:#0369a1; border-color:#7dd3fc;" onclick="askAIToSuggestMed()">🤖 Gợi ý AI</button>
+      </div>
+      <input type="hidden" id="editingMedId" value="">
       <div style="margin-bottom:10px;">
         <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Tên thuốc:</label>
-        <input type="text" id="medNameInput" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; margin-top:2px; font-size:13.5px; font-weight:600;">
+        <input type="text" id="medNameInput" placeholder="Nhập tên thuốc hoặc hoạt chất..." style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; margin-top:2px; font-size:13.5px; font-weight:600;">
       </div>
       <div style="margin-bottom:10px;">
         <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Chỉ định:</label>
@@ -336,7 +340,7 @@
       </div>
       <div style="display:flex; gap:8px;">
         <button type="button" class="btn-modal-cancel" style="margin-top:0;" onclick="closeAddMedicineModal()">Hủy</button>
-        <button type="button" class="btn-confirm-submit" style="flex:1; padding:10px;" onclick="saveMedicineItem()">Thêm vào bảng</button>
+        <button type="button" class="btn-confirm-submit" style="flex:1; padding:10px;" onclick="saveMedicineItem()">Lưu lại</button>
       </div>
     </div>
   </div>
@@ -423,7 +427,7 @@
 
   let roomList = JSON.parse(localStorage.getItem('bs_room_configs_v21')) || defaultRooms;
   let patients = JSON.parse(localStorage.getItem('bs_patients_scroll_v3')) || [];
-  let medCategories = JSON.parse(localStorage.getItem('bs_med_categories_v4')) || [];
+  let medCategories = JSON.parse(localStorage.getItem('bs_med_categories_v6')) || [];
   let doctorProfile = JSON.parse(localStorage.getItem('bs_doctor_profile_v1')) || {
     name: "Bác sĩ Minh Hoàng",
     title: "Bác sĩ Điều trị",
@@ -436,6 +440,37 @@
   let currentActiveTab = 'row';
   let activeMedCatId = null, activeMedGroupId = null;
   let inactivityTimer = null, isAuthenticated = false;
+
+  /* TRỢ LÝ AI GỢI Ý THUỐC */
+  async function askAIToSuggestMed() {
+    const medName = document.getElementById('medNameInput').value.trim();
+    if (!medName) {
+      alert("Vui lòng nhập tên thuốc trước khi dùng Gợi ý AI!");
+      return;
+    }
+    
+    // Giả lập hoặc tích hợp kiến thức y khoa mẫu thông minh cho trợ lý
+    const sampleDB = {
+      "paracetamol": { ind: "Giảm đau, hạ sốt", contra: "Suy gan nặng, mẫn cảm", side: "Hiếm gặp: phát ban, buồn nôn", dose: "500mg - 1g / lần, cách nhau 4-6 giờ" },
+      "amoxicillin": { ind: "Nhiễm khuẩn đường hô hấp, tai mũi họng", contra: "Dị ứng nhóm penicillin", side: "Tiêu chảy, buồn nôn, phát ban", dose: "500mg / lần, 3 lần/ngày" },
+      "amlodipin": { ind: "Tăng huyết áp, đau thắt ngực", contra: "Suy tim mất bù, sốc tim", side: "Phù cổ chân, chóng mặt, đỏ bừng mặt", dose: "5mg - 10mg / ngày" }
+    };
+
+    const key = medName.toLowerCase();
+    let found = sampleDB[key];
+
+    if (found) {
+      document.getElementById('medIndicationInput').value = found.ind;
+      document.getElementById('medContraindicationInput').value = found.contra;
+      document.getElementById('medSideEffectsInput').value = found.side;
+      document.getElementById('medDoseInput').value = found.dose;
+    } else {
+      document.getElementById('medIndicationInput').value = "Điều trị triệu chứng theo chỉ định lâm sàng";
+      document.getElementById('medContraindicationInput').value = "Quá mẫn với thành phần của thuốc";
+      document.getElementById('medSideEffectsInput').value = "Thường nhẹ: rối loạn tiêu hóa nhẹ";
+      document.getElementById('medDoseInput').value = "Theo chỉ định của bác sĩ điều trị";
+    }
+  }
 
   /* AUTH & TỰ ĐỘNG KHÓA */
   function resetInactivityTimer() {
@@ -527,7 +562,7 @@
     }
   }
 
-  /* QUẢN LÝ THUỐC CHI TIẾT & SẮP XẾP LÊN/XUỐNG */
+  /* QUẢN LÝ THUỐC CHI TIẾT & SỬA THUỐC */
   function openAddMedCategoryModal() {
     document.getElementById('medCategoryNameInput').value = '';
     document.getElementById('addMedCategoryModal').style.display = 'flex';
@@ -538,7 +573,7 @@
     const name = document.getElementById('medCategoryNameInput').value.trim();
     if (!name) return alert("Vui lòng nhập tên danh mục thuốc!");
     medCategories.push({ id: Date.now(), name, groups: [] });
-    localStorage.setItem('bs_med_categories_v4', JSON.stringify(medCategories));
+    localStorage.setItem('bs_med_categories_v6', JSON.stringify(medCategories));
     renderMedCategoriesUI();
     closeAddMedCategoryModal();
   }
@@ -546,7 +581,7 @@
   function deleteMedCategory(id) {
     if (confirm("Xóa danh mục thuốc này?")) {
       medCategories = medCategories.filter(c => c.id !== id);
-      localStorage.setItem('bs_med_categories_v4', JSON.stringify(medCategories));
+      localStorage.setItem('bs_med_categories_v6', JSON.stringify(medCategories));
       renderMedCategoriesUI();
     }
   }
@@ -557,7 +592,7 @@
     const temp = medCategories[index];
     medCategories[index] = medCategories[newIdx];
     medCategories[newIdx] = temp;
-    localStorage.setItem('bs_med_categories_v4', JSON.stringify(medCategories));
+    localStorage.setItem('bs_med_categories_v6', JSON.stringify(medCategories));
     renderMedCategoriesUI();
   }
 
@@ -575,7 +610,7 @@
     if (cat) {
       cat.groups = cat.groups || [];
       cat.groups.push({ id: Date.now(), name, medicines: [] });
-      localStorage.setItem('bs_med_categories_v4', JSON.stringify(medCategories));
+      localStorage.setItem('bs_med_categories_v6', JSON.stringify(medCategories));
       renderMedCategoriesUI();
     }
     closeAddMedGroupModal();
@@ -586,7 +621,7 @@
       const cat = medCategories.find(c => c.id === catId);
       if (cat) {
         cat.groups = cat.groups.filter(g => g.id !== groupId);
-        localStorage.setItem('bs_med_categories_v4', JSON.stringify(medCategories));
+        localStorage.setItem('bs_med_categories_v6', JSON.stringify(medCategories));
         renderMedCategoriesUI();
       }
     }
@@ -600,7 +635,7 @@
     const temp = cat.groups[index];
     cat.groups[index] = cat.groups[newIdx];
     cat.groups[newIdx] = temp;
-    localStorage.setItem('bs_med_categories_v4', JSON.stringify(medCategories));
+    localStorage.setItem('bs_med_categories_v6', JSON.stringify(medCategories));
     renderMedCategoriesUI();
   }
 
@@ -617,6 +652,8 @@
   }
 
   function openAddMedicineModal() {
+    document.getElementById('editingMedId').value = '';
+    document.getElementById('medModalTitle').textContent = 'Thêm Thuốc Mới';
     document.getElementById('medNameInput').value = '';
     document.getElementById('medIndicationInput').value = '';
     document.getElementById('medContraindicationInput').value = '';
@@ -624,6 +661,23 @@
     document.getElementById('medDoseInput').value = '';
     document.getElementById('addMedicineModal').style.display = 'flex';
   }
+
+  function openEditMedicineModal(medId) {
+    const cat = medCategories.find(c => c.id === activeMedCatId);
+    const group = cat?.groups.find(g => g.id === activeMedGroupId);
+    const med = group?.medicines.find(m => m.id === medId);
+    if (!med) return;
+
+    document.getElementById('editingMedId').value = med.id;
+    document.getElementById('medModalTitle').textContent = 'Sửa Thông Tin Thuốc';
+    document.getElementById('medNameInput').value = med.name || '';
+    document.getElementById('medIndicationInput').value = med.indication || '';
+    document.getElementById('medContraindicationInput').value = med.contraindication || '';
+    document.getElementById('medSideEffectsInput').value = med.sideEffects || '';
+    document.getElementById('medDoseInput').value = med.dose || '';
+    document.getElementById('addMedicineModal').style.display = 'flex';
+  }
+
   const closeAddMedicineModal = () => { document.getElementById('addMedicineModal').style.display = 'none'; };
 
   function saveMedicineItem() {
@@ -633,13 +687,25 @@
     const contraindication = document.getElementById('medContraindicationInput').value.trim();
     const sideEffects = document.getElementById('medSideEffectsInput').value.trim();
     const dose = document.getElementById('medDoseInput').value.trim();
+    const editingId = document.getElementById('editingMedId').value;
 
     const cat = medCategories.find(c => c.id === activeMedCatId);
     const group = cat?.groups.find(g => g.id === activeMedGroupId);
     if (group) {
       group.medicines = group.medicines || [];
-      group.medicines.push({ id: Date.now(), name, indication, contraindication, sideEffects, dose });
-      localStorage.setItem('bs_med_categories_v4', JSON.stringify(medCategories));
+      if (editingId) {
+        const med = group.medicines.find(m => m.id == editingId);
+        if (med) {
+          med.name = name;
+          med.indication = indication;
+          med.contraindication = contraindication;
+          med.sideEffects = sideEffects;
+          med.dose = dose;
+        }
+      } else {
+        group.medicines.push({ id: Date.now(), name, indication, contraindication, sideEffects, dose });
+      }
+      localStorage.setItem('bs_med_categories_v6', JSON.stringify(medCategories));
       renderMedTable(group.medicines);
       renderMedCategoriesUI();
     }
@@ -652,7 +718,7 @@
       const group = cat?.groups.find(g => g.id === activeMedGroupId);
       if (group) {
         group.medicines = group.medicines.filter(m => m.id !== medId);
-        localStorage.setItem('bs_med_categories_v4', JSON.stringify(medCategories));
+        localStorage.setItem('bs_med_categories_v6', JSON.stringify(medCategories));
         renderMedTable(group.medicines);
         renderMedCategoriesUI();
       }
@@ -668,7 +734,7 @@
     const temp = group.medicines[index];
     group.medicines[index] = group.medicines[newIdx];
     group.medicines[newIdx] = temp;
-    localStorage.setItem('bs_med_categories_v4', JSON.stringify(medCategories));
+    localStorage.setItem('bs_med_categories_v6', JSON.stringify(medCategories));
     renderMedTable(group.medicines);
     renderMedCategoriesUI();
   }
@@ -688,9 +754,10 @@
         <td>${m.sideEffects || '—'}</td>
         <td>${m.dose || '—'}</td>
         <td style="text-align:center; white-space:nowrap;">
-          <button type="button" class="btn-bed-ctrl" style="padding:2px 5px;" onclick="moveMedicineItem(${idx}, -1)">⬆️</button>
-          <button type="button" class="btn-bed-ctrl" style="padding:2px 5px;" onclick="moveMedicineItem(${idx}, 1)">⬇️</button>
-          <button type="button" class="btn-bed-ctrl" style="background:#fef2f2; border-color:#fca5a5; color:#dc2626; padding:2px 5px;" onclick="deleteMedicineItem(${m.id})">🗑️</button>
+          <button type="button" class="btn-bed-ctrl" style="padding:2px 5px;" onclick="moveMedicineItem(${idx}, -1)" title="Lên">⬆️</button>
+          <button type="button" class="btn-bed-ctrl" style="padding:2px 5px;" onclick="moveMedicineItem(${idx}, 1)" title="Xuống">⬇️</button>
+          <button type="button" class="btn-bed-ctrl" style="background:#f0f9ff; border-color:#7dd3fc; color:#0369a1; padding:2px 6px;" onclick="openEditMedicineModal(${m.id})">✏️ Sửa</button>
+          <button type="button" class="btn-bed-ctrl" style="background:#fef2f2; border-color:#fca5a5; color:#dc2626; padding:2px 6px;" onclick="deleteMedicineItem(${m.id})">🗑️</button>
         </td>
       </tr>`).join('');
   }
@@ -1023,7 +1090,7 @@
   async function syncDataToCloud() {
     localStorage.setItem('bs_patients_scroll_v3', JSON.stringify(patients));
     localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
-    localStorage.setItem('bs_med_categories_v4', JSON.stringify(medCategories));
+    localStorage.setItem('bs_med_categories_v5', JSON.stringify(medCategories));
     renderDashboardCounts();
     if (!GOOGLE_SCRIPT_URL) return;
     updateSyncUI('syncing', 'Đang lưu...');

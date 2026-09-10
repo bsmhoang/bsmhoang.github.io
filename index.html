@@ -159,12 +159,15 @@
     <div id="medCategoryContainer" style="display: flex; flex-direction: column; gap: 14px; margin-top: 10px;"></div>
   </div>
 
-  <!-- TRANG CHI TIẾT NHÓM THUỐC (BẢNG THÔNG TIN) -->
+  <!-- TRANG CHI TIẾT NHÓM THUỐC (BẢNG THÔNG TIN VÀ NÚT XÓA DANH MỤC BÊN TRONG) -->
   <div id="medGroupDetailView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('medicationView')">⬅️ Danh mục thuốc</button>
       <h3 style="font-size:16px; font-weight:700;" id="medGroupDetailTitle">Nhóm Thuốc</h3>
-      <button class="btn-top" onclick="openAddMedicineModal()">➕ Thêm thuốc vào nhóm</button>
+      <div style="display:flex; gap:6px;">
+        <button class="btn-top" style="background:#fef2f2; border-color:#fca5a5; color:#dc2626;" onclick="deleteCategoryFromDetail()">🗑️ Xóa danh mục</button>
+        <button class="btn-top" onclick="openAddMedicineModal()">➕ Thêm thuốc vào nhóm</button>
+      </div>
     </div>
     <div style="background:#fff; border-radius:var(--radius-lg); padding:20px; border:1.5px solid var(--border); overflow-x:auto;">
       <table class="med-table">
@@ -709,6 +712,14 @@
     }
   }
 
+  function deleteCategoryFromDetail() {
+    if (confirm("Xóa danh mục thuốc này và toàn bộ dữ liệu bên trong?")) {
+      medCategories = medCategories.filter(c => c.id !== activeMedCatId);
+      localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
+      showView('medicationView');
+    }
+  }
+
   function moveMedCategory(index, direction) {
     const newIdx = index + direction;
     if (newIdx < 0 || newIdx >= medCategories.length) return;
@@ -924,7 +935,7 @@
     container.innerHTML = medCategories.map((cat, catIdx) => `
       <div style="background:#fff; border:1.5px solid var(--border); border-radius:var(--radius-lg); padding:16px;">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-light); padding-bottom:8px; margin-bottom:10px; flex-wrap:wrap; gap:6px;">
-          <h3 style="font-size:16px; font-weight:700; color:var(--primary); cursor:pointer;" onclick="openEditMedCategoryModal(${cat.id})" title="Bấm vào để sửa danh mục">💊 ${cat.name}</h3>
+          <h3 style="font-size:16px; font-weight:700; color:var(--primary);">💊 ${cat.name}</h3>
           <div style="display:flex; gap:6px; align-items:center;">
             <button type="button" class="btn-bed-ctrl" onclick="moveMedCategory(${catIdx}, -1)" title="Lên">⬆️</button>
             <button type="button" class="btn-bed-ctrl" onclick="moveMedCategory(${catIdx}, 1)" title="Xuống">⬇️</button>

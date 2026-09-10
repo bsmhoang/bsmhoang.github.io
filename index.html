@@ -52,16 +52,17 @@
     
     .bed-cell-name { font-size: 13.5px; font-weight: 700; color: #0f172a; word-break: break-word; }
     .bed-cell-empty { font-size: 12.5px; color: #94a3b8; font-style: italic; }
+    .bed-cell-meta { font-size: 11px; color: var(--primary); font-weight: 600; margin-top: 2px; }
 
     .btn-bed-ctrl { background: #fff; border: 1px solid var(--border); font-size: 11.5px; font-weight: 600; padding: 5px 10px; border-radius: 6px; cursor: pointer; color: #334155; }
-    .btn-small-action { background: #f0f9ff; border: 1px solid #7dd3fc; color: #0369a1; font-size: 11.5px; font-weight: 600; padding: 5px 10px; border-radius: 6px; cursor: pointer; }
+    .btn-small-action { background: #f0f9ff; border: 1px solid #7dd3fc; color: #0369a1; font-size: 11.5px; font-weight: 600; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
     
-    .del-bed-list { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; max-height: 200px; overflow-y: auto; text-align: left; }
-    .del-bed-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-weight: 600; gap: 8px; }
-    .del-bed-item input[type="text"] { width: 70px; padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px; text-align: center; font-weight: 700; font-size: 13px; }
+    .del-bed-list { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; max-height: 220px; overflow-y: auto; text-align: left; }
+    .del-bed-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; font-size: 12.5px; font-weight: 600; gap: 6px; }
+    .del-bed-item input[type="text"] { width: 60px; padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px; text-align: center; font-weight: 700; font-size: 12.5px; }
 
     .custom-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.65); z-index: 100000; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(3px); }
-    .custom-modal-card { background: #fff; border-radius: 20px; padding: 24px; width: 100%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; max-height: 90vh; overflow-y: auto; }
+    .custom-modal-card { background: #fff; border-radius: 20px; padding: 24px; width: 100%; max-width: 420px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; max-height: 90vh; overflow-y: auto; }
     .btn-modal-cancel { width: 100%; background: #f1f5f9; border: none; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #64748b; cursor: pointer; margin-top: 8px; }
 
     .summary-page-container, .form-fullpage-card { background: #fff; border: 1.5px solid var(--border); border-radius: var(--radius-lg); box-shadow: 0 4px 16px rgba(0,0,0,0.04); overflow: hidden; margin-bottom: 20px; }
@@ -152,7 +153,7 @@
   <div id="summaryFullView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('roomGridView')">⬅️ Danh sách phòng</button>
-      <h3 style="font-size:16px; font-weight:700;" id="summaryBedBadge">Phòng - Giường</h3><div style="width:40px;"></div>
+      <h3 style="font-size:16px; font-weight:700;" id="summaryBedBadge">Phòng - Vị trí</h3><div style="width:40px;"></div>
     </div>
     <div class="summary-page-container">
       <div class="summary-page-header">
@@ -169,7 +170,7 @@
       <div class="summary-page-footer">
         <div style="display:flex; gap:6px;">
           <button class="btn-del-patient-active" onclick="deleteActivePatient()">🗑️ Xóa ca bệnh</button>
-          <button class="btn-transfer-bed" onclick="openTransferBedModal()">🔄 Chuyển giường</button>
+          <button class="btn-transfer-bed" onclick="openTransferBedModal()">🔄 Chuyển vị trí</button>
         </div>
         <button class="btn-finish-treatment" onclick="finishCurrentTreatment()">Kết thúc điều trị</button>
       </div>
@@ -187,7 +188,7 @@
     <input type="file" id="fileInput_imaging" accept="image/*" style="display:none" onchange="handleImageFileSelected(this,'imaging')">
     <div class="form-fullpage-card">
       <div class="form-fullpage-header" style="display:flex; justify-content:space-between; gap:10px; align-items:center;">
-        <div><span id="crumbPrefix" style="font-size:11px; color:var(--text-muted);">Giường ></span><input type="text" id="recordName" placeholder="Nhập tên bệnh nhân..." style="border:none; outline:none; font-size:16px; font-weight:700; color:var(--primary); width:100%;"></div>
+        <div><span id="crumbPrefix" style="font-size:11px; color:var(--text-muted);">Vị trí ></span><input type="text" id="recordName" placeholder="Nhập tên bệnh nhân..." style="border:none; outline:none; font-size:16px; font-weight:700; color:var(--primary); width:100%;"></div>
         <div><input type="datetime-local" id="recordDateTimeInput" style="border:1px solid var(--border); border-radius:8px; padding:6px; font-size:12px;"></div>
       </div>
       <div class="form-fullpage-content">
@@ -253,13 +254,14 @@
   <div id="editRoomModal" class="custom-modal-overlay" onclick="closeEditRoomModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()">
       <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:4px;" id="editRoomModalTitle">Sửa Phòng Bệnh</div>
-      <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">Quản lý và tùy chỉnh giường:</p>
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">Thêm hàng hoặc thêm cột vị trí:</p>
       
       <div style="display:flex; gap:6px; margin-bottom:14px;">
-        <button type="button" class="btn-confirm-submit" style="flex:1; padding:9px; font-size:12.5px;" onclick="addNewBedToRoom()">➕ Thêm giường</button>
+        <button type="button" class="btn-small-action" style="flex:1;" onclick="addRowToRoom()">➕ Thêm hàng</button>
+        <button type="button" class="btn-small-action" style="flex:1;" onclick="addColToRoom()">➕ Thêm cột</button>
       </div>
 
-      <div style="font-size:13px; font-weight:600; color:var(--text-muted); text-align:left; margin-bottom:6px;">Danh sách giường:</div>
+      <div style="font-size:13px; font-weight:600; color:var(--text-muted); text-align:left; margin-bottom:6px;">Danh sách vị trí & Số giường:</div>
       <div class="del-bed-list" id="editRoomBedListContainer"></div>
 
       <div style="display:flex; gap:8px; margin-top:16px;">
@@ -272,8 +274,8 @@
   <!-- MODAL BẢNG CHỌN CHUYỂN GIƯỜNG -->
   <div id="transferBedModal" class="custom-modal-overlay" onclick="closeTransferBedModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()">
-      <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:4px;">Chuyển Giường Bệnh</div>
-      <p style="font-size:13px; color:var(--text-muted); margin-bottom:10px;" id="transferBedSubtitle">Chọn giường trống để chuyển đến:</p>
+      <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:4px;">Chuyển Vị Trí Bệnh Nhân</div>
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:10px;" id="transferBedSubtitle">Chọn vị trí trống để chuyển đến:</p>
       <div class="transfer-list-box" id="transferBedListContainer"></div>
       <button type="button" class="btn-modal-cancel" onclick="closeTransferBedModal()">Hủy</button>
     </div>
@@ -307,12 +309,12 @@
   const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxVVVoEdjNY5fsWGuJegc9EHAcrzTFaty4VEhMeyo5HsKdT-U89s9SlT7R-zdaXuMayzw/exec";
   const CORRECT_PIN = "000000";
   const defaultRooms = [
-    { id: '825', name: 'P 825', cols: 2, beds: ['1.1', '1.2', '2.1', '2.2'] },
-    { id: '817', name: 'P 817', cols: 2, beds: ['1.1', '1.2'] },
-    { id: '819', name: 'P 819', cols: 2, beds: ['1.1', '1.2'] }
+    { id: '825', name: 'P 825', cols: 2, beds: ['1.1', '1.2', '2.1', '2.2'], bedNumbers: {} },
+    { id: '817', name: 'P 817', cols: 2, beds: ['1.1', '1.2'], bedNumbers: {} },
+    { id: '819', name: 'P 819', cols: 2, beds: ['1.1', '1.2'], bedNumbers: {} }
   ];
 
-  let roomList = JSON.parse(localStorage.getItem('bs_room_configs_v11')) || defaultRooms;
+  let roomList = JSON.parse(localStorage.getItem('bs_room_configs_v14')) || defaultRooms;
   let patients = JSON.parse(localStorage.getItem('bs_patients_scroll_v3')) || [];
   let doctorProfile = JSON.parse(localStorage.getItem('bs_doctor_profile_v1')) || {
     name: "Bác sĩ Minh Hoàng",
@@ -415,21 +417,24 @@
     }
   }
 
-  /* QUẢN LÝ SỬA PHÒNG */
+  /* QUẢN LÝ SỬA PHÒNG: THÊM HÀNG, THÊM CỘT, ĐỔI SỐ GIƯỜNG, XÓA */
   function openEditRoomModal(roomId) {
     const r = roomList.find(x => x.id === roomId);
     if (!r) return;
     currentEditingRoomId = roomId;
     document.getElementById('editRoomModalTitle').textContent = `Sửa phòng - ${r.name}`;
+    r.bedNumbers = r.bedNumbers || {};
     
     const container = document.getElementById('editRoomBedListContainer');
     container.innerHTML = r.beds.map(bed => {
       const p = getPatientInBed(r.name, bed);
+      const bedNumVal = r.bedNumbers[bed] !== undefined ? r.bedNumbers[bed] : 0;
       return `
         <div class="del-bed-item">
           <input type="checkbox" name="editRoomDelCheckbox" value="${bed}" ${p ? 'disabled' : ''}>
-          <span style="flex:1; font-size:12.5px;">Vị trí: <b>${bed}</b> ${p ? `(BN: ${p.name})` : ''}</span>
-          ${p ? `<span>Đổi số:</span><input type="text" name="editBedNumInput" data-old="${bed}" value="${bed}">` : ``}
+          <span style="flex:1; font-size:12px;">Vị trí: <b>${bed}</b> ${p ? `(BN: ${p.name})` : ''}</span>
+          <span>Số giường:</span>
+          <input type="number" name="editBedNumInput" data-bed="${bed}" value="${bedNumVal}" min="0" style="width:55px;">
         </div>`;
     }).join('');
     
@@ -437,18 +442,38 @@
   }
   const closeEditRoomModal = () => { document.getElementById('editRoomModal').style.display = 'none'; currentEditingRoomId = null; };
 
-  function addNewBedToRoom() {
+  function addColToRoom() {
     const r = roomList.find(x => x.id === currentEditingRoomId);
     if (!r) return;
+    const colCount = (r.cols || 2) + 1;
+    r.cols = colCount;
     
-    let newBedName = `Vị trí ${r.beds.length + 1}`;
-    let counter = 1;
+    const rowCount = Math.ceil(r.beds.length / (colCount - 1)) || 1;
+    let newBedName = `${rowCount}.${colCount}`;
     while (r.beds.includes(newBedName)) {
-      newBedName = `Vị trí ${r.beds.length + counter}`;
-      counter++;
+      newBedName = `${Math.floor(Math.random() * 1000)}`;
+    }
+    r.beds.push(newBedName);
+    
+    syncDataToCloud();
+    openEditRoomModal(r.id);
+  }
+
+  function addRowToRoom() {
+    const r = roomList.find(x => x.id === currentEditingRoomId);
+    if (!r) return;
+    const colCount = r.cols || 2;
+    const currentRows = Math.ceil(r.beds.length / colCount) || 1;
+    const nextRow = currentRows + 1;
+    
+    for (let c = 1; c <= colCount; c++) {
+      let newBedName = `${nextRow}.${c}`;
+      while (r.beds.includes(newBedName)) {
+        newBedName = `${nextRow}.${Math.floor(Math.random() * 1000)}`;
+      }
+      r.beds.push(newBedName);
     }
     
-    r.beds.push(newBedName);
     syncDataToCloud();
     openEditRoomModal(r.id);
   }
@@ -457,40 +482,23 @@
     const r = roomList.find(x => x.id === currentEditingRoomId);
     if (!r) { closeEditRoomModal(); return; }
     
-    // 1. Đổi số giường cho những vị trí có bệnh nhân
-    const bedInputs = document.querySelectorAll('input[name="editBedNumInput"]');
-    let newBeds = [...r.beds];
-    let hasError = false;
-
-    bedInputs.forEach(inp => {
-      const oldVal = inp.getAttribute('data-old');
-      const newVal = inp.value.trim();
-      if (newVal && newVal !== oldVal) {
-        if (newBeds.includes(newVal)) {
-          alert(`Vị trí ${newVal} đã tồn tại trong phòng!`);
-          hasError = true;
-          return;
-        }
-        const idx = newBeds.indexOf(oldVal);
-        if (idx !== -1) newBeds[idx] = newVal;
-        
-        patients.forEach(pat => {
-          if (pat.status === 'active' && String(pat.room).trim() === String(r.name).trim() && String(pat.bed).trim() === String(oldVal)) {
-            pat.bed = String(newVal);
-          }
-        });
-      }
+    r.bedNumbers = r.bedNumbers || {};
+    
+    // 1. Cập nhật số giường cho từng vị trí
+    const bedNumInputs = document.querySelectorAll('input[name="editBedNumInput"]');
+    bedNumInputs.forEach(inp => {
+      const bedKey = inp.getAttribute('data-bed');
+      const val = parseInt(inp.value);
+      r.bedNumbers[bedKey] = isNaN(val) ? 0 : val;
     });
 
-    if (hasError) return;
-    r.beds = newBeds;
-
-    // 2. Xóa giường trống được tích chọn
+    // 2. Xóa giường được tích chọn
     const checkboxes = document.querySelectorAll('input[name="editRoomDelCheckbox"]:checked');
     const bedsToRemove = Array.from(checkboxes).map(cb => cb.value);
     
     if (bedsToRemove.length > 0) {
       r.beds = r.beds.filter(b => !bedsToRemove.includes(b));
+      bedsToRemove.forEach(b => { delete r.bedNumbers[b]; });
     }
 
     syncDataToCloud();
@@ -593,7 +601,7 @@
     } catch { updateSyncUI('error', 'Không thể lưu'); }
   }
 
-  /* BỆNH ÁN & TIẾP NHẬN */
+  /* BỆNH ÁN & TIẾP NHẬN - TỰ ĐỘNG ĐỔI TÊN VỊ TRÍ THÀNH TÊN BỆNH NHÂN KHI NHẬP */
   function handleBedClick(room, bed) {
     const existing = getPatientInBed(room, bed);
     if (existing) { currentActiveIndex = existing.entries.length - 1; openSummaryView(existing.id); }
@@ -667,9 +675,26 @@
         openSummaryView(p.id);
       }
     } else {
-      const newP = { id: Date.now(), room: currentEditing.room, bed: currentEditing.bed, name, initialDiag: entry.diag, status: 'active', entries: [entry] };
-      patients.unshift(newP); syncDataToCloud();
-      currentActiveIndex = 0; openSummaryView(newP.id);
+      const oldBed = currentEditing.bed;
+      const r = roomList.find(x => String(x.name).trim() === String(currentEditing.room).trim());
+      
+      if (r) {
+        const idx = r.beds.indexOf(oldBed);
+        if (idx !== -1) {
+          r.beds[idx] = name;
+          r.bedNumbers = r.bedNumbers || {};
+          if (r.bedNumbers[oldBed] !== undefined) {
+            r.bedNumbers[name] = r.bedNumbers[oldBed];
+            delete r.bedNumbers[oldBed];
+          }
+        }
+      }
+
+      const newP = { id: Date.now(), room: currentEditing.room, bed: name, name, initialDiag: entry.diag, status: 'active', entries: [entry] };
+      patients.unshift(newP); 
+      syncDataToCloud();
+      currentActiveIndex = 0; 
+      openSummaryView(newP.id);
     }
   }
 
@@ -773,17 +798,21 @@
     win.document.close(); win.focus(); setTimeout(() => win.print(), 400);
   }
 
-  /* RENDER DANH SÁCH PHÒNG VÀ LƯỚI TỰ ĐỘNG THEO SỐ CỘT (COLS) */
+  /* RENDER DANH SÁCH PHÒNG VÀ HIỂN THỊ SỐ GIƯỜNG NẾU > 0 */
   function renderRoomsGrid() {
     const c = document.getElementById('roomsDynamicContainer'); if (!c) return;
 
     c.innerHTML = roomList.map(r => {
       const colNum = r.cols || 2;
+      r.bedNumbers = r.bedNumbers || {};
+      
       const bedsHtml = r.beds.map(bed => {
         const p = getPatientInBed(r.name, bed);
+        const bedNum = r.bedNumbers[bed] || 0;
         return `
           <div class="bed-cell-item ${p ? 'occupied' : ''}" onclick="handleBedClick('${r.name}', '${bed}')">
             ${p ? `<span class="bed-cell-name">👤 ${p.name}</span>` : `<span class="bed-cell-empty">+ Trống</span>`}
+            ${bedNum > 0 ? `<span class="bed-cell-meta">Giường: ${bedNum}</span>` : ''}
           </div>`;
       }).join('');
 

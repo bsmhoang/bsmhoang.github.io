@@ -102,7 +102,6 @@
     #imageModalViewer { display: none; position: fixed; inset: 0; z-index: 99999; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; padding: 10px; }
     #imageModalViewer img { max-width: 95%; max-height: 90vh; border-radius: 8px; }
 
-    /* Bảng thuốc styling */
     .med-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
     .med-table th, .med-table td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; }
     .med-table th { background: #f8fafc; font-weight: 700; color: #1e293b; }
@@ -173,7 +172,7 @@
             <th>Chống chỉ định</th>
             <th>TDKM</th>
             <th>Liều dùng</th>
-            <th style="width:50px; text-align:center;">Xóa</th>
+            <th style="width:90px; text-align:center;">Thao tác</th>
           </tr>
         </thead>
         <tbody id="medTableBody"></tbody>
@@ -424,7 +423,7 @@
 
   let roomList = JSON.parse(localStorage.getItem('bs_room_configs_v21')) || defaultRooms;
   let patients = JSON.parse(localStorage.getItem('bs_patients_scroll_v3')) || [];
-  let medCategories = JSON.parse(localStorage.getItem('bs_med_categories_v3')) || [];
+  let medCategories = JSON.parse(localStorage.getItem('bs_med_categories_v4')) || [];
   let doctorProfile = JSON.parse(localStorage.getItem('bs_doctor_profile_v1')) || {
     name: "Bác sĩ Minh Hoàng",
     title: "Bác sĩ Điều trị",
@@ -528,7 +527,7 @@
     }
   }
 
-  /* QUẢN LÝ THUỐC CHI TIẾT */
+  /* QUẢN LÝ THUỐC CHI TIẾT & SẮP XẾP LÊN/XUỐNG */
   function openAddMedCategoryModal() {
     document.getElementById('medCategoryNameInput').value = '';
     document.getElementById('addMedCategoryModal').style.display = 'flex';
@@ -539,7 +538,7 @@
     const name = document.getElementById('medCategoryNameInput').value.trim();
     if (!name) return alert("Vui lòng nhập tên danh mục thuốc!");
     medCategories.push({ id: Date.now(), name, groups: [] });
-    localStorage.setItem('bs_med_categories_v3', JSON.stringify(medCategories));
+    localStorage.setItem('bs_med_categories_v4', JSON.stringify(medCategories));
     renderMedCategoriesUI();
     closeAddMedCategoryModal();
   }
@@ -547,9 +546,19 @@
   function deleteMedCategory(id) {
     if (confirm("Xóa danh mục thuốc này?")) {
       medCategories = medCategories.filter(c => c.id !== id);
-      localStorage.setItem('bs_med_categories_v3', JSON.stringify(medCategories));
+      localStorage.setItem('bs_med_categories_v4', JSON.stringify(medCategories));
       renderMedCategoriesUI();
     }
+  }
+
+  function moveMedCategory(index, direction) {
+    const newIdx = index + direction;
+    if (newIdx < 0 || newIdx >= medCategories.length) return;
+    const temp = medCategories[index];
+    medCategories[index] = medCategories[newIdx];
+    medCategories[newIdx] = temp;
+    localStorage.setItem('bs_med_categories_v4', JSON.stringify(medCategories));
+    renderMedCategoriesUI();
   }
 
   function openAddMedGroupModal(catId) {
@@ -566,7 +575,7 @@
     if (cat) {
       cat.groups = cat.groups || [];
       cat.groups.push({ id: Date.now(), name, medicines: [] });
-      localStorage.setItem('bs_med_categories_v3', JSON.stringify(medCategories));
+      localStorage.setItem('bs_med_categories_v4', JSON.stringify(medCategories));
       renderMedCategoriesUI();
     }
     closeAddMedGroupModal();
@@ -577,10 +586,22 @@
       const cat = medCategories.find(c => c.id === catId);
       if (cat) {
         cat.groups = cat.groups.filter(g => g.id !== groupId);
-        localStorage.setItem('bs_med_categories_v3', JSON.stringify(medCategories));
+        localStorage.setItem('bs_med_categories_v4', JSON.stringify(medCategories));
         renderMedCategoriesUI();
       }
     }
+  }
+
+  function moveMedGroup(catId, index, direction) {
+    const cat = medCategories.find(c => c.id === catId);
+    if (!cat) return;
+    const newIdx = index + direction;
+    if (newIdx < 0 || newIdx >= cat.groups.length) return;
+    const temp = cat.groups[index];
+    cat.groups[index] = cat.groups[newIdx];
+    cat.groups[newIdx] = temp;
+    localStorage.setItem('bs_med_categories_v4', JSON.stringify(medCategories));
+    renderMedCategoriesUI();
   }
 
   function openMedGroupDetail(catId, groupId) {
@@ -618,8 +639,9 @@
     if (group) {
       group.medicines = group.medicines || [];
       group.medicines.push({ id: Date.now(), name, indication, contraindication, sideEffects, dose });
-      localStorage.setItem('bs_med_categories_v3', JSON.stringify(medCategories));
+      localStorage.setItem('bs_med_categories_v4', JSON.stringify(medCategories));
       renderMedTable(group.medicines);
+      renderMedCategoriesUI();
     }
     closeAddMedicineModal();
   }
@@ -630,10 +652,25 @@
       const group = cat?.groups.find(g => g.id === activeMedGroupId);
       if (group) {
         group.medicines = group.medicines.filter(m => m.id !== medId);
-        localStorage.setItem('bs_med_categories_v3', JSON.stringify(medCategories));
+        localStorage.setItem('bs_med_categories_v4', JSON.stringify(medCategories));
         renderMedTable(group.medicines);
+        renderMedCategoriesUI();
       }
     }
+  }
+
+  function moveMedicineItem(index, direction) {
+    const cat = medCategories.find(c => c.id === activeMedCatId);
+    const group = cat?.groups.find(g => g.id === activeMedGroupId);
+    if (!group) return;
+    const newIdx = index + direction;
+    if (newIdx < 0 || newIdx >= group.medicines.length) return;
+    const temp = group.medicines[index];
+    group.medicines[index] = group.medicines[newIdx];
+    group.medicines[newIdx] = temp;
+    localStorage.setItem('bs_med_categories_v4', JSON.stringify(medCategories));
+    renderMedTable(group.medicines);
+    renderMedCategoriesUI();
   }
 
   function renderMedTable(medicines) {
@@ -643,14 +680,18 @@
       tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); font-style:italic; padding:16px;">Chưa có loại thuốc nào trong nhóm này.</td></tr>`;
       return;
     }
-    tbody.innerHTML = medicines.map(m => `
+    tbody.innerHTML = medicines.map((m, idx) => `
       <tr>
         <td style="font-weight:700; color:var(--primary);">${m.name}</td>
         <td>${m.indication || '—'}</td>
         <td>${m.contraindication || '—'}</td>
         <td>${m.sideEffects || '—'}</td>
         <td>${m.dose || '—'}</td>
-        <td style="text-align:center;"><button type="button" class="btn-bed-ctrl" style="background:#fef2f2; border-color:#fca5a5; color:#dc2626; padding:3px 6px;" onclick="deleteMedicineItem(${m.id})">🗑️</button></td>
+        <td style="text-align:center; white-space:nowrap;">
+          <button type="button" class="btn-bed-ctrl" style="padding:2px 5px;" onclick="moveMedicineItem(${idx}, -1)">⬆️</button>
+          <button type="button" class="btn-bed-ctrl" style="padding:2px 5px;" onclick="moveMedicineItem(${idx}, 1)">⬇️</button>
+          <button type="button" class="btn-bed-ctrl" style="background:#fef2f2; border-color:#fca5a5; color:#dc2626; padding:2px 5px;" onclick="deleteMedicineItem(${m.id})">🗑️</button>
+        </td>
       </tr>`).join('');
   }
 
@@ -666,23 +707,32 @@
       return;
     }
 
-    container.innerHTML = medCategories.map(cat => `
+    container.innerHTML = medCategories.map((cat, catIdx) => `
       <div style="background:#fff; border:1.5px solid var(--border); border-radius:var(--radius-lg); padding:16px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-light); padding-bottom:8px; margin-bottom:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-light); padding-bottom:8px; margin-bottom:10px; flex-wrap:wrap; gap:6px;">
           <h3 style="font-size:16px; font-weight:700; color:var(--primary);">💊 ${cat.name}</h3>
-          <div style="display:flex; gap:6px;">
+          <div style="display:flex; gap:6px; align-items:center;">
+            <button type="button" class="btn-bed-ctrl" onclick="moveMedCategory(${catIdx}, -1)" title="Lên">⬆️</button>
+            <button type="button" class="btn-bed-ctrl" onclick="moveMedCategory(${catIdx}, 1)" title="Xuống">⬇️</button>
             <button type="button" class="btn-bed-ctrl" style="background:#e0f2fe; border-color:#7dd3fc; color:#0369a1;" onclick="openAddMedGroupModal(${cat.id})">➕ Thêm nhóm</button>
-            <button type="button" class="btn-bed-ctrl" style="background:#fef2f2; border-color:#fca5a5; color:#dc2626;" onclick="deleteMedCategory(${cat.id})">🗑️ Xóa danh mục</button>
+            <button type="button" class="btn-bed-ctrl" style="background:#fef2f2; border-color:#fca5a5; color:#dc2626;" onclick="deleteMedCategory(${cat.id})">🗑️ Xóa</button>
           </div>
         </div>
         
-        <div style="display:flex; flex-direction:column; gap:6px;">
-          ${cat.groups?.length ? cat.groups.map(g => `
-            <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid var(--border-light); padding:8px 12px; border-radius:8px; cursor:pointer;" onclick="openMedGroupDetail(${cat.id}, ${g.id})">
-              <span style="font-size:13.5px; font-weight:600; color:#1e293b;">📁 ${g.name} (${g.medicines?.length || 0} thuốc)</span>
-              <div style="display:flex; gap:6px; align-items:center;">
-                <span style="font-size:12px; color:var(--primary); font-weight:600;">Xem bảng ➔</span>
-                <button type="button" class="btn-bed-ctrl" style="background:#fff; color:#dc2626; padding:2px 6px;" onclick="event.stopPropagation(); deleteMedGroup(${cat.id}, ${g.id})">✕</button>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          ${cat.groups?.length ? cat.groups.map((g, gIdx) => `
+            <div style="background:#f8fafc; border:1px solid var(--border-light); padding:10px 12px; border-radius:8px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <span style="font-size:13.5px; font-weight:700; color:#1e293b; cursor:pointer;" onclick="openMedGroupDetail(${cat.id}, ${g.id})">📁 ${g.name} (${g.medicines?.length || 0} thuốc)</span>
+                <div style="display:flex; gap:4px; align-items:center;">
+                  <button type="button" class="btn-bed-ctrl" style="padding:2px 5px;" onclick="moveMedGroup(${cat.id}, ${gIdx}, -1)">⬆️</button>
+                  <button type="button" class="btn-bed-ctrl" style="padding:2px 5px;" onclick="moveMedGroup(${cat.id}, ${gIdx}, 1)">⬇️</button>
+                  <button type="button" class="btn-bed-ctrl" style="background:#f0fdf4; border-color:#86efac; color:#15803d; padding:3px 8px;" onclick="activeMedCatId=${cat.id}; activeMedGroupId=${g.id}; openAddMedicineModal();">➕ Thêm thuốc</button>
+                  <button type="button" class="btn-bed-ctrl" style="background:#fff; color:#dc2626; padding:3px 6px;" onclick="deleteMedGroup(${cat.id}, ${g.id})">✕</button>
+                </div>
+              </div>
+              <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;">
+                ${g.medicines?.length ? g.medicines.map(m => `<span style="background:#e0f2fe; color:#0369a1; font-size:11.5px; font-weight:600; padding:2px 8px; border-radius:12px; cursor:pointer;" onclick="openMedGroupDetail(${cat.id}, ${g.id})">${m.name}</span>`).join('') : '<span style="font-size:12px; color:var(--text-muted); font-style:italic;">Chưa có thuốc nào.</span>'}
               </div>
             </div>`).join('') : '<p style="font-size:13px; color:var(--text-muted); font-style:italic;">Chưa có nhóm thuốc nào.</p>'}
         </div>
@@ -973,7 +1023,7 @@
   async function syncDataToCloud() {
     localStorage.setItem('bs_patients_scroll_v3', JSON.stringify(patients));
     localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
-    localStorage.setItem('bs_med_categories_v3', JSON.stringify(medCategories));
+    localStorage.setItem('bs_med_categories_v4', JSON.stringify(medCategories));
     renderDashboardCounts();
     if (!GOOGLE_SCRIPT_URL) return;
     updateSyncUI('syncing', 'Đang lưu...');

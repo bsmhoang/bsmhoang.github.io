@@ -156,7 +156,7 @@
     <div id="medCategoryContainer" style="display: flex; flex-direction: column; gap: 14px; margin-top: 10px;"></div>
   </div>
 
-  <!-- TRANG CHI TIẾT NHÓM THUỐC (BẢNG THÔNG TIN) -->
+  <!-- TRANG CHI TIẾT NHÓM THUỐC (BẢNG THÔNG TIN SẮP XẾP DỌC) -->
   <div id="medGroupDetailView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('medicationView')">⬅️ Danh mục thuốc</button>
@@ -427,7 +427,7 @@
 
   let roomList = JSON.parse(localStorage.getItem('bs_room_configs_v21')) || defaultRooms;
   let patients = JSON.parse(localStorage.getItem('bs_patients_scroll_v3')) || [];
-  let medCategories = JSON.parse(localStorage.getItem('bs_med_categories_v6')) || [];
+  let medCategories = JSON.parse(localStorage.getItem('bs_med_categories_v7')) || [];
   let doctorProfile = JSON.parse(localStorage.getItem('bs_doctor_profile_v1')) || {
     name: "Bác sĩ Minh Hoàng",
     title: "Bác sĩ Điều trị",
@@ -449,7 +449,6 @@
       return;
     }
     
-    // Giả lập hoặc tích hợp kiến thức y khoa mẫu thông minh cho trợ lý
     const sampleDB = {
       "paracetamol": { ind: "Giảm đau, hạ sốt", contra: "Suy gan nặng, mẫn cảm", side: "Hiếm gặp: phát ban, buồn nôn", dose: "500mg - 1g / lần, cách nhau 4-6 giờ" },
       "amoxicillin": { ind: "Nhiễm khuẩn đường hô hấp, tai mũi họng", contra: "Dị ứng nhóm penicillin", side: "Tiêu chảy, buồn nôn, phát ban", dose: "500mg / lần, 3 lần/ngày" },
@@ -573,7 +572,7 @@
     const name = document.getElementById('medCategoryNameInput').value.trim();
     if (!name) return alert("Vui lòng nhập tên danh mục thuốc!");
     medCategories.push({ id: Date.now(), name, groups: [] });
-    localStorage.setItem('bs_med_categories_v6', JSON.stringify(medCategories));
+    localStorage.setItem('bs_med_categories_v7', JSON.stringify(medCategories));
     renderMedCategoriesUI();
     closeAddMedCategoryModal();
   }
@@ -581,7 +580,7 @@
   function deleteMedCategory(id) {
     if (confirm("Xóa danh mục thuốc này?")) {
       medCategories = medCategories.filter(c => c.id !== id);
-      localStorage.setItem('bs_med_categories_v6', JSON.stringify(medCategories));
+      localStorage.setItem('bs_med_categories_v7', JSON.stringify(medCategories));
       renderMedCategoriesUI();
     }
   }
@@ -592,7 +591,7 @@
     const temp = medCategories[index];
     medCategories[index] = medCategories[newIdx];
     medCategories[newIdx] = temp;
-    localStorage.setItem('bs_med_categories_v6', JSON.stringify(medCategories));
+    localStorage.setItem('bs_med_categories_v7', JSON.stringify(medCategories));
     renderMedCategoriesUI();
   }
 
@@ -610,7 +609,7 @@
     if (cat) {
       cat.groups = cat.groups || [];
       cat.groups.push({ id: Date.now(), name, medicines: [] });
-      localStorage.setItem('bs_med_categories_v6', JSON.stringify(medCategories));
+      localStorage.setItem('bs_med_categories_v7', JSON.stringify(medCategories));
       renderMedCategoriesUI();
     }
     closeAddMedGroupModal();
@@ -621,7 +620,7 @@
       const cat = medCategories.find(c => c.id === catId);
       if (cat) {
         cat.groups = cat.groups.filter(g => g.id !== groupId);
-        localStorage.setItem('bs_med_categories_v6', JSON.stringify(medCategories));
+        localStorage.setItem('bs_med_categories_v7', JSON.stringify(medCategories));
         renderMedCategoriesUI();
       }
     }
@@ -635,7 +634,7 @@
     const temp = cat.groups[index];
     cat.groups[index] = cat.groups[newIdx];
     cat.groups[newIdx] = temp;
-    localStorage.setItem('bs_med_categories_v6', JSON.stringify(medCategories));
+    localStorage.setItem('bs_med_categories_v7', JSON.stringify(medCategories));
     renderMedCategoriesUI();
   }
 
@@ -705,7 +704,7 @@
       } else {
         group.medicines.push({ id: Date.now(), name, indication, contraindication, sideEffects, dose });
       }
-      localStorage.setItem('bs_med_categories_v6', JSON.stringify(medCategories));
+      localStorage.setItem('bs_med_categories_v7', JSON.stringify(medCategories));
       renderMedTable(group.medicines);
       renderMedCategoriesUI();
     }
@@ -718,7 +717,7 @@
       const group = cat?.groups.find(g => g.id === activeMedGroupId);
       if (group) {
         group.medicines = group.medicines.filter(m => m.id !== medId);
-        localStorage.setItem('bs_med_categories_v6', JSON.stringify(medCategories));
+        localStorage.setItem('bs_med_categories_v7', JSON.stringify(medCategories));
         renderMedTable(group.medicines);
         renderMedCategoriesUI();
       }
@@ -734,7 +733,7 @@
     const temp = group.medicines[index];
     group.medicines[index] = group.medicines[newIdx];
     group.medicines[newIdx] = temp;
-    localStorage.setItem('bs_med_categories_v6', JSON.stringify(medCategories));
+    localStorage.setItem('bs_med_categories_v7', JSON.stringify(medCategories));
     renderMedTable(group.medicines);
     renderMedCategoriesUI();
   }
@@ -798,8 +797,11 @@
                   <button type="button" class="btn-bed-ctrl" style="background:#fff; color:#dc2626; padding:3px 6px;" onclick="deleteMedGroup(${cat.id}, ${g.id})">✕</button>
                 </div>
               </div>
-              <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;">
-                ${g.medicines?.length ? g.medicines.map(m => `<span style="background:#e0f2fe; color:#0369a1; font-size:11.5px; font-weight:600; padding:2px 8px; border-radius:12px; cursor:pointer;" onclick="openMedGroupDetail(${cat.id}, ${g.id})">${m.name}</span>`).join('') : '<span style="font-size:12px; color:var(--text-muted); font-style:italic;">Chưa có thuốc nào.</span>'}
+              <div style="display:flex; flex-direction:column; gap:4px; margin-top:4px;">
+                ${g.medicines?.length ? g.medicines.map(m => `
+                  <div style="background:#e0f2fe; color:#0369a1; font-size:12px; font-weight:600; padding:4px 8px; border-radius:6px; cursor:pointer;" onclick="openMedGroupDetail(${cat.id}, ${g.id})">
+                    • ${m.name} <span style="font-weight:400; color:#475569;">(${m.dose || 'Chưa rõ liều'})</span>
+                  </div>`).join('') : '<span style="font-size:12px; color:var(--text-muted); font-style:italic;">Chưa có thuốc nào.</span>'}
               </div>
             </div>`).join('') : '<p style="font-size:13px; color:var(--text-muted); font-style:italic;">Chưa có nhóm thuốc nào.</p>'}
         </div>
@@ -1090,7 +1092,7 @@
   async function syncDataToCloud() {
     localStorage.setItem('bs_patients_scroll_v3', JSON.stringify(patients));
     localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
-    localStorage.setItem('bs_med_categories_v5', JSON.stringify(medCategories));
+    localStorage.setItem('bs_med_categories_v7', JSON.stringify(medCategories));
     renderDashboardCounts();
     if (!GOOGLE_SCRIPT_URL) return;
     updateSyncUI('syncing', 'Đang lưu...');

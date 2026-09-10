@@ -160,7 +160,7 @@
     <div id="medCategoryContainer" style="display: flex; flex-direction: column; gap: 14px; margin-top: 10px;"></div>
   </div>
 
-  <!-- TRANG CHI TIẾT NHÓM THUỐC VỚI PHÍM ĐỔI TÊN Ở CUỐI TRANG -->
+  <!-- TRANG CHI TIẾT NHÓM THUỐC -->
   <div id="medGroupDetailView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('medicationView')">⬅️ Danh mục thuốc</button>
@@ -184,11 +184,6 @@
         </thead>
         <tbody id="medTableBody"></tbody>
       </table>
-    </div>
-
-    <!-- PHÍM ĐỔI TÊN NHÓM Ở CUỐI TRANG -->
-    <div style="display:flex; justify-content:flex-end;">
-      <button type="button" class="btn-top" style="background:#f0f9ff; border-color:#7dd3fc; color:#0369a1;" onclick="openEditGroupDirectly()">✏️ Đổi tên nhóm thuốc</button>
     </div>
   </div>
 
@@ -836,11 +831,10 @@
     showView('medGroupDetailView');
   }
 
-  function openEditGroupDirectly() {
-    if (!activeMedCatId || !activeMedGroupId) {
-      alert("Vui lòng chọn nhóm thuốc!");
-      return;
-    }
+  function openEditFromDetailTitle() {
+    const cat = medCategories.find(c => c.id === activeMedCatId);
+    const group = cat?.groups.find(g => g.id === activeMedGroupId);
+    if (!cat || !group) return;
     openEditMedGroupModal(activeMedCatId, activeMedGroupId);
   }
 
@@ -1382,7 +1376,7 @@
     el.style.color = st === 'syncing' ? '#92400e' : st === 'success' ? '#0369a1' : '#991b1b';
   }
 
-  /* BỆNH ÁN & TIẾP NHẬN */
+  /* BỆNH ÁN & TIẾП NHẬN */
   function handleBedClick(room, bed) {
     const existing = getPatientInBed(room, bed);
     if (existing) { currentActiveIndex = existing.entries.length - 1; openSummaryView(existing.id); }

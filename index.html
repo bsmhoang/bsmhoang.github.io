@@ -159,15 +159,12 @@
     <div id="medCategoryContainer" style="display: flex; flex-direction: column; gap: 14px; margin-top: 10px;"></div>
   </div>
 
-  <!-- TRANG CHI TIẾT NHÓM THUỐC (BẢNG THÔNG TIN VÀ NÚT XÓA DANH MỤC BÊN TRONG) -->
+  <!-- TRANG CHI TIẾT NHÓM THUỐC (BẢNG THÔNG TIN) -->
   <div id="medGroupDetailView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('medicationView')">⬅️ Danh mục thuốc</button>
       <h3 style="font-size:16px; font-weight:700;" id="medGroupDetailTitle">Nhóm Thuốc</h3>
-      <div style="display:flex; gap:6px;">
-        <button class="btn-top" style="background:#fef2f2; border-color:#fca5a5; color:#dc2626;" onclick="deleteCategoryFromDetail()">🗑️ Xóa danh mục</button>
-        <button class="btn-top" onclick="openAddMedicineModal()">➕ Thêm thuốc vào nhóm</button>
-      </div>
+      <button class="btn-top" onclick="openAddMedicineModal()">➕ Thêm thuốc vào nhóm</button>
     </div>
     <div style="background:#fff; border-radius:var(--radius-lg); padding:20px; border:1.5px solid var(--border); overflow-x:auto;">
       <table class="med-table">
@@ -301,7 +298,7 @@
     </div>
   </div>
 
-  <!-- MODAL SỬA DANH MỤC (Đổi tên, Thêm nhóm, Xóa) -->
+  <!-- MODAL SỬA DANH MỤC (Đổi tên, Thêm nhóm) -->
   <div id="editMedCategoryModal" class="custom-modal-overlay" onclick="closeEditMedCategoryModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()">
       <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:12px;">Sửa Danh Mục Thuốc</div>
@@ -314,9 +311,8 @@
         </div>
       </div>
 
-      <div style="border-top:1px solid var(--border-light); padding-top:12px; margin-top:12px; display:flex; flex-direction:column; gap:8px;">
-        <button type="button" class="btn-confirm-submit" style="background:#e0f2fe; color:#0369a1;" onclick="openAddMedGroupFromEdit()">➕ Thêm nhóm thuốc mới</button>
-        <button type="button" class="btn-confirm-submit" style="background:#fef2f2; color:#dc2626;" onclick="deleteCurrentCategory()">🗑️ Xóa danh mục này</button>
+      <div style="border-top:1px solid var(--border-light); padding-top:12px; margin-top:12px;">
+        <button type="button" class="btn-confirm-submit" style="background:#e0f2fe; color:#0369a1; width:100%;" onclick="openAddMedGroupFromEdit()">➕ Thêm nhóm thuốc mới</button>
       </div>
 
       <button type="button" class="btn-modal-cancel" style="margin-top:16px;" onclick="closeEditMedCategoryModal()">Đóng</button>
@@ -338,7 +334,7 @@
     </div>
   </div>
 
-  <!-- MODAL SỬA NHÓM THUỐC (Đổi tên, Xóa) -->
+  <!-- MODAL SỬA NHÓM THUỐC (Đổi tên, Xóa nhóm) -->
   <div id="editMedGroupModal" class="custom-modal-overlay" onclick="closeEditMedGroupModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()">
       <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:12px;">Sửa Nhóm Thuốc</div>
@@ -703,23 +699,6 @@
     openAddMedGroupModal(activeMedCatId);
   }
 
-  function deleteCurrentCategory() {
-    if (confirm("Xóa danh mục thuốc này và toàn bộ dữ liệu bên trong?")) {
-      medCategories = medCategories.filter(c => c.id !== activeMedCatId);
-      localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
-      renderMedCategoriesUI();
-      closeEditMedCategoryModal();
-    }
-  }
-
-  function deleteCategoryFromDetail() {
-    if (confirm("Xóa danh mục thuốc này và toàn bộ dữ liệu bên trong?")) {
-      medCategories = medCategories.filter(c => c.id !== activeMedCatId);
-      localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
-      showView('medicationView');
-    }
-  }
-
   function moveMedCategory(index, direction) {
     const newIdx = index + direction;
     if (newIdx < 0 || newIdx >= medCategories.length) return;
@@ -778,6 +757,11 @@
       const cat = medCategories.find(c => c.id === activeMedCatId);
       if (cat) {
         cat.groups = cat.groups.filter(g => g.id !== activeMedGroupId);
+        // Tự động xóa danh mục nếu nhóm trống và không còn nhóm nào
+        if (cat.groups.length === 0) {
+          medCategories = medCategories.filter(c => c.id !== activeMedCatId);
+          showView('medicationView');
+        }
         localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
         renderMedCategoriesUI();
         closeEditMedGroupModal();
@@ -876,6 +860,18 @@
       const group = cat?.groups.find(g => g.id === activeMedGroupId);
       if (group) {
         group.medicines = group.medicines.filter(m => m.id !== medId);
+        
+        // Tự động dọn dẹp nếu nhóm và danh mục không còn thuốc nào
+        if (group.medicines.length === 0) {
+          cat.groups = cat.groups.filter(g => g.id !== activeMedGroupId);
+          if (cat.groups.length === 0) {
+            medCategories = medCategories.filter(c => c.id !== activeMedCatId);
+            showView('medicationView');
+          } else {
+            showView('medicationView');
+          }
+        }
+
         localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
         renderMedTable(group.medicines);
         renderMedCategoriesUI();

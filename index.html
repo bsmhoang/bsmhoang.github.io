@@ -151,7 +151,10 @@
     <div class="view-header">
       <button class="btn-back" onclick="showView('homeView')">⬅️ Trang chủ</button>
       <h3 style="font-size:16px; font-weight:700;">Danh Mục Thuốc</h3>
-      <button class="btn-top" onclick="openAddMedCategoryModal()">➕ Thêm danh mục</button>
+      <div style="display:flex; gap:6px;">
+        <button class="btn-top" style="background:#f0fdf4; border-color:#86efac; color:#15803d;" onclick="exportMedicationPDF()">📄 Xuất PDF</button>
+        <button class="btn-top" onclick="openAddMedCategoryModal()">➕ Thêm danh mục</button>
+      </div>
     </div>
     <div id="medCategoryContainer" style="display: flex; flex-direction: column; gap: 14px; margin-top: 10px;"></div>
   </div>
@@ -427,7 +430,7 @@
 
   let roomList = JSON.parse(localStorage.getItem('bs_room_configs_v21')) || defaultRooms;
   let patients = JSON.parse(localStorage.getItem('bs_patients_scroll_v3')) || [];
-  let medCategories = JSON.parse(localStorage.getItem('bs_med_categories_v9')) || [];
+  let medCategories = JSON.parse(localStorage.getItem('bs_med_categories_v10')) || [];
   let doctorProfile = JSON.parse(localStorage.getItem('bs_doctor_profile_v1')) || {
     name: "Bác sĩ Minh Hoàng",
     title: "Bác sĩ Điều trị",
@@ -441,9 +444,52 @@
   let activeMedCatId = null, activeMedGroupId = null;
   let inactivityTimer = null, isAuthenticated = false;
 
-  /* TRỢ LÝ AI GỢI Ý THUỐC */
+  /* XUẤT DANH MỤC THUỐC RA PDF */
+  function exportMedicationPDF() {
+    if (!medCategories.length) return alert("Chưa có danh mục thuốc nào để xuất!");
+    const win = window.open('', '_blank');
+    if (!win) return alert("Bật quyền pop-up trên trình duyệt để in PDF!");
+
+    const bodyHtml = medCategories.map((cat, cIdx) => `
+      <div style="margin-bottom: 20px;">
+        <h3 style="color: #0284c7; border-bottom: 2px solid #0284c7; padding-bottom: 4px; margin-bottom: 10px;">${cIdx + 1}. Danh mục: ${cat.name}</h3>
+        ${cat.groups && cat.groups.length ? cat.groups.map((g, gIdx) => `
+          <div style="margin-bottom: 12px; margin-left: 10px;">
+            <h4 style="color: #1e293b; margin-bottom: 6px;">📁 Nhóm: ${g.name}</h4>
+            ${g.medicines && g.medicines.length ? `
+              <table style="width: 100%; border-collapse: collapse; font-size: 11.5px; margin-bottom: 10px;">
+                <thead>
+                  <tr style="background: #f1f5f9;">
+                    <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left;">Tên thuốc</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left;">Chỉ định</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left;">Chống chỉ định</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left;">TDKM</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left;">Liều dùng</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${g.medicines.map(m => `
+                    <tr>
+                      <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: bold; color: #0284c7;">${m.name}</td>
+                      <td style="border: 1px solid #cbd5e1; padding: 6px;">${m.indication || '—'}</td>
+                      <td style="border: 1px solid #cbd5e1; padding: 6px;">${m.contraindication || '—'}</td>
+                      <td style="border: 1px solid #cbd5e1; padding: 6px;">${m.sideEffects || '—'}</td>
+                      <td style="border: 1px solid #cbd5e1; padding: 6px;">${m.dose || '—'}</td>
+                    </tr>`).join('')}
+                </tbody>
+              </table>` : '<p style="font-size: 12px; color: #64748b; font-style: italic; margin-left: 10px;">Chưa có thuốc trong nhóm này.</p>'}
+          </div>`).join('') : '<p style="font-size: 12px; color: #64748b; font-style: italic; margin-left: 10px;">Chưa có nhóm thuốc nào.</p>'}
+      </div>`).join('');
+
+    win.document.write(`<!DOCTYPE html><html><head><title>Danh Mục Thuốc Điều Trị</title><style>body{font-family:sans-serif;padding:20px;color:#0f172a;}@media print{body{padding:0;}}</style></head><body><h2 style="text-align:center;color:#0284c7;margin-bottom:20px;">DANH MỤC & TRA CỨU THUỐC ĐIỀU TRỊ</h2>${bodyHtml}</body></html>`);
+    win.document.close();
+    win.focus();
+    setTimeout(() => win.print(), 400);
+  }
+
+  /* TRỢ LÝ AI GỢI Ý THUỐC MỞ RỘNG */
   async function askAIToSuggestMed() {
-    const medName = document.getElementById('medNameInput').value.trim();
+    const medName = document.getElementById('medNameInput').value.trim().toLowerCase();
     if (!medName) {
       alert("Vui lòng nhập tên thuốc trước khi dùng Gợi ý AI!");
       return;
@@ -452,11 +498,19 @@
     const sampleDB = {
       "paracetamol": { ind: "Giảm đau, hạ sốt", contra: "Suy gan nặng, mẫn cảm", side: "Hiếm gặp: phát ban, buồn nôn", dose: "500mg - 1g / lần, cách nhau 4-6 giờ" },
       "amoxicillin": { ind: "Nhiễm khuẩn đường hô hấp, tai mũi họng", contra: "Dị ứng nhóm penicillin", side: "Tiêu chảy, buồn nôn, phát ban", dose: "500mg / lần, 3 lần/ngày" },
-      "amlodipin": { ind: "Tăng huyết áp, đau thắt ngực", contra: "Suy tim mất bù, sốc tim", side: "Phù cổ chân, chóng mặt, đỏ bừng mặt", dose: "5mg - 10mg / ngày" }
+      "amlodipin": { ind: "Tăng huyết áp, đau thắt ngực", contra: "Suy tim mất bù, sốc tim", side: "Phù cổ chân, chóng mặt, đỏ bừng mặt", dose: "5mg - 10mg / ngày" },
+      "omeprazol": { ind: "Loét dạ dày tá tràng, trào ngược thực quản", contra: "Mẫn cảm với omeprazol", side: "Đau đầu, tiêu chảy, buồn nôn", dose: "20mg - 40mg / ngày vào buổi sáng" },
+      "metformin": { ind: "Đái tháo đường týp 2", contra: "Suy thận, nhiễm toan chuyển hóa", side: "Rối loạn tiêu hóa, buồn nôn", dose: "500mg - 1000mg / lần, 2 lần/ngày" },
+      "ibuprofen": { ind: "Giảm đau, kháng viêm, hạ sốt", contra: "Loét dạ dày tiến triển, suy thận nặng", side: "Đau thượng vị, ợ hơi, chóng mặt", dose: "400mg / lần, cách nhau 6-8 giờ" },
+      "ceftriaxon": { ind: "Nhiễm khuẩn nặng do vi khuẩn nhạy cảm", contra: "Dị ứng nhóm cephalosporin", side: "Tiêu chảy, phản ứng tại chỗ tiêm", dose: "1g - 2g / ngày, tiêm bắp hoặc tĩnh mạch" },
+      "salbutamol": { ind: "Hen phế quản, co thắt phế quản", contra: "Mẫn cảm, cường giáp nặng", side: "Run tay, đánh trống ngực, hồi hộp", dose: "2 - 4mg / lần, 3 lần/ngày hoặc dạng xịt" }
     };
 
-    const key = medName.toLowerCase();
-    let found = sampleDB[key];
+    let found = sampleDB[medName];
+    if (!found) {
+      const key = Object.keys(sampleDB).find(k => medName.includes(k) || k.includes(medName));
+      if (key) found = sampleDB[key];
+    }
 
     if (found) {
       document.getElementById('medIndicationInput').value = found.ind;
@@ -572,7 +626,7 @@
     const name = document.getElementById('medCategoryNameInput').value.trim();
     if (!name) return alert("Vui lòng nhập tên danh mục thuốc!");
     medCategories.push({ id: Date.now(), name, groups: [] });
-    localStorage.setItem('bs_med_categories_v9', JSON.stringify(medCategories));
+    localStorage.setItem('bs_med_categories_v10', JSON.stringify(medCategories));
     renderMedCategoriesUI();
     closeAddMedCategoryModal();
   }
@@ -580,7 +634,7 @@
   function deleteMedCategory(id) {
     if (confirm("Xóa danh mục thuốc này?")) {
       medCategories = medCategories.filter(c => c.id !== id);
-      localStorage.setItem('bs_med_categories_v9', JSON.stringify(medCategories));
+      localStorage.setItem('bs_med_categories_v10', JSON.stringify(medCategories));
       renderMedCategoriesUI();
     }
   }
@@ -591,7 +645,7 @@
     const temp = medCategories[index];
     medCategories[index] = medCategories[newIdx];
     medCategories[newIdx] = temp;
-    localStorage.setItem('bs_med_categories_v9', JSON.stringify(medCategories));
+    localStorage.setItem('bs_med_categories_v10', JSON.stringify(medCategories));
     renderMedCategoriesUI();
   }
 
@@ -609,7 +663,7 @@
     if (cat) {
       cat.groups = cat.groups || [];
       cat.groups.push({ id: Date.now(), name, medicines: [] });
-      localStorage.setItem('bs_med_categories_v9', JSON.stringify(medCategories));
+      localStorage.setItem('bs_med_categories_v10', JSON.stringify(medCategories));
       renderMedCategoriesUI();
     }
     closeAddMedGroupModal();
@@ -620,7 +674,7 @@
       const cat = medCategories.find(c => c.id === catId);
       if (cat) {
         cat.groups = cat.groups.filter(g => g.id !== groupId);
-        localStorage.setItem('bs_med_categories_v9', JSON.stringify(medCategories));
+        localStorage.setItem('bs_med_categories_v10', JSON.stringify(medCategories));
         renderMedCategoriesUI();
       }
     }
@@ -634,7 +688,7 @@
     const temp = cat.groups[index];
     cat.groups[index] = cat.groups[newIdx];
     cat.groups[newIdx] = temp;
-    localStorage.setItem('bs_med_categories_v9', JSON.stringify(medCategories));
+    localStorage.setItem('bs_med_categories_v10', JSON.stringify(medCategories));
     renderMedCategoriesUI();
   }
 
@@ -704,7 +758,7 @@
       } else {
         group.medicines.push({ id: Date.now(), name, indication, contraindication, sideEffects, dose });
       }
-      localStorage.setItem('bs_med_categories_v9', JSON.stringify(medCategories));
+      localStorage.setItem('bs_med_categories_v10', JSON.stringify(medCategories));
       renderMedTable(group.medicines);
       renderMedCategoriesUI();
     }
@@ -717,7 +771,7 @@
       const group = cat?.groups.find(g => g.id === activeMedGroupId);
       if (group) {
         group.medicines = group.medicines.filter(m => m.id !== medId);
-        localStorage.setItem('bs_med_categories_v9', JSON.stringify(medCategories));
+        localStorage.setItem('bs_med_categories_v10', JSON.stringify(medCategories));
         renderMedTable(group.medicines);
         renderMedCategoriesUI();
       }
@@ -733,7 +787,7 @@
     const temp = group.medicines[index];
     group.medicines[index] = group.medicines[newIdx];
     group.medicines[newIdx] = temp;
-    localStorage.setItem('bs_med_categories_v9', JSON.stringify(medCategories));
+    localStorage.setItem('bs_med_categories_v10', JSON.stringify(medCategories));
     renderMedTable(group.medicines);
     renderMedCategoriesUI();
   }
@@ -1093,7 +1147,7 @@
   async function syncDataToCloud() {
     localStorage.setItem('bs_patients_scroll_v3', JSON.stringify(patients));
     localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
-    localStorage.setItem('bs_med_categories_v9', JSON.stringify(medCategories));
+    localStorage.setItem('bs_med_categories_v10', JSON.stringify(medCategories));
     renderDashboardCounts();
     if (!GOOGLE_SCRIPT_URL) return;
     updateSyncUI('syncing', 'Đang lưu...');

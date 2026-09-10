@@ -160,11 +160,11 @@
     <div id="medCategoryContainer" style="display: flex; flex-direction: column; gap: 14px; margin-top: 10px;"></div>
   </div>
 
-  <!-- TRANG CHI TIẾT NHÓM THUỐC VỚI TIÊU ĐỀ ĐÓNG KHUNG, ẤN 2 LẦN ĐỂ SỬA -->
+  <!-- TRANG CHI TIẾT NHÓM THUỐC VỚI PHÍM ĐÓNG KHUNG, ẤN 2 LẦN ĐỂ SỬA -->
   <div id="medGroupDetailView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('medicationView')">⬅️ Danh mục thuốc</button>
-      <div id="medGroupDetailTitleBox" style="background:#fff; border:1.5px solid var(--border); padding:6px 14px; border-radius:10px; cursor:pointer; user-select:none;" ondblclick="openEditFromDetailTitle()" title="Nhấp đúp (ấn 2 lần) để đổi tên nhóm">
+      <div id="medGroupDetailTitleBox" style="background:#fff; border:1.5px solid var(--border); padding:6px 14px; border-radius:10px; cursor:pointer; user-select:none;" ondblclick="openEditFromDetailTitle()" onclick="openEditFromDetailTitle()" title="Nhấp hoặc ấn 2 lần để đổi tên nhóm">
         <span style="font-size:13.5px; font-weight:700; color:var(--primary);" id="medGroupDetailTitle">Nhóm Thuốc</span>
       </div>
       <button class="btn-top" onclick="openAddMedicineModal()">➕ Thêm thuốc vào nhóm</button>
@@ -286,6 +286,23 @@
 
   <div id="imageModalViewer" onclick="this.style.display='none'"><img id="modalViewerImg" src="" alt="Ảnh bệnh án"></div>
 
+  <!-- MODAL CÀI ĐẶT PHÒNG BỆNH -->
+  <div id="roomSettingsModal" class="custom-modal-overlay" onclick="closeRoomSettingsModal()">
+    <div class="custom-modal-card" onclick="event.stopPropagation()">
+      <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:14px;">Cài Đặt Phòng Bệnh</div>
+      <div style="background:#f8fafc; padding:12px; border-radius:10px; border:1px solid var(--border-light); margin-bottom:14px; text-align:left;">
+        <label style="font-size:12px; font-weight:700; color:var(--primary);">➕ Thêm phòng mới:</label>
+        <div style="display:flex; gap:6px; margin-top:6px;">
+          <input type="text" id="newRoomNameInput" placeholder="Tên phòng (VD: P 830)" style="flex:1; padding:7px; border:1px solid var(--border); border-radius:6px; font-size:13px;">
+          <button type="button" class="btn-confirm-submit" style="padding:7px 12px; font-size:12px;" onclick="addNewRoom()">Thêm</button>
+        </div>
+      </div>
+      <div style="font-size:12.5px; font-weight:700; color:var(--text-muted); text-align:left; margin-bottom:6px;">Danh sách phòng hiện tại:</div>
+      <div id="roomSettingsListContainer" style="max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; text-align: left; margin-bottom: 16px;"></div>
+      <button type="button" class="btn-modal-cancel" style="margin-top:0;" onclick="closeRoomSettingsModal()">Đóng</button>
+    </div>
+  </div>
+
   <!-- MODAL THÊM DANH MỤC THUỐC -->
   <div id="addMedCategoryModal" class="custom-modal-overlay" onclick="closeAddMedCategoryModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()">
@@ -301,11 +318,10 @@
     </div>
   </div>
 
-  <!-- MODAL SỬA DANH MỤC (Đổi tên, Thêm nhóm) -->
+  <!-- MODAL SỬA DANH MỤC -->
   <div id="editMedCategoryModal" class="custom-modal-overlay" onclick="closeEditMedCategoryModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()">
       <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:12px;">Sửa Danh Mục Thuốc</div>
-      
       <div style="margin-bottom:14px; text-align:left;">
         <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Đổi tên danh mục:</label>
         <div style="display:flex; gap:6px; margin-top:4px;">
@@ -313,11 +329,9 @@
           <button type="button" class="btn-confirm-submit" style="padding:8px 12px; font-size:12px;" onclick="saveCatNameOnly()">Lưu tên</button>
         </div>
       </div>
-
       <div style="border-top:1px solid var(--border-light); padding-top:12px; margin-top:12px;">
         <button type="button" class="btn-confirm-submit" style="background:#e0f2fe; color:#0369a1; width:100%;" onclick="openAddMedGroupFromEdit()">➕ Thêm nhóm thuốc mới</button>
       </div>
-
       <button type="button" class="btn-modal-cancel" style="margin-top:16px;" onclick="closeEditMedCategoryModal()">Đóng</button>
     </div>
   </div>
@@ -337,11 +351,10 @@
     </div>
   </div>
 
-  <!-- MODAL SỬA NHÓM THUỐC (Đổi tên, Xóa nhóm) -->
+  <!-- MODAL SỬA NHÓM THUỐC -->
   <div id="editMedGroupModal" class="custom-modal-overlay" onclick="closeEditMedGroupModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()">
       <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:12px;">Sửa Nhóm Thuốc</div>
-      
       <div style="margin-bottom:14px; text-align:left;">
         <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Đổi tên nhóm thuốc:</label>
         <div style="display:flex; gap:6px; margin-top:4px;">
@@ -349,11 +362,9 @@
           <button type="button" class="btn-confirm-submit" style="padding:8px 12px; font-size:12px;" onclick="saveGroupNameOnly()">Lưu tên</button>
         </div>
       </div>
-
       <div style="border-top:1px solid var(--border-light); padding-top:12px; margin-top:12px;">
         <button type="button" class="btn-confirm-submit" style="background:#fef2f2; color:#dc2626; width:100%;" onclick="deleteCurrentGroup()">🗑️ Xóa nhóm thuốc này</button>
       </div>
-
       <button type="button" class="btn-modal-cancel" style="margin-top:16px;" onclick="closeEditMedGroupModal()">Đóng</button>
     </div>
   </div>
@@ -729,11 +740,11 @@
 
     document.getElementById('editingGroupId').value = group.id;
     document.getElementById('medGroupModalTitle').textContent = 'Sửa Thông Tin Nhóm Thuốc';
-    document.getElementById('medGroupNameInput').value = group.name || '';
-    document.getElementById('addMedGroupModal').style.display = 'flex';
+    document.getElementById('editGroupNameInput').value = group.name || '';
+    document.getElementById('editMedGroupModal').style.display = 'flex';
   }
 
-  const closeAddMedGroupModal = () => { document.getElementById('addMedGroupModal').style.display = 'none'; };
+  const closeEditMedGroupModal = () => { document.getElementById('editMedGroupModal').style.display = 'none'; };
 
   function saveMedGroup() {
     const name = document.getElementById('medGroupNameInput').value.trim();
@@ -759,6 +770,24 @@
       }
     }
     closeAddMedGroupModal();
+  }
+
+  function saveGroupNameOnly() {
+    const newName = document.getElementById('editGroupNameInput').value.trim();
+    if (!newName) return alert("Vui lòng nhập tên nhóm!");
+    const cat = medCategories.find(c => c.id === activeMedCatId);
+    const group = cat?.groups.find(g => g.id === activeMedGroupId);
+    if (group) {
+      group.name = newName;
+      localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
+      renderMedCategoriesUI();
+      const currentCat = medCategories.find(c => c.id === activeMedCatId);
+      const currentGroup = currentCat?.groups.find(g => g.id === activeMedGroupId);
+      if (currentCat && currentGroup) {
+        document.getElementById('medGroupDetailTitle').textContent = `${currentCat.name} > ${currentGroup.name}`;
+      }
+      closeEditMedGroupModal();
+    }
   }
 
   function deleteCurrentGroup() {

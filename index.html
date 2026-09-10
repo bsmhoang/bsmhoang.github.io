@@ -160,13 +160,12 @@
     <div id="medCategoryContainer" style="display: flex; flex-direction: column; gap: 14px; margin-top: 10px;"></div>
   </div>
 
-  <!-- TRANG CHI TIẾT NHÓM THUỐC CÓ NÚT SỬA RIÊNG TRÊN TIÊU ĐỀ -->
+  <!-- TRANG CHI TIẾT NHÓM THUỐC VỚI TIÊU ĐỀ ĐÓNG KHUNG, ẤN 2 LẦN ĐỂ SỬA -->
   <div id="medGroupDetailView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('medicationView')">⬅️ Danh mục thuốc</button>
-      <div style="display:flex; align-items:center; gap:8px;">
-        <span style="font-size:14.5px; font-weight:700; color:var(--primary);" id="medGroupDetailTitle">Nhóm Thuốc</span>
-        <button type="button" class="btn-bed-ctrl" style="background:#f0f9ff; color:#0369a1; border-color:#7dd3fc; padding:3px 8px; font-size:12px;" onclick="openEditFromDetailTitle()">✏️ Sửa nhóm</button>
+      <div id="medGroupDetailTitleBox" style="background:#fff; border:1.5px solid var(--border); padding:6px 14px; border-radius:10px; cursor:pointer; user-select:none;" ondblclick="openEditFromDetailTitle()" title="Nhấp đúp (ấn 2 lần) để đổi tên nhóm">
+        <span style="font-size:13.5px; font-weight:700; color:var(--primary);" id="medGroupDetailTitle">Nhóm Thuốc</span>
       </div>
       <button class="btn-top" onclick="openAddMedicineModal()">➕ Thêm thuốc vào nhóm</button>
     </div>
@@ -753,7 +752,6 @@
       localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
       renderMedCategoriesUI();
       
-      // Cập nhật lại tiêu đề trang chi tiết
       const currentCat = medCategories.find(c => c.id === activeMedCatId);
       const currentGroup = currentCat?.groups.find(g => g.id === activeMedGroupId);
       if (currentCat && currentGroup) {
@@ -878,7 +876,6 @@
       if (group) {
         group.medicines = group.medicines.filter(m => m.id !== medId);
         
-        // Tự động dọn dẹp nếu nhóm hoặc danh mục không còn thuốc nào
         if (group.medicines.length === 0) {
           cat.groups = cat.groups.filter(g => g.id !== activeMedGroupId);
           if (cat.groups.length === 0) {

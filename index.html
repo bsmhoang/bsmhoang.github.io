@@ -160,11 +160,14 @@
     <div id="medCategoryContainer" style="display: flex; flex-direction: column; gap: 14px; margin-top: 10px;"></div>
   </div>
 
-  <!-- TRANG CHI TIẾT NHÓM THUỐC -->
+  <!-- TRANG CHI TIẾT NHÓM THUỐC CÓ NÚT SỬA RIÊNG TRÊN TIÊU ĐỀ -->
   <div id="medGroupDetailView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('medicationView')">⬅️ Danh mục thuốc</button>
-      <h3 style="font-size:15px; font-weight:700; cursor:pointer; color:var(--primary);" id="medGroupDetailTitle" onclick="openEditFromDetailTitle()" title="Bấm vào đây để sửa tên nhóm">Nhóm Thuốc</h3>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:14.5px; font-weight:700; color:var(--primary);" id="medGroupDetailTitle">Nhóm Thuốc</span>
+        <button type="button" class="btn-bed-ctrl" style="background:#f0f9ff; color:#0369a1; border-color:#7dd3fc; padding:3px 8px; font-size:12px;" onclick="openEditFromDetailTitle()">✏️ Sửa nhóm</button>
+      </div>
       <button class="btn-top" onclick="openAddMedicineModal()">➕ Thêm thuốc vào nhóm</button>
     </div>
     <div style="background:#fff; border-radius:var(--radius-lg); padding:20px; border:1.5px solid var(--border); overflow-x:auto;">
@@ -749,7 +752,8 @@
       }
       localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
       renderMedCategoriesUI();
-      // Cập nhật lại tiêu đề trang chi tiết nếu đang mở
+      
+      // Cập nhật lại tiêu đề trang chi tiết
       const currentCat = medCategories.find(c => c.id === activeMedCatId);
       const currentGroup = currentCat?.groups.find(g => g.id === activeMedGroupId);
       if (currentCat && currentGroup) {
@@ -766,13 +770,11 @@
         cat.groups = cat.groups.filter(g => g.id !== activeMedGroupId);
         if (cat.groups.length === 0) {
           medCategories = medCategories.filter(c => c.id !== activeMedCatId);
-          showView('medicationView');
-        } else {
-          showView('medicationView');
         }
         localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
         renderMedCategoriesUI();
-        closeAddMedGroupModal();
+        closeEditMedGroupModal();
+        showView('medicationView');
       }
     }
   }
@@ -876,7 +878,7 @@
       if (group) {
         group.medicines = group.medicines.filter(m => m.id !== medId);
         
-        // Tự động dọn dẹp nếu nhóm và danh mục không còn thuốc nào
+        // Tự động dọn dẹp nếu nhóm hoặc danh mục không còn thuốc nào
         if (group.medicines.length === 0) {
           cat.groups = cat.groups.filter(g => g.id !== activeMedGroupId);
           if (cat.groups.length === 0) {
@@ -973,80 +975,7 @@
       </div>`).join('');
   }
 
-  /* QUẢN LÝ SỬA PHÒNG VÀ CÀI ĐẶT PHÒNG */
-  function openRoomSettingsModal() {
-    renderRoomSettingsList();
-    document.getElementById('roomSettingsModal').style.display = 'flex';
-  }
-  const closeRoomSettingsModal = () => { document.getElementById('roomSettingsModal').style.display = 'none'; };
-
-  function renderRoomSettingsList() {
-    const c = document.getElementById('roomSettingsListContainer');
-    if (!c) return;
-    c.innerHTML = roomList.map((r) => `
-      <div style="display:flex; gap:6px; align-items:center; background:#f8fafc; padding:8px; border:1px solid var(--border-light); border-radius:8px;">
-        <input type="text" id="roomNameEdit_${r.id}" value="${r.name}" style="flex:1; padding:6px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-weight:600;">
-        <button type="button" class="btn-bed-ctrl" style="background:#e0f2fe; color:#0369a1; border-color:#7dd3fc; padding:6px 10px;" onclick="saveRoomName('${r.id}')">Lưu</button>
-        <button type="button" class="btn-bed-ctrl" style="background:#fef2f2; color:#dc2626; border-color:#fca5a5; padding:6px 10px;" onclick="deleteRoom('${r.id}')">Xóa</button>
-      </div>`).join('');
-  }
-
-  function addNewRoom() {
-    const input = document.getElementById('newRoomNameInput');
-    const name = input.value.trim();
-    if (!name) return alert("Vui lòng nhập tên phòng!");
-    const newId = String(Date.now());
-    roomList.push({ id: newId, name, rows: 2, cols: 2, hiddenBeds: [] });
-    input.value = '';
-    syncDataToCloud();
-    renderRoomSettingsList();
-  }
-
-  function saveRoomName(roomId) {
-    const input = document.getElementById(`roomNameEdit_${roomId}`);
-    const newName = input.value.trim();
-    if (!newName) return alert("Tên phòng không được để trống!");
-    const r = roomList.find(x => x.id === roomId);
-    if (r) {
-      r.name = newName;
-      syncDataToCloud();
-      alert("Đã đổi tên phòng thành công!");
-    }
-  }
-
-  function deleteRoom(roomId) {
-    const r = roomList.find(x => x.id === roomId);
-    if (!r) return;
-    
-    const rowCount = r.rows || 2;
-    const colCount = r.cols || 2;
-    r.hiddenBeds = r.hiddenBeds || [];
-    let hasPatient = false;
-
-    for (let i = 0; i < rowCount; i++) {
-      let rowChar = ROW_LABELS[i];
-      for (let j = 1; j <= colCount; j++) {
-        let cellName = `${rowChar}${j}`;
-        if (!r.hiddenBeds.includes(cellName) && getPatientInBed(r.name, cellName)) {
-          hasPatient = true;
-          break;
-        }
-      }
-      if (hasPatient) break;
-    }
-
-    if (hasPatient) {
-      alert("Không thể xóa phòng đang có bệnh nhân điều trị!");
-      return;
-    }
-
-    if (confirm(`Xóa phòng ${r.name}?`)) {
-      roomList = roomList.filter(x => x.id !== roomId);
-      syncDataToCloud();
-      renderRoomSettingsList();
-    }
-  }
-
+  /* QUẢN LÝ SỬA PHÒNG */
   function openEditRoomModal(roomId) {
     const r = roomList.find(x => x.id === roomId);
     if (!r) return;

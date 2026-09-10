@@ -127,13 +127,14 @@
         <h2>📋 Quản lý</h2><p>Danh sách phòng buồng & Theo dõi bệnh nhân</p>
         <span class="count-tag" id="homeActiveCount">0 Đang điều trị</span>
       </div>
-      <div class="big-btn btn-green" onclick="showView('dischargedView')">
-        <h2>🏥 Ra viện</h2><p>Lưu trữ bệnh nhân đã xuất viện</p>
-        <span class="count-tag" id="homeDischargedCount">0 Đã ra viện</span>
-      </div>
+      <!-- Mục Thuốc đã được chuyển lên trên mục Ra viện -->
       <div class="big-btn btn-purple" onclick="showView('medicationView')">
         <h2>💊 Thuốc</h2><p>Danh mục và tra cứu thuốc điều trị</p>
         <span class="count-tag" id="homeMedCount">0 Danh mục</span>
+      </div>
+      <div class="big-btn btn-green" onclick="showView('dischargedView')">
+        <h2>🏥 Ra viện</h2><p>Lưu trữ bệnh nhân đã xuất viện</p>
+        <span class="count-tag" id="homeDischargedCount">0 Đã ra viện</span>
       </div>
     </div>
   </div>
@@ -432,7 +433,7 @@
 
   let roomList = JSON.parse(localStorage.getItem('bs_room_configs_v21')) || defaultRooms;
   let patients = JSON.parse(localStorage.getItem('bs_patients_scroll_v3')) || [];
-  let medCategories = JSON.parse(localStorage.getItem('bs_med_categories_v12')) || [];
+  let medCategories = JSON.parse(localStorage.getItem('bs_med_categories_v14')) || [];
   let doctorProfile = JSON.parse(localStorage.getItem('bs_doctor_profile_v1')) || {
     name: "Bác sĩ Minh Hoàng",
     title: "Bác sĩ Điều trị",
@@ -489,7 +490,7 @@
     setTimeout(() => win.print(), 400);
   }
 
-  /* TRỢ LÝ AI GỢI Ý THUỐC MỞ RỘNG */
+  /* TRỢ LÝ AI GỢI Ý THUỐC */
   async function askAIToSuggestMed() {
     const medName = document.getElementById('medNameInput').value.trim().toLowerCase();
     if (!medName) {
@@ -617,46 +618,54 @@
     }
   }
 
-  /* QUẢN LÝ THUỐC CHI TIẾT & SỬA THUỐC */
+  /* QUẢN LÝ THUỐC */
   function openAddMedCategoryModal() {
-    document.getElementById('editingCategoryId').value = '';
-    document.getElementById('medCategoryModalTitle').textContent = 'Thêm Danh Mục Thuốc';
     document.getElementById('medCategoryNameInput').value = '';
     document.getElementById('addMedCategoryModal').style.display = 'flex';
   }
-
-  function openEditMedCategoryModal(catId) {
-    const cat = medCategories.find(c => c.id === catId);
-    if (!cat) return;
-    document.getElementById('editingCategoryId').value = cat.id;
-    document.getElementById('medCategoryModalTitle').textContent = 'Sửa Tên Danh Mục';
-    document.getElementById('medCategoryNameInput').value = cat.name || '';
-    document.getElementById('addMedCategoryModal').style.display = 'flex';
-  }
-
   const closeAddMedCategoryModal = () => { document.getElementById('addMedCategoryModal').style.display = 'none'; };
 
   function saveMedCategory() {
     const name = document.getElementById('medCategoryNameInput').value.trim();
     if (!name) return alert("Vui lòng nhập tên danh mục thuốc!");
-    const editingId = document.getElementById('editingCategoryId').value;
-
-    if (editingId) {
-      const cat = medCategories.find(c => c.id == editingId);
-      if (cat) cat.name = name;
-    } else {
-      medCategories.push({ id: Date.now(), name, groups: [] });
-    }
-    localStorage.setItem('bs_med_categories_v12', JSON.stringify(medCategories));
+    medCategories.push({ id: Date.now(), name, groups: [] });
+    localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
     renderMedCategoriesUI();
     closeAddMedCategoryModal();
   }
 
-  function deleteMedCategory(id) {
-    if (confirm("Xóa danh mục thuốc này và toàn bộ dữ liệu bên trong?")) {
-      medCategories = medCategories.filter(c => c.id !== id);
-      localStorage.setItem('bs_med_categories_v12', JSON.stringify(medCategories));
+  function openEditMedCategoryModal(catId) {
+    activeMedCatId = catId;
+    const cat = medCategories.find(c => c.id === catId);
+    if (!cat) return;
+    document.getElementById('editCatNameInput').value = cat.name || '';
+    document.getElementById('editMedCategoryModal').style.display = 'flex';
+  }
+  const closeEditMedCategoryModal = () => { document.getElementById('editMedCategoryModal').style.display = 'none'; };
+
+  function saveCatNameOnly() {
+    const newName = document.getElementById('editCatNameInput').value.trim();
+    if (!newName) return alert("Vui lòng nhập tên danh mục!");
+    const cat = medCategories.find(c => c.id === activeMedCatId);
+    if (cat) {
+      cat.name = newName;
+      localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
       renderMedCategoriesUI();
+      closeEditMedCategoryModal();
+    }
+  }
+
+  function openAddMedGroupFromEdit() {
+    closeEditMedCategoryModal();
+    openAddMedGroupModal(activeMedCatId);
+  }
+
+  function deleteCurrentCategory() {
+    if (confirm("Xóa danh mục thuốc này và toàn bộ dữ liệu bên trong?")) {
+      medCategories = medCategories.filter(c => c.id !== activeMedCatId);
+      localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
+      renderMedCategoriesUI();
+      closeEditMedCategoryModal();
     }
   }
 
@@ -666,7 +675,7 @@
     const temp = medCategories[index];
     medCategories[index] = medCategories[newIdx];
     medCategories[newIdx] = temp;
-    localStorage.setItem('bs_med_categories_v12', JSON.stringify(medCategories));
+    localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
     renderMedCategoriesUI();
   }
 
@@ -680,12 +689,13 @@
 
   function openEditMedGroupModal(catId, groupId) {
     activeMedCatId = catId;
+    activeMedGroupId = groupId;
     const cat = medCategories.find(c => c.id === catId);
     const group = cat?.groups.find(g => g.id === groupId);
     if (!group) return;
 
     document.getElementById('editingGroupId').value = group.id;
-    document.getElementById('medGroupModalTitle').textContent = 'Sửa Tên Nhóm Thuốc';
+    document.getElementById('medGroupModalTitle').textContent = 'Sửa Thông Tin Nhóm Thuốc';
     document.getElementById('medGroupNameInput').value = group.name || '';
     document.getElementById('addMedGroupModal').style.display = 'flex';
   }
@@ -706,19 +716,20 @@
       } else {
         cat.groups.push({ id: Date.now(), name, medicines: [] });
       }
-      localStorage.setItem('bs_med_categories_v12', JSON.stringify(medCategories));
+      localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
       renderMedCategoriesUI();
     }
     closeAddMedGroupModal();
   }
 
-  function deleteMedGroup(catId, groupId) {
-    if (confirm("Xóa nhóm thuốc này?")) {
-      const cat = medCategories.find(c => c.id === catId);
+  function deleteCurrentGroup() {
+    if (confirm("Xóa nhóm thuốc này và toàn bộ thuốc bên trong?")) {
+      const cat = medCategories.find(c => c.id === activeMedCatId);
       if (cat) {
-        cat.groups = cat.groups.filter(g => g.id !== groupId);
-        localStorage.setItem('bs_med_categories_v12', JSON.stringify(medCategories));
+        cat.groups = cat.groups.filter(g => g.id !== activeMedGroupId);
+        localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
         renderMedCategoriesUI();
+        closeAddMedGroupModal();
       }
     }
   }
@@ -731,7 +742,7 @@
     const temp = cat.groups[index];
     cat.groups[index] = cat.groups[newIdx];
     cat.groups[newIdx] = temp;
-    localStorage.setItem('bs_med_categories_v12', JSON.stringify(medCategories));
+    localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
     renderMedCategoriesUI();
   }
 
@@ -801,7 +812,7 @@
       } else {
         group.medicines.push({ id: Date.now(), name, indication, contraindication, sideEffects, dose });
       }
-      localStorage.setItem('bs_med_categories_v12', JSON.stringify(medCategories));
+      localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
       renderMedTable(group.medicines);
       renderMedCategoriesUI();
     }
@@ -814,7 +825,7 @@
       const group = cat?.groups.find(g => g.id === activeMedGroupId);
       if (group) {
         group.medicines = group.medicines.filter(m => m.id !== medId);
-        localStorage.setItem('bs_med_categories_v12', JSON.stringify(medCategories));
+        localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
         renderMedTable(group.medicines);
         renderMedCategoriesUI();
       }
@@ -830,7 +841,7 @@
     const temp = group.medicines[index];
     group.medicines[index] = group.medicines[newIdx];
     group.medicines[newIdx] = temp;
-    localStorage.setItem('bs_med_categories_v12', JSON.stringify(medCategories));
+    localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
     renderMedTable(group.medicines);
     renderMedCategoriesUI();
   }
@@ -877,9 +888,7 @@
           <div style="display:flex; gap:6px; align-items:center;">
             <button type="button" class="btn-bed-ctrl" onclick="moveMedCategory(${catIdx}, -1)" title="Lên">⬆️</button>
             <button type="button" class="btn-bed-ctrl" onclick="moveMedCategory(${catIdx}, 1)" title="Xuống">⬇️</button>
-            <button type="button" class="btn-bed-ctrl" style="background:#e0f2fe; border-color:#7dd3fc; color:#0369a1;" onclick="openAddMedGroupModal(${cat.id})">➕ Thêm nhóm</button>
             <button type="button" class="btn-bed-ctrl" style="background:#f0f9ff; border-color:#7dd3fc; color:#0369a1;" onclick="openEditMedCategoryModal(${cat.id})">✏️ Sửa</button>
-            <button type="button" class="btn-bed-ctrl" style="background:#fef2f2; border-color:#fca5a5; color:#dc2626;" onclick="deleteMedCategory(${cat.id})">🗑️ Xóa</button>
           </div>
         </div>
         
@@ -893,7 +902,6 @@
                   <button type="button" class="btn-bed-ctrl" style="padding:2px 5px;" onclick="moveMedGroup(${cat.id}, ${gIdx}, 1)">⬇️</button>
                   <button type="button" class="btn-bed-ctrl" style="background:#f0fdf4; border-color:#86efac; color:#15803d; padding:3px 8px;" onclick="activeMedCatId=${cat.id}; activeMedGroupId=${g.id}; openAddMedicineModal();">➕ Thêm thuốc</button>
                   <button type="button" class="btn-bed-ctrl" style="background:#f0f9ff; color:#0369a1; border-color:#7dd3fc; padding:3px 6px;" onclick="openEditMedGroupModal(${cat.id}, ${g.id})">✏️ Sửa</button>
-                  <button type="button" class="btn-bed-ctrl" style="background:#fff; color:#dc2626; padding:3px 6px;" onclick="deleteMedGroup(${cat.id}, ${g.id})">✕</button>
                 </div>
               </div>
               <div style="display:flex; flex-direction:column; gap:4px; margin-top:4px;">
@@ -1192,7 +1200,7 @@
   async function syncDataToCloud() {
     localStorage.setItem('bs_patients_scroll_v3', JSON.stringify(patients));
     localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
-    localStorage.setItem('bs_med_categories_v12', JSON.stringify(medCategories));
+    localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
     renderDashboardCounts();
     if (!GOOGLE_SCRIPT_URL) return;
     updateSyncUI('syncing', 'Đang lưu...');
@@ -1423,7 +1431,7 @@
             <div style="white-space:pre-wrap;"><strong>Hình ảnh:</strong> ${e.imaging || '—'}${makeImgs(e.images?.imaging)}</div>
           </div>`).join('')}
       </div>`).join('');
-    win.document.write(`<!DOCTYPE html><html><head><title>${title}</title><style>body{font-family:sans-serif;padding:20px;color:#1e293b;font-size:13px;line-height:1.4;}@media print{body{padding:0;}}</style></head><body><h2 style="text-align:center;color:#0284c7;border-bottom:2px solid #0284c7;padding-bottom:8px;">${title.toUpperCase()}</h2>${body}</body></html>`);
+    win.document.write(`<!DOCTYPE html><html><head><title>${title}</title><style>body{font-family:sans-serif;padding:20px;color:#1e293b;font-size:13px;line-height:1.4;}@media print{body{padding:0;}}</style></head><body><h2 style="text-align:center;color:#0284c7;margin-bottom:20px;">${title.toUpperCase()}</h2>${body}</body></html>`);
     win.document.close(); win.focus(); setTimeout(() => win.print(), 400);
   }
 

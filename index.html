@@ -336,7 +336,6 @@
         </div>
       </div>
 
-      <!-- Khu vực đổi tên các nhóm thuốc thuộc danh mục này -->
       <div style="margin-bottom:14px; text-align:left;">
         <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Danh sách nhóm thuốc (Bấm lưu để đổi tên):</label>
         <div id="editCategoryGroupsList" style="max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-top: 4px; border: 1px solid var(--border-light); padding: 8px; border-radius: 8px; background: #fafafa;"></div>
@@ -707,7 +706,6 @@
     if (!cat) return;
     document.getElementById('editCatNameInput').value = cat.name || '';
     
-    // Render danh sách các nhóm trong danh mục này để người dùng sửa tên trực tiếp
     const groupListContainer = document.getElementById('editCategoryGroupsList');
     if (cat.groups && cat.groups.length > 0) {
       groupListContainer.innerHTML = cat.groups.map(g => `
@@ -767,97 +765,24 @@
 
   function openAddMedGroupModal(catId) {
     activeMedCatId = catId;
-    document.getElementById('editingGroupId').value = '';
-    document.getElementById('medGroupModalTitle').textContent = 'Thêm Nhóm Thuốc';
     document.getElementById('medGroupNameInput').value = '';
     document.getElementById('addMedGroupModal').style.display = 'flex';
   }
 
-  function openEditMedGroupModal(catId, groupId) {
-    activeMedCatId = catId;
-    activeMedGroupId = groupId;
-    const cat = medCategories.find(c => c.id === catId);
-    const group = cat?.groups.find(g => g.id === groupId);
-    if (!group) return;
-
-    document.getElementById('editingGroupId').value = group.id;
-    document.getElementById('medGroupModalTitle').textContent = 'Sửa Thông Tin Nhóm Thuốc';
-    document.getElementById('editGroupNameInput').value = group.name || '';
-    document.getElementById('editMedGroupModal').style.display = 'flex';
-  }
-
-  const closeEditMedGroupModal = () => { document.getElementById('editMedGroupModal').style.display = 'none'; };
+  const closeAddMedGroupModal = () => { document.getElementById('addMedGroupModal').style.display = 'none'; };
 
   function saveMedGroup() {
     const name = document.getElementById('medGroupNameInput').value.trim();
     if (!name) return alert("Vui lòng nhập tên nhóm thuốc!");
-    const editingGroupId = document.getElementById('editingGroupId').value;
 
     const cat = medCategories.find(c => c.id === activeMedCatId);
     if (cat) {
       cat.groups = cat.groups || [];
-      if (editingGroupId) {
-        const group = cat.groups.find(g => g.id == editingGroupId);
-        if (group) group.name = name;
-      } else {
-        cat.groups.push({ id: Date.now(), name, medicines: [] });
-      }
+      cat.groups.push({ id: Date.now(), name, medicines: [] });
       localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
       renderMedCategoriesUI();
-      
-      const currentCat = medCategories.find(c => c.id === activeMedCatId);
-      const currentGroup = currentCat?.groups.find(g => g.id === activeMedGroupId);
-      if (currentCat && currentGroup) {
-        document.getElementById('medGroupDetailTitle').textContent = `${currentCat.name} > ${currentGroup.name}`;
-      }
     }
     closeAddMedGroupModal();
-  }
-
-  function saveGroupNameOnly() {
-    const newName = document.getElementById('editGroupNameInput').value.trim();
-    if (!newName) return alert("Vui lòng nhập tên nhóm!");
-    const cat = medCategories.find(c => c.id === activeMedCatId);
-    const group = cat?.groups.find(g => g.id === activeMedGroupId);
-    if (group) {
-      group.name = newName;
-      localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
-      renderMedCategoriesUI();
-      const currentCat = medCategories.find(c => c.id === activeMedCatId);
-      const currentGroup = currentCat?.groups.find(g => g.id === activeMedGroupId);
-      if (currentCat && currentGroup) {
-        document.getElementById('medGroupDetailTitle').textContent = `${currentCat.name} > ${currentGroup.name}`;
-      }
-      closeEditMedGroupModal();
-    }
-  }
-
-  function deleteCurrentGroup() {
-    if (confirm("Xóa nhóm thuốc này và toàn bộ thuốc bên trong?")) {
-      const cat = medCategories.find(c => c.id === activeMedCatId);
-      if (cat) {
-        cat.groups = cat.groups.filter(g => g.id !== activeMedGroupId);
-        if (cat.groups.length === 0) {
-          medCategories = medCategories.filter(c => c.id !== activeMedCatId);
-        }
-        localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
-        renderMedCategoriesUI();
-        closeEditMedGroupModal();
-        showView('medicationView');
-      }
-    }
-  }
-
-  function moveMedGroup(catId, index, direction) {
-    const cat = medCategories.find(c => c.id === catId);
-    if (!cat) return;
-    const newIdx = index + direction;
-    if (newIdx < 0 || newIdx >= cat.groups.length) return;
-    const temp = cat.groups[index];
-    cat.groups[index] = cat.groups[newIdx];
-    cat.groups[newIdx] = temp;
-    localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
-    renderMedCategoriesUI();
   }
 
   function openMedGroupDetail(catId, groupId) {
@@ -870,6 +795,13 @@
     document.getElementById('medGroupDetailTitle').textContent = `${cat.name} > ${group.name}`;
     renderMedTable(group.medicines || []);
     showView('medGroupDetailView');
+  }
+
+  function openEditFromDetailTitle() {
+    const cat = medCategories.find(c => c.id === activeMedCatId);
+    const group = cat?.groups.find(g => g.id === activeMedGroupId);
+    if (!cat || !group) return;
+    openEditMedCategoryModal(cat.id);
   }
 
   function openAddMedicineModal() {
@@ -1337,7 +1269,7 @@
     el.style.color = st === 'syncing' ? '#92400e' : st === 'success' ? '#0369a1' : '#991b1b';
   }
 
-  /* BỆNH ÁN & TIẾП NHẬН */
+  /* BỆNH ÁN & TIẾP NHẬN */
   function handleBedClick(room, bed) {
     const existing = getPatientInBed(room, bed);
     if (existing) { currentActiveIndex = existing.entries.length - 1; openSummaryView(existing.id); }

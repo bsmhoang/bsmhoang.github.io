@@ -159,11 +159,11 @@
     <div id="medCategoryContainer" style="display: flex; flex-direction: column; gap: 14px; margin-top: 10px;"></div>
   </div>
 
-  <!-- TRANG CHI TIẾT NHÓM THUỐC (BẢNG THÔNG TIN) -->
+  <!-- TRANG CHI TIẾT NHÓM THUỐC (BẢNG THÔNG TIN VÀ NÚT SỬA TÊN KHI BẤM VÀO TIÊU ĐỀ) -->
   <div id="medGroupDetailView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('medicationView')">⬅️ Danh mục thuốc</button>
-      <h3 style="font-size:16px; font-weight:700;" id="medGroupDetailTitle">Nhóm Thuốc</h3>
+      <h3 style="font-size:15px; font-weight:700; cursor:pointer; color:var(--primary);" id="medGroupDetailTitle" onclick="openEditFromDetailTitle()" title="Bấm vào đây để sửa tên danh mục hoặc nhóm">Nhóm Thuốc</h3>
       <button class="btn-top" onclick="openAddMedicineModal()">➕ Thêm thuốc vào nhóm</button>
     </div>
     <div style="background:#fff; border-radius:var(--radius-lg); padding:20px; border:1.5px solid var(--border); overflow-x:auto;">
@@ -757,7 +757,6 @@
       const cat = medCategories.find(c => c.id === activeMedCatId);
       if (cat) {
         cat.groups = cat.groups.filter(g => g.id !== activeMedGroupId);
-        // Tự động xóa danh mục nếu nhóm trống và không còn nhóm nào
         if (cat.groups.length === 0) {
           medCategories = medCategories.filter(c => c.id !== activeMedCatId);
           showView('medicationView');
@@ -791,6 +790,15 @@
     document.getElementById('medGroupDetailTitle').textContent = `${cat.name} > ${group.name}`;
     renderMedTable(group.medicines || []);
     showView('medGroupDetailView');
+  }
+
+  function openEditFromDetailTitle() {
+    const cat = medCategories.find(c => c.id === activeMedCatId);
+    const group = cat?.groups.find(g => g.id === activeMedGroupId);
+    if (!cat || !group) return;
+    
+    // Mở bảng sửa nhóm thuốc trực tiếp từ tiêu đề
+    openEditMedGroupModal(activeMedCatId, activeMedGroupId);
   }
 
   function openAddMedicineModal() {
@@ -866,10 +874,8 @@
           cat.groups = cat.groups.filter(g => g.id !== activeMedGroupId);
           if (cat.groups.length === 0) {
             medCategories = medCategories.filter(c => c.id !== activeMedCatId);
-            showView('medicationView');
-          } else {
-            showView('medicationView');
           }
+          showView('medicationView');
         }
 
         localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));

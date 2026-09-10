@@ -159,12 +159,12 @@
     <div id="medCategoryContainer" style="display: flex; flex-direction: column; gap: 14px; margin-top: 10px;"></div>
   </div>
 
-  <!-- TRANG CHI TIẾT NHÓM THUỐC (QUẢN LÝ BÊN TRONG NHÓM) -->
+  <!-- TRANG CHI TIẾT NHÓM THUỐC (BẢNG THÔNG TIN) -->
   <div id="medGroupDetailView" class="view-section">
     <div class="view-header">
       <button class="btn-back" onclick="showView('medicationView')">⬅️ Danh mục thuốc</button>
       <h3 style="font-size:16px; font-weight:700;" id="medGroupDetailTitle">Nhóm Thuốc</h3>
-      <button class="btn-top" onclick="openAddMedicineModal()">➕ Thêm thuốc</button>
+      <button class="btn-top" onclick="openAddMedicineModal()">➕ Thêm thuốc vào nhóm</button>
     </div>
     <div style="background:#fff; border-radius:var(--radius-lg); padding:16px; border:1.5px solid var(--border); overflow-x:auto;">
       <table class="med-table">
@@ -175,7 +175,7 @@
             <th>Chống chỉ định</th>
             <th>TDKM</th>
             <th>Liều dùng</th>
-            <th style="width:140px; text-align:center;">Thao tác</th>
+            <th style="width:130px; text-align:center;">Thao tác</th>
           </tr>
         </thead>
         <tbody id="medTableBody"></tbody>
@@ -283,17 +283,18 @@
 
   <div id="imageModalViewer" onclick="this.style.display='none'"><img id="modalViewerImg" src="" alt="Ảnh bệnh án"></div>
 
-  <!-- MODAL THÊM DANH MỤC THUỐC -->
+  <!-- MODAL THÊM / SỬA DANH MỤC THUỐC -->
   <div id="addMedCategoryModal" class="custom-modal-overlay" onclick="closeAddMedCategoryModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()">
-      <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:12px;">Thêm Danh Mục Thuốc</div>
+      <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:12px;" id="medCategoryModalTitle">Thêm Danh Mục Thuốc</div>
+      <input type="hidden" id="editingCategoryId" value="">
       <div style="margin-bottom:14px; text-align:left;">
         <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Tên danh mục:</label>
         <input type="text" id="medCategoryNameInput" placeholder="Ví dụ: Tim mạch, Kháng sinh..." style="width:100%; padding:9px; border:1px solid var(--border); border-radius:8px; margin-top:4px; font-size:14px; font-weight:600;">
       </div>
       <div style="display:flex; gap:8px;">
         <button type="button" class="btn-modal-cancel" style="margin-top:0;" onclick="closeAddMedCategoryModal()">Hủy</button>
-        <button type="button" class="btn-confirm-submit" style="flex:1; padding:10px;" onclick="saveMedCategory()">Tạo mới</button>
+        <button type="button" class="btn-confirm-submit" style="flex:1; padding:10px;" onclick="saveMedCategory()">Lưu lại</button>
       </div>
     </div>
   </div>
@@ -431,7 +432,7 @@
 
   let roomList = JSON.parse(localStorage.getItem('bs_room_configs_v21')) || defaultRooms;
   let patients = JSON.parse(localStorage.getItem('bs_patients_scroll_v3')) || [];
-  let medCategories = JSON.parse(localStorage.getItem('bs_med_categories_v11')) || [];
+  let medCategories = JSON.parse(localStorage.getItem('bs_med_categories_v12')) || [];
   let doctorProfile = JSON.parse(localStorage.getItem('bs_doctor_profile_v1')) || {
     name: "Bác sĩ Minh Hoàng",
     title: "Bác sĩ Điều trị",
@@ -618,24 +619,43 @@
 
   /* QUẢN LÝ THUỐC CHI TIẾT & SỬA THUỐC */
   function openAddMedCategoryModal() {
+    document.getElementById('editingCategoryId').value = '';
+    document.getElementById('medCategoryModalTitle').textContent = 'Thêm Danh Mục Thuốc';
     document.getElementById('medCategoryNameInput').value = '';
     document.getElementById('addMedCategoryModal').style.display = 'flex';
   }
+
+  function openEditMedCategoryModal(catId) {
+    const cat = medCategories.find(c => c.id === catId);
+    if (!cat) return;
+    document.getElementById('editingCategoryId').value = cat.id;
+    document.getElementById('medCategoryModalTitle').textContent = 'Sửa Tên Danh Mục';
+    document.getElementById('medCategoryNameInput').value = cat.name || '';
+    document.getElementById('addMedCategoryModal').style.display = 'flex';
+  }
+
   const closeAddMedCategoryModal = () => { document.getElementById('addMedCategoryModal').style.display = 'none'; };
 
   function saveMedCategory() {
     const name = document.getElementById('medCategoryNameInput').value.trim();
     if (!name) return alert("Vui lòng nhập tên danh mục thuốc!");
-    medCategories.push({ id: Date.now(), name, groups: [] });
-    localStorage.setItem('bs_med_categories_v11', JSON.stringify(medCategories));
+    const editingId = document.getElementById('editingCategoryId').value;
+
+    if (editingId) {
+      const cat = medCategories.find(c => c.id == editingId);
+      if (cat) cat.name = name;
+    } else {
+      medCategories.push({ id: Date.now(), name, groups: [] });
+    }
+    localStorage.setItem('bs_med_categories_v12', JSON.stringify(medCategories));
     renderMedCategoriesUI();
     closeAddMedCategoryModal();
   }
 
   function deleteMedCategory(id) {
-    if (confirm("Xóa danh mục thuốc này?")) {
+    if (confirm("Xóa danh mục thuốc này và toàn bộ dữ liệu bên trong?")) {
       medCategories = medCategories.filter(c => c.id !== id);
-      localStorage.setItem('bs_med_categories_v11', JSON.stringify(medCategories));
+      localStorage.setItem('bs_med_categories_v12', JSON.stringify(medCategories));
       renderMedCategoriesUI();
     }
   }
@@ -646,7 +666,7 @@
     const temp = medCategories[index];
     medCategories[index] = medCategories[newIdx];
     medCategories[newIdx] = temp;
-    localStorage.setItem('bs_med_categories_v11', JSON.stringify(medCategories));
+    localStorage.setItem('bs_med_categories_v12', JSON.stringify(medCategories));
     renderMedCategoriesUI();
   }
 
@@ -686,7 +706,7 @@
       } else {
         cat.groups.push({ id: Date.now(), name, medicines: [] });
       }
-      localStorage.setItem('bs_med_categories_v11', JSON.stringify(medCategories));
+      localStorage.setItem('bs_med_categories_v12', JSON.stringify(medCategories));
       renderMedCategoriesUI();
     }
     closeAddMedGroupModal();
@@ -697,7 +717,7 @@
       const cat = medCategories.find(c => c.id === catId);
       if (cat) {
         cat.groups = cat.groups.filter(g => g.id !== groupId);
-        localStorage.setItem('bs_med_categories_v11', JSON.stringify(medCategories));
+        localStorage.setItem('bs_med_categories_v12', JSON.stringify(medCategories));
         renderMedCategoriesUI();
       }
     }
@@ -711,7 +731,7 @@
     const temp = cat.groups[index];
     cat.groups[index] = cat.groups[newIdx];
     cat.groups[newIdx] = temp;
-    localStorage.setItem('bs_med_categories_v11', JSON.stringify(medCategories));
+    localStorage.setItem('bs_med_categories_v12', JSON.stringify(medCategories));
     renderMedCategoriesUI();
   }
 
@@ -781,7 +801,7 @@
       } else {
         group.medicines.push({ id: Date.now(), name, indication, contraindication, sideEffects, dose });
       }
-      localStorage.setItem('bs_med_categories_v11', JSON.stringify(medCategories));
+      localStorage.setItem('bs_med_categories_v12', JSON.stringify(medCategories));
       renderMedTable(group.medicines);
       renderMedCategoriesUI();
     }
@@ -794,7 +814,7 @@
       const group = cat?.groups.find(g => g.id === activeMedGroupId);
       if (group) {
         group.medicines = group.medicines.filter(m => m.id !== medId);
-        localStorage.setItem('bs_med_categories_v11', JSON.stringify(medCategories));
+        localStorage.setItem('bs_med_categories_v12', JSON.stringify(medCategories));
         renderMedTable(group.medicines);
         renderMedCategoriesUI();
       }
@@ -810,7 +830,7 @@
     const temp = group.medicines[index];
     group.medicines[index] = group.medicines[newIdx];
     group.medicines[newIdx] = temp;
-    localStorage.setItem('bs_med_categories_v11', JSON.stringify(medCategories));
+    localStorage.setItem('bs_med_categories_v12', JSON.stringify(medCategories));
     renderMedTable(group.medicines);
     renderMedCategoriesUI();
   }
@@ -858,6 +878,7 @@
             <button type="button" class="btn-bed-ctrl" onclick="moveMedCategory(${catIdx}, -1)" title="Lên">⬆️</button>
             <button type="button" class="btn-bed-ctrl" onclick="moveMedCategory(${catIdx}, 1)" title="Xuống">⬇️</button>
             <button type="button" class="btn-bed-ctrl" style="background:#e0f2fe; border-color:#7dd3fc; color:#0369a1;" onclick="openAddMedGroupModal(${cat.id})">➕ Thêm nhóm</button>
+            <button type="button" class="btn-bed-ctrl" style="background:#f0f9ff; border-color:#7dd3fc; color:#0369a1;" onclick="openEditMedCategoryModal(${cat.id})">✏️ Sửa</button>
             <button type="button" class="btn-bed-ctrl" style="background:#fef2f2; border-color:#fca5a5; color:#dc2626;" onclick="deleteMedCategory(${cat.id})">🗑️ Xóa</button>
           </div>
         </div>
@@ -870,7 +891,7 @@
                 <div style="display:flex; gap:4px; align-items:center;">
                   <button type="button" class="btn-bed-ctrl" style="padding:2px 5px;" onclick="moveMedGroup(${cat.id}, ${gIdx}, -1)">⬆️</button>
                   <button type="button" class="btn-bed-ctrl" style="padding:2px 5px;" onclick="moveMedGroup(${cat.id}, ${gIdx}, 1)">⬇️</button>
-                  <button type="button" class="btn-bed-ctrl" style="background:#f0fef4; border-color:#86efac; color:#15803d; padding:3px 8px;" onclick="activeMedCatId=${cat.id}; activeMedGroupId=${g.id}; openAddMedicineModal();">➕ Thêm thuốc</button>
+                  <button type="button" class="btn-bed-ctrl" style="background:#f0fdf4; border-color:#86efac; color:#15803d; padding:3px 8px;" onclick="activeMedCatId=${cat.id}; activeMedGroupId=${g.id}; openAddMedicineModal();">➕ Thêm thuốc</button>
                   <button type="button" class="btn-bed-ctrl" style="background:#f0f9ff; color:#0369a1; border-color:#7dd3fc; padding:3px 6px;" onclick="openEditMedGroupModal(${cat.id}, ${g.id})">✏️ Sửa</button>
                   <button type="button" class="btn-bed-ctrl" style="background:#fff; color:#dc2626; padding:3px 6px;" onclick="deleteMedGroup(${cat.id}, ${g.id})">✕</button>
                 </div>
@@ -1171,7 +1192,7 @@
   async function syncDataToCloud() {
     localStorage.setItem('bs_patients_scroll_v3', JSON.stringify(patients));
     localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
-    localStorage.setItem('bs_med_categories_v11', JSON.stringify(medCategories));
+    localStorage.setItem('bs_med_categories_v12', JSON.stringify(medCategories));
     renderDashboardCounts();
     if (!GOOGLE_SCRIPT_URL) return;
     updateSyncUI('syncing', 'Đang lưu...');

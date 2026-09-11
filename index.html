@@ -290,7 +290,6 @@
 
   <!-- ==================== HỆ THỐNG MODAL ==================== -->
 
-  <!-- Modal 1: Cài đặt & Sửa phòng bệnh -->
   <div id="roomSettingsModal" class="custom-modal-overlay" onclick="closeRoomSettingsModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()">
       <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:14px;">Cài Đặt Phòng Bệnh</div>
@@ -341,7 +340,6 @@
     </div>
   </div>
 
-  <!-- Modal 2: Quản lý Danh mục & Nhóm thuốc -->
   <div id="addMedCategoryModal" class="custom-modal-overlay" onclick="closeAddMedCategoryModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()">
       <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:12px;">Thêm Danh Mục Thuốc</div>
@@ -442,7 +440,6 @@
     </div>
   </div>
 
-  <!-- Modal 3: Hệ thống (Chuyển vị trí & Hồ sơ bác sĩ) -->
   <div id="transferBedModal" class="custom-modal-overlay" onclick="closeTransferBedModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()">
       <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:4px;">Chuyển Vị Trí Bệnh Nhân</div>
@@ -502,7 +499,6 @@
   let activeMedCatId = null, activeMedGroupId = null;
   let inactivityTimer = null, isAuthenticated = false;
 
-  /* XUẤT DANH MỤC THUỐC RA PDF */
   function exportMedicationPDF() {
     if (!medCategories.length) return alert("Chưa có danh mục thuốc nào để xuất!");
     const win = window.open('', '_blank');
@@ -545,7 +541,6 @@
     setTimeout(() => win.print(), 400);
   }
 
-  /* TRỢ LÝ AI GỢI Ý THUỐC */
   async function askAIToSuggestMed() {
     const medName = document.getElementById('medNameInput').value.trim().toLowerCase();
     if (!medName) {
@@ -583,7 +578,6 @@
     }
   }
 
-  /* AUTH & TỰ ĐỘNG KHÓA */
   function resetInactivityTimer() {
     if (!isAuthenticated) return;
     clearTimeout(inactivityTimer);
@@ -616,7 +610,6 @@
   }
   ['touchstart', 'mousemove', 'scroll', 'keydown', 'click'].forEach(evt => window.addEventListener(evt, resetInactivityTimer, true));
 
-  /* HỒ SƠ BÁC SĨ */
   function renderDoctorProfileUI() {
     document.getElementById('doctorNameText').textContent = doctorProfile.name;
     document.getElementById('doctorTitleText').textContent = doctorProfile.title;
@@ -673,7 +666,6 @@
     }
   }
 
-  /* QUẢN LÝ THUỐC CHI TIẾT & SỬA THUỐC */
   function openAddMedCategoryModal() {
     document.getElementById('medCategoryNameInput').value = '';
     document.getElementById('addMedCategoryModal').style.display = 'flex';
@@ -960,7 +952,6 @@
       </div>`).join('');
   }
 
-  /* QUẢN LÝ SỬA PHÒNG VÀ CÀI ĐẶT PHÒNG */
   function openRoomSettingsModal() {
     renderRoomSettingsList();
     document.getElementById('roomSettingsModal').style.display = 'flex';
@@ -1243,7 +1234,6 @@
     renderCellVisibilityMatrix();
   }
 
-  /* UI UTILS */
   const autoExpandTextarea = el => { if(el){ el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; } };
   const resizeAllTextareas = () => setTimeout(() => ['recordDiagnosis','recordTracking','recordTests','recordImagingText'].forEach(id => autoExpandTextarea(document.getElementById(id))), 50);
   const getNowForInput = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); };
@@ -1262,7 +1252,6 @@
   }
   const getPatientInBed = (room, bed) => patients.find(p => p.status === 'active' && String(p.room).trim() === String(room).trim() && String(p.bed).trim() === String(bed).trim());
 
-  /* HÌNH ẢNH BỆNH ÁN */
   const triggerPickImage = f => document.getElementById(`fileInput_${f}`)?.click();
   const handleImageFileSelected = (inp, f) => { if (inp.files?.[0]) { compressAndAddImage(inp.files[0], f); inp.value = ''; } };
   const handlePasteImage = (e, f) => {
@@ -1304,7 +1293,6 @@
     v.style.display = 'flex';
   }
 
-  /* ĐỒNG BỘ 3 TRANG TÍNH (SHEET 1, 2, 3) */
   async function loadDataFromCloud() {
     if (!GOOGLE_SCRIPT_URL) return;
     updateSyncUI('syncing', 'Đang nạp...');
@@ -1355,7 +1343,6 @@
     el.style.color = st === 'syncing' ? '#92400e' : st === 'success' ? '#0369a1' : '#991b1b';
   }
 
-  /* BỆNH ÁN & TIẾP NHẬN */
   function handleBedClick(room, bed) {
     const existing = getPatientInBed(room, bed);
     if (existing) { currentActiveIndex = existing.entries.length - 1; openSummaryView(existing.id); }
@@ -1540,7 +1527,6 @@
     showView('summaryFullView');
   }
 
-  /* XUẤT PDF */
   function exportPatientPDF(id) {
     const p = patients.find(x => x.id === id); if (!p) return;
     openPrintWindow([p], `Bệnh Án - ${p.name}`);
@@ -1574,7 +1560,6 @@
     setTimeout(() => win.print(), 400);
   }
 
-  /* RENDER DANH SÁCH PHÒNG THEO MA TRẬN CHUẨN */
   function renderRoomsGrid() {
     const c = document.getElementById('roomsDynamicContainer'); if (!c) return;
 

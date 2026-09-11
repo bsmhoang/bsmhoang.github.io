@@ -677,10 +677,7 @@
     if (!name) return alert("Vui lòng nhập tên danh mục thuốc!");
     medCategories.push({ id: Date.now(), name, groups: [] });
     localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
-    
-    // Đồng bộ ngay lập tức lên Google Sheets
     syncDataToCloud();
-    
     renderMedCategoriesUI();
     closeAddMedCategoryModal();
   }
@@ -713,10 +710,7 @@
     if (cat) {
       cat.name = newName;
       localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
-      
-      // Đồng bộ ngay lập tức lên Google Sheets
       syncDataToCloud();
-      
       renderMedCategoriesUI();
       closeEditMedCategoryModal();
     }
@@ -732,10 +726,7 @@
     if (group) {
       group.name = newName;
       localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
-      
-      // Đồng bộ ngay lập tức lên Google Sheets
       syncDataToCloud();
-      
       renderMedCategoriesUI();
       alert("Đã lưu tên nhóm thành công!");
     }
@@ -753,10 +744,7 @@
     medCategories[index] = medCategories[newIdx];
     medCategories[newIdx] = temp;
     localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
-    
-    // Đồng bộ ngay lập tức lên Google Sheets
     syncDataToCloud();
-    
     renderMedCategoriesUI();
   }
 
@@ -778,10 +766,7 @@
       const newGroupId = Date.now();
       cat.groups.push({ id: newGroupId, name, medicines: [] });
       localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
-      
-      // Đồng bộ ngay lập tức lên Google Sheets
       syncDataToCloud();
-      
       renderMedCategoriesUI();
       closeAddMedGroupModal();
       
@@ -863,10 +848,7 @@
         group.medicines.push({ id: Date.now(), name, indication, contraindication, sideEffects, dose });
       }
       localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
-      
-      // ĐỒNG BỘ NGAY LẬP TỨC LÊN GOOGLE SHEETS
       syncDataToCloud();
-      
       renderMedTable(group.medicines);
       renderMedCategoriesUI();
     }
@@ -889,10 +871,7 @@
         }
 
         localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
-        
-        // ĐỒNG BỘ NGAY LẬP TỨC LÊN GOOGLE SHEETS KHI XÓA
         syncDataToCloud();
-        
         renderMedTable(group.medicines);
         renderMedCategoriesUI();
       }
@@ -909,10 +888,7 @@
     group.medicines[index] = group.medicines[newIdx];
     group.medicines[newIdx] = temp;
     localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
-    
-    // Đồng bộ ngay lập tức lên Google Sheets
     syncDataToCloud();
-    
     renderMedTable(group.medicines);
     renderMedCategoriesUI();
   }
@@ -1339,6 +1315,10 @@
         medCategories = data.medCategories;
         localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
       }
+      if (data?.rooms && data.rooms.length > 0) {
+        roomList = data.rooms;
+        localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
+      }
       updateSyncUI('success', 'Đã đồng bộ');
       renderDashboardCounts();
       renderMedCategoriesUI();
@@ -1355,11 +1335,19 @@
     if (!GOOGLE_SCRIPT_URL) return;
     updateSyncUI('syncing', 'Đang lưu...');
     try {
+      const payload = JSON.stringify({ patients, rooms: roomList, medCategories });
+      
+      if (navigator.sendBeacon) {
+        const blob = new Blob([payload], { type: 'text/plain; charset=UTF-8' });
+        navigator.sendBeacon(GOOGLE_SCRIPT_URL, blob);
+      }
+      
       await fetch(GOOGLE_SCRIPT_URL, { 
         method: 'POST', 
         mode: 'no-cors', 
-        headers: {'Content-Type': 'text/plain'}, 
-        body: JSON.stringify({ patients, rooms: roomList, medCategories }) 
+        cache: 'no-cache',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+        body: payload 
       });
       updateSyncUI('success', 'Đã lưu');
     } catch { 

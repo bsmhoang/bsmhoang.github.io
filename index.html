@@ -784,7 +784,6 @@
       renderMedCategoriesUI();
       closeAddMedGroupModal();
       
-      // Mở ngay bảng thêm thuốc đầu tiên vào nhóm mới tạo
       openMedGroupDetail(cat.id, newGroupId);
       openAddMedicineModal();
     }
@@ -876,7 +875,6 @@
       if (group) {
         group.medicines = group.medicines.filter(m => m.id !== medId);
         
-        // Tự động xóa nhóm thuốc và danh mục nếu không còn thuốc
         if (group.medicines.length === 0) {
           cat.groups = cat.groups.filter(g => g.id !== activeMedGroupId);
           if (cat.groups.length === 0) {
@@ -973,7 +971,7 @@
       </div>`).join('');
   }
 
-  /* QUẢN LÝ SỬA PHÒNG VÀ CÀI ĐẶT PHÒNG */
+  /* QUẢN LÝ SỬA PHÒNG VÀ CÀI ĐẶT PHÒNG (BẢO TOÀN DỮ LIỆU PATIENTS) */
   function openRoomSettingsModal() {
     renderRoomSettingsList();
     document.getElementById('roomSettingsModal').style.display = 'flex';
@@ -998,7 +996,7 @@
     const newId = String(Date.now());
     roomList.push({ id: newId, name, rows: 2, cols: 2, hiddenBeds: [] });
     input.value = '';
-    syncDataToCloud();
+    syncDataToCloud(); // Bảo toàn cả patients và roomList
     renderRoomSettingsList();
   }
 
@@ -1008,8 +1006,16 @@
     if (!newName) return alert("Tên phòng không được để trống!");
     const r = roomList.find(x => x.id === roomId);
     if (r) {
+      // Cập nhật tên phòng trong danh sách phòng và đồng thời cập nhật cả tên phòng cho các bệnh nhân đang nằm ở phòng đó
+      const oldName = r.name;
       r.name = newName;
-      syncDataToCloud();
+      patients.forEach(pat => {
+        if (String(pat.room).trim() === String(oldName).trim()) {
+          pat.room = newName;
+        }
+      });
+      syncDataToCloud(); // Bảo toàn toàn bộ dữ liệu patients và roomList
+      renderDashboardCounts();
       alert("Đã đổi tên phòng thành công!");
     }
   }
@@ -1042,7 +1048,7 @@
 
     if (confirm(`Xóa phòng ${r.name}?`)) {
       roomList = roomList.filter(x => x.id !== roomId);
-      syncDataToCloud();
+      syncDataToCloud(); // Bảo toàn toàn bộ dữ liệu patients và roomList
       renderRoomSettingsList();
     }
   }
@@ -1347,7 +1353,7 @@
     el.style.color = st === 'syncing' ? '#92400e' : st === 'success' ? '#0369a1' : '#991b1b';
   }
 
-  /* BỆNH ÁN & TIẾП NHẬН */
+  /* BỆNH ÁN & TIẾP NHẬН */
   function handleBedClick(room, bed) {
     const existing = getPatientInBed(room, bed);
     if (existing) { currentActiveIndex = existing.entries.length - 1; openSummaryView(existing.id); }

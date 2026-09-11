@@ -1305,8 +1305,10 @@
     if (!GOOGLE_SCRIPT_URL) return;
     updateSyncUI('syncing', 'Đang nạp...');
     try {
-      const res = await fetch(GOOGLE_SCRIPT_URL);
+      // Thêm tham số ngẫu nhiên ?t=... để chống cache trên điện thoại
+      const res = await fetch(GOOGLE_SCRIPT_URL + "?t=" + new Date().getTime(), { cache: "no-store" });
       const data = await res.json();
+      
       if (data?.patients) {
         patients = data.patients;
         localStorage.setItem('bs_patients_scroll_v3', JSON.stringify(patients));
@@ -1319,6 +1321,7 @@
         roomList = data.rooms;
         localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
       }
+      
       updateSyncUI('success', 'Đã đồng bộ');
       renderDashboardCounts();
       renderMedCategoriesUI();

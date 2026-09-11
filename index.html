@@ -288,9 +288,9 @@
 
   <div id="imageModalViewer" onclick="this.style.display='none'"><img id="modalViewerImg" src="" alt="Ảnh bệnh án"></div>
 
-  <!-- ==================== HỆ THỐNG MODAL ĐÃ ĐƯỢC SẮP XẾP GỌN GÀNG ==================== -->
+  <!-- ==================== HỆ THỐNG MODAL (GỌN GÀNG & RÕ RÀNG) ==================== -->
 
-  <!-- 1. Modal Quản lý Phòng -->
+  <!-- Modal 1: Cài đặt & Sửa phòng bệnh -->
   <div id="roomSettingsModal" class="custom-modal-overlay" onclick="closeRoomSettingsModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()">
       <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:14px;">Cài Đặt Phòng Bệnh</div>
@@ -341,7 +341,7 @@
     </div>
   </div>
 
-  <!-- 2. Modal Quản lý Thuốc -->
+  <!-- Modal 2: Quản lý Danh mục & Nhóm thuốc -->
   <div id="addMedCategoryModal" class="custom-modal-overlay" onclick="closeAddMedCategoryModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()">
       <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:12px;">Thêm Danh Mục Thuốc</div>
@@ -442,7 +442,7 @@
     </div>
   </div>
 
-  <!-- 3. Modal Hệ thống Khác (Chuyển vị trí & Hồ sơ bác sĩ) -->
+  <!-- Modal 3: Hệ thống (Chuyển giường & Hồ sơ bác sĩ) -->
   <div id="transferBedModal" class="custom-modal-overlay" onclick="closeTransferBedModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()">
       <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:4px;">Chuyển Vị Trí Bệnh Nhân</div>
@@ -1259,6 +1259,49 @@
     document.getElementById(viewId).style.display = 'block';
     window.scrollTo({ top: 0, behavior: 'auto' });
     renderDashboardCounts();
+  }
+  const getPatientInBed = (room, bed) => patients.find(p => p.status === 'active' && String(p.room).trim() === String(room).trim() && String(p.bed).trim() === String(bed).trim());
+
+  /* HÌNH ẢNH BỆNH ÁN */
+  const triggerPickImage = f => document.getElementById(`fileInput_${f}`)?.click();
+  const handleImageFileSelected = (inp, f) => { if (inp.files?.[0]) { compressAndAddImage(inp.files[0], f); inp.value = ''; } };
+  const handlePasteImage = (e, f) => {
+    for (let item of (e.clipboardData || e.originalEvent.clipboardData).items) {
+      if (item.type.includes('image')) { compressAndAddImage(item.getAsFile(), f); e.preventDefault(); break; }
+    }
+  };
+  function compressAndAddImage(file, field) {
+    const reader = new FileReader();
+    reader.onload = evt => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const max = 1200;
+        let w = img.width, h = img.height;
+        if (w > max || h > max) { if (w > h) { h = Math.round((h * max) / w); w = max; } else { w = Math.round((w * max) / h); h = max; } }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        formImages[field].push(canvas.toDataURL('image/jpeg', 0.7));
+        renderFormImagePreviews(field);
+      };
+      img.src = evt.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+  function renderFormImagePreviews(f) {
+    const c = document.getElementById(`preview_${f}`);
+    if (!c) return;
+    if (!formImages[f]?.length) { c.style.display = 'none'; c.innerHTML = ''; return; }
+    c.style.display = 'flex';
+    c.innerHTML = formImages[f].map((src, i) => `
+      <div class="img-preview-card"><img src="${src}" onclick="viewLargeImage('${src}')">
+        <button type="button" class="btn-remove-img" onclick="formImages['${f}'].splice(${i},1);renderFormImagePreviews('${f}')">✕</button>
+      </div>`).join('');
+  }
+  function viewLargeImage(src) {
+    const v = document.getElementById('imageModalViewer');
+    document.getElementById('modalViewerImg').src = src;
+    v.style.display = 'flex';
   }
 
   /* ĐỒNG BỘ 3 TRANG TÍNH (SHEET 1, 2, 3) */

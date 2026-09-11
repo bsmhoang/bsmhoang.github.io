@@ -147,7 +147,6 @@
     <div class="rooms-column-list" id="roomsDynamicContainer"></div>
   </div>
 
-  <!-- TRANG QUẢN LÝ THUỐC -->
   <div id="medicationView" class="view-section">
     <div class="view-header">
       <button type="button" class="btn-back" onclick="showView('homeView')">⬅️ Trang chủ</button>
@@ -160,7 +159,6 @@
     <div id="medCategoryContainer" style="display: flex; flex-direction: column; gap: 14px; margin-top: 10px;"></div>
   </div>
 
-  <!-- TRANG CHI TIẾT NHÓM THUỐC -->
   <div id="medGroupDetailView" class="view-section">
     <div class="view-header">
       <button type="button" class="btn-back" onclick="showView('medicationView')">⬅️ Danh mục thuốc</button>
@@ -270,7 +268,6 @@
     <div id="dischargedListContainer"></div>
   </div>
 
-  <!-- TRANG GIỚI THIỆU CÁ NHÂN -->
   <div id="profileView" class="view-section">
     <div class="view-header">
       <button type="button" class="btn-back" onclick="showView('homeView')">⬅️ Trang chủ</button>
@@ -291,7 +288,9 @@
 
   <div id="imageModalViewer" onclick="this.style.display='none'"><img id="modalViewerImg" src="" alt="Ảnh bệnh án"></div>
 
-  <!-- MODAL CÀI ĐẶT PHÒNG BỆNH -->
+  <!-- ==================== HỆ THỐNG MODAL ĐÃ ĐƯỢC SẮP XẾP GỌN GÀNG ==================== -->
+
+  <!-- 1. Modal Quản lý Phòng -->
   <div id="roomSettingsModal" class="custom-modal-overlay" onclick="closeRoomSettingsModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()">
       <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:14px;">Cài Đặt Phòng Bệnh</div>
@@ -308,116 +307,6 @@
     </div>
   </div>
 
-  <!-- MODAL THÊM DANH MỤC THUỐC -->
-  <div id="addMedCategoryModal" class="custom-modal-overlay" onclick="closeAddMedCategoryModal()">
-    <div class="custom-modal-card" onclick="event.stopPropagation()">
-      <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:12px;">Thêm Danh Mục Thuốc</div>
-      <div style="margin-bottom:14px; text-align:left;">
-        <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Tên danh mục:</label>
-        <input type="text" id="medCategoryNameInput" placeholder="Ví dụ: Tim mạch, Kháng sinh..." style="width:100%; padding:9px; border:1px solid var(--border); border-radius:8px; margin-top:4px; font-size:14px; font-weight:600;">
-      </div>
-      <div style="display:flex; gap:8px;">
-        <button type="button" class="btn-modal-cancel" style="margin-top:0;" onclick="closeAddMedCategoryModal()">Hủy</button>
-        <button type="button" class="btn-confirm-submit" style="flex:1; padding:10px;" onclick="saveMedCategory()">Tạo mới</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL SỬA DANH MỤC -->
-  <div id="editMedCategoryModal" class="custom-modal-overlay" onclick="closeEditMedCategoryModal()">
-    <div class="custom-modal-card" onclick="event.stopPropagation()">
-      <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:12px;">Sửa Danh Mục & Nhóm Thuốc</div>
-      
-      <div style="margin-bottom:14px; text-align:left;">
-        <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Tên danh mục:</label>
-        <div style="display:flex; gap:6px; margin-top:4px;">
-          <input type="text" id="editCatNameInput" style="flex:1; padding:8px; border:1px solid var(--border); border-radius:8px; font-size:13.5px; font-weight:600;">
-          <button type="button" class="btn-confirm-submit" style="padding:8px 12px; font-size:12px;" onclick="saveCatNameOnly()">Lưu tên</button>
-        </div>
-      </div>
-
-      <div style="margin-bottom:14px; text-align:left;">
-        <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Danh sách nhóm thuốc (Bấm lưu để đổi tên):</label>
-        <div id="editCategoryGroupsList" style="max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-top: 4px; border: 1px solid var(--border-light); padding: 8px; border-radius: 8px; background: #fafafa;"></div>
-      </div>
-
-      <div style="border-top:1px solid var(--border-light); padding-top:12px; margin-top:12px;">
-        <button type="button" class="btn-confirm-submit" style="background:#e0f2fe; color:#0369a1; width:100%;" onclick="openAddMedGroupFromEdit()">➕ Thêm nhóm thuốc mới</button>
-      </div>
-
-      <button type="button" class="btn-modal-cancel" style="margin-top:16px;" onclick="closeEditMedCategoryModal()">Đóng</button>
-    </div>
-  </div>
-
-  <!-- MODAL THÊM NHÓM THUỐC -->
-  <div id="addMedGroupModal" class="custom-modal-overlay" onclick="closeAddMedGroupModal()">
-    <div class="custom-modal-card" onclick="event.stopPropagation()">
-      <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:12px;">Thêm Nhóm Thuốc Mới</div>
-      <div style="margin-bottom:14px; text-align:left;">
-        <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Tên nhóm thuốc:</label>
-        <input type="text" id="medGroupNameInput" placeholder="Ví dụ: Beta-blocker..." style="width:100%; padding:9px; border:1px solid var(--border); border-radius:8px; margin-top:4px; font-size:14px; font-weight:600;">
-      </div>
-      <div style="display:flex; gap:8px;">
-        <button type="button" class="btn-modal-cancel" style="margin-top:0;" onclick="closeAddMedGroupModal()">Hủy</button>
-        <button type="button" class="btn-confirm-submit" style="flex:1; padding:10px;" onclick="saveMedGroupAndCreateFirstMed()">Tiếp tục (Thêm thuốc đầu tiên)</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL SỬA NHÓM THUỐC -->
-  <div id="editMedGroupModal" class="custom-modal-overlay" onclick="closeEditMedGroupModal()">
-    <div class="custom-modal-card" onclick="event.stopPropagation()">
-      <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:12px;" id="medGroupModalTitle">Sửa Nhóm Thuốc</div>
-      <div style="margin-bottom:14px; text-align:left;">
-        <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Đổi tên nhóm thuốc:</label>
-        <div style="display:flex; gap:6px; margin-top:4px;">
-          <input type="text" id="editGroupNameInput" style="flex:1; padding:8px; border:1px solid var(--border); border-radius:8px; font-size:13.5px; font-weight:600;">
-          <button type="button" class="btn-confirm-submit" style="padding:8px 12px; font-size:12px;" onclick="saveGroupNameOnly()">Lưu tên</button>
-        </div>
-      </div>
-      <div style="border-top:1px solid var(--border-light); padding-top:12px; margin-top:12px;">
-        <button type="button" class="btn-confirm-submit" style="background:#fef2f2; color:#dc2626; width:100%;" onclick="deleteCurrentGroup()">🗑️ Xóa nhóm thuốc này</button>
-      </div>
-      <button type="button" class="btn-modal-cancel" style="margin-top:16px;" onclick="closeEditMedGroupModal()">Đóng</button>
-    </div>
-  </div>
-
-  <!-- MODAL THÊM / SỬA THUỐC CHI TIẾT KÈM AI GỢI Ý -->
-  <div id="addMedicineModal" class="custom-modal-overlay" onclick="closeAddMedicineModal()">
-    <div class="custom-modal-card" onclick="event.stopPropagation()" style="text-align:left;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-        <div style="font-size:17px; font-weight:700; color:#0f172a;" id="medModalTitle">Thêm Thuốc Mới</div>
-        <button type="button" class="btn-bed-ctrl" style="background:#e0f2fe; color:#0369a1; border-color:#7dd3fc;" onclick="askAIToSuggestMed()">🤖 Gợi ý AI</button>
-      </div>
-      <input type="hidden" id="editingMedId" value="">
-      <div style="margin-bottom:10px;">
-        <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Tên thuốc:</label>
-        <input type="text" id="medNameInput" placeholder="Nhập tên thuốc hoặc hoạt chất..." style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; margin-top:2px; font-size:13.5px; font-weight:600;">
-      </div>
-      <div style="margin-bottom:10px;">
-        <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Chỉ định:</label>
-        <input type="text" id="medIndicationInput" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; margin-top:2px; font-size:13.5px;">
-      </div>
-      <div style="margin-bottom:10px;">
-        <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Chống chỉ định:</label>
-        <input type="text" id="medContraindicationInput" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; margin-top:2px; font-size:13.5px;">
-      </div>
-      <div style="margin-bottom:10px;">
-        <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Tác dụng không mong muốn (TDKM):</label>
-        <input type="text" id="medSideEffectsInput" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; margin-top:2px; font-size:13.5px;">
-      </div>
-      <div style="margin-bottom:16px;">
-        <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Liều dùng:</label>
-        <input type="text" id="medDoseInput" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; margin-top:2px; font-size:13.5px;">
-      </div>
-      <div style="display:flex; gap:8px;">
-        <button type="button" class="btn-modal-cancel" style="margin-top:0;" onclick="closeAddMedicineModal()">Hủy</button>
-        <button type="button" class="btn-confirm-submit" style="flex:1; padding:10px;" onclick="saveMedicineItem()">Lưu lại</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL SỬA PHÒNG -->
   <div id="editRoomModal" class="custom-modal-overlay" onclick="closeEditRoomModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()">
       <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:12px;" id="editRoomModalTitle">Sửa Phòng Bệnh</div>
@@ -452,7 +341,108 @@
     </div>
   </div>
 
-  <!-- MODAL CHUYỂN VỊ TRÍ -->
+  <!-- 2. Modal Quản lý Thuốc -->
+  <div id="addMedCategoryModal" class="custom-modal-overlay" onclick="closeAddMedCategoryModal()">
+    <div class="custom-modal-card" onclick="event.stopPropagation()">
+      <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:12px;">Thêm Danh Mục Thuốc</div>
+      <div style="margin-bottom:14px; text-align:left;">
+        <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Tên danh mục:</label>
+        <input type="text" id="medCategoryNameInput" placeholder="Ví dụ: Tim mạch, Kháng sinh..." style="width:100%; padding:9px; border:1px solid var(--border); border-radius:8px; margin-top:4px; font-size:14px; font-weight:600;">
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="btn-modal-cancel" style="margin-top:0;" onclick="closeAddMedCategoryModal()">Hủy</button>
+        <button type="button" class="btn-confirm-submit" style="flex:1; padding:10px;" onclick="saveMedCategory()">Tạo mới</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="editMedCategoryModal" class="custom-modal-overlay" onclick="closeEditMedCategoryModal()">
+    <div class="custom-modal-card" onclick="event.stopPropagation()">
+      <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:12px;">Sửa Danh Mục & Nhóm Thuốc</div>
+      <div style="margin-bottom:14px; text-align:left;">
+        <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Tên danh mục:</label>
+        <div style="display:flex; gap:6px; margin-top:4px;">
+          <input type="text" id="editCatNameInput" style="flex:1; padding:8px; border:1px solid var(--border); border-radius:8px; font-size:13.5px; font-weight:600;">
+          <button type="button" class="btn-confirm-submit" style="padding:8px 12px; font-size:12px;" onclick="saveCatNameOnly()">Lưu tên</button>
+        </div>
+      </div>
+      <div style="margin-bottom:14px; text-align:left;">
+        <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Danh sách nhóm thuốc:</label>
+        <div id="editCategoryGroupsList" style="max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-top: 4px; border: 1px solid var(--border-light); padding: 8px; border-radius: 8px; background: #fafafa;"></div>
+      </div>
+      <div style="border-top:1px solid var(--border-light); padding-top:12px; margin-top:12px;">
+        <button type="button" class="btn-confirm-submit" style="background:#e0f2fe; color:#0369a1; width:100%;" onclick="openAddMedGroupFromEdit()">➕ Thêm nhóm thuốc mới</button>
+      </div>
+      <button type="button" class="btn-modal-cancel" style="margin-top:16px;" onclick="closeEditMedCategoryModal()">Đóng</button>
+    </div>
+  </div>
+
+  <div id="addMedGroupModal" class="custom-modal-overlay" onclick="closeAddMedGroupModal()">
+    <div class="custom-modal-card" onclick="event.stopPropagation()">
+      <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:12px;">Thêm Nhóm Thuốc Mới</div>
+      <div style="margin-bottom:14px; text-align:left;">
+        <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Tên nhóm thuốc:</label>
+        <input type="text" id="medGroupNameInput" placeholder="Ví dụ: Beta-blocker..." style="width:100%; padding:9px; border:1px solid var(--border); border-radius:8px; margin-top:4px; font-size:14px; font-weight:600;">
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="btn-modal-cancel" style="margin-top:0;" onclick="closeAddMedGroupModal()">Hủy</button>
+        <button type="button" class="btn-confirm-submit" style="flex:1; padding:10px;" onclick="saveMedGroupAndCreateFirstMed()">Tiếp tục</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="editMedGroupModal" class="custom-modal-overlay" onclick="closeEditMedGroupModal()">
+    <div class="custom-modal-card" onclick="event.stopPropagation()">
+      <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:12px;" id="medGroupModalTitle">Sửa Nhóm Thuốc</div>
+      <div style="margin-bottom:14px; text-align:left;">
+        <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Đổi tên nhóm thuốc:</label>
+        <div style="display:flex; gap:6px; margin-top:4px;">
+          <input type="text" id="editGroupNameInput" style="flex:1; padding:8px; border:1px solid var(--border); border-radius:8px; font-size:13.5px; font-weight:600;">
+          <button type="button" class="btn-confirm-submit" style="padding:8px 12px; font-size:12px;" onclick="saveGroupNameOnly()">Lưu tên</button>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--border-light); padding-top:12px; margin-top:12px;">
+        <button type="button" class="btn-confirm-submit" style="background:#fef2f2; color:#dc2626; width:100%;" onclick="deleteCurrentGroup()">🗑️ Xóa nhóm thuốc này</button>
+      </div>
+      <button type="button" class="btn-modal-cancel" style="margin-top:16px;" onclick="closeEditMedGroupModal()">Đóng</button>
+    </div>
+  </div>
+
+  <div id="addMedicineModal" class="custom-modal-overlay" onclick="closeAddMedicineModal()">
+    <div class="custom-modal-card" onclick="event.stopPropagation()" style="text-align:left;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div style="font-size:17px; font-weight:700; color:#0f172a;" id="medModalTitle">Thêm Thuốc Mới</div>
+        <button type="button" class="btn-bed-ctrl" style="background:#e0f2fe; color:#0369a1; border-color:#7dd3fc;" onclick="askAIToSuggestMed()">🤖 Gợi ý AI</button>
+      </div>
+      <input type="hidden" id="editingMedId" value="">
+      <div style="margin-bottom:10px;">
+        <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Tên thuốc:</label>
+        <input type="text" id="medNameInput" placeholder="Nhập tên thuốc hoặc hoạt chất..." style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; margin-top:2px; font-size:13.5px; font-weight:600;">
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Chỉ định:</label>
+        <input type="text" id="medIndicationInput" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; margin-top:2px; font-size:13.5px;">
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Chống chỉ định:</label>
+        <input type="text" id="medContraindicationInput" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; margin-top:2px; font-size:13.5px;">
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Tác dụng không mong muốn (TDKM):</label>
+        <input type="text" id="medSideEffectsInput" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; margin-top:2px; font-size:13.5px;">
+      </div>
+      <div style="margin-bottom:16px;">
+        <label style="font-size:12px; font-weight:600; color:var(--text-muted);">Liều dùng:</label>
+        <input type="text" id="medDoseInput" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; margin-top:2px; font-size:13.5px;">
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="btn-modal-cancel" style="margin-top:0;" onclick="closeAddMedicineModal()">Hủy</button>
+        <button type="button" class="btn-confirm-submit" style="flex:1; padding:10px;" onclick="saveMedicineItem()">Lưu lại</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Modal Hệ thống Khác (Chuyển vị trí & Hồ sơ bác sĩ) -->
   <div id="transferBedModal" class="custom-modal-overlay" onclick="closeTransferBedModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()">
       <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:4px;">Chuyển Vị Trí Bệnh Nhân</div>
@@ -462,7 +452,6 @@
     </div>
   </div>
 
-  <!-- MODAL SỬA THÔNG TIN BÁC SĨ -->
   <div id="editProfileModal" class="custom-modal-overlay" onclick="closeEditProfileModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()" style="text-align:left;">
       <div style="font-size:17px; font-weight:700; color:#0f172a; margin-bottom:14px; text-align:center;">Sửa Thông Tin Bác Sĩ</div>
@@ -971,7 +960,7 @@
       </div>`).join('');
   }
 
-  /* QUẢN LÝ SỬA PHÒNG VÀ CÀI ĐẶT PHÒNG (BẢO TOÀN DỮ LIỆU PATIENTS) */
+  /* QUẢN LÝ SỬA PHÒNG VÀ CÀI ĐẶT PHÒNG */
   function openRoomSettingsModal() {
     renderRoomSettingsList();
     document.getElementById('roomSettingsModal').style.display = 'flex';
@@ -996,7 +985,7 @@
     const newId = String(Date.now());
     roomList.push({ id: newId, name, rows: 2, cols: 2, hiddenBeds: [] });
     input.value = '';
-    syncDataToCloud(); // Bảo toàn toàn bộ dữ liệu patients và roomList
+    syncDataToCloud();
     renderRoomSettingsList();
   }
 
@@ -1013,7 +1002,7 @@
           pat.room = newName;
         }
       });
-      syncDataToCloud(); // Bảo toàn toàn bộ dữ liệu patients và roomList
+      syncDataToCloud();
       renderDashboardCounts();
       alert("Đã đổi tên phòng thành công!");
     }
@@ -1047,7 +1036,7 @@
 
     if (confirm(`Xóa phòng ${r.name}?`)) {
       roomList = roomList.filter(x => x.id !== roomId);
-      syncDataToCloud(); // Bảo toàn toàn bộ dữ liệu patients và roomList
+      syncDataToCloud();
       renderRoomSettingsList();
     }
   }
@@ -1271,67 +1260,28 @@
     window.scrollTo({ top: 0, behavior: 'auto' });
     renderDashboardCounts();
   }
-  const getPatientInBed = (room, bed) => patients.find(p => p.status === 'active' && String(p.room).trim() === String(room).trim() && String(p.bed).trim() === String(bed).trim());
 
-  /* HÌNH ẢNH BỆNH ÁN */
-  const triggerPickImage = f => document.getElementById(`fileInput_${f}`)?.click();
-  const handleImageFileSelected = (inp, f) => { if (inp.files?.[0]) { compressAndAddImage(inp.files[0], f); inp.value = ''; } };
-  const handlePasteImage = (e, f) => {
-    for (let item of (e.clipboardData || e.originalEvent.clipboardData).items) {
-      if (item.type.includes('image')) { compressAndAddImage(item.getAsFile(), f); e.preventDefault(); break; }
-    }
-  };
-  function compressAndAddImage(file, field) {
-    const reader = new FileReader();
-    reader.onload = evt => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const max = 1200;
-        let w = img.width, h = img.height;
-        if (w > max || h > max) { if (w > h) { h = Math.round((h * max) / w); w = max; } else { w = Math.round((w * max) / h); h = max; } }
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        formImages[field].push(canvas.toDataURL('image/jpeg', 0.7));
-        renderFormImagePreviews(field);
-      };
-      img.src = evt.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-  function renderFormImagePreviews(f) {
-    const c = document.getElementById(`preview_${f}`);
-    if (!c) return;
-    if (!formImages[f]?.length) { c.style.display = 'none'; c.innerHTML = ''; return; }
-    c.style.display = 'flex';
-    c.innerHTML = formImages[f].map((src, i) => `
-      <div class="img-preview-card"><img src="${src}" onclick="viewLargeImage('${src}')">
-        <button type="button" class="btn-remove-img" onclick="formImages['${f}'].splice(${i},1);renderFormImagePreviews('${f}')">✕</button>
-      </div>`).join('');
-  }
-  function viewLargeImage(src) {
-    const v = document.getElementById('imageModalViewer');
-    document.getElementById('modalViewerImg').src = src;
-    v.style.display = 'flex';
-  }
-
-  /* ĐỒNG BỘ */
+  /* ĐỒNG BỘ 3 TRANG TÍNH (SHEET 1, 2, 3) */
   async function loadDataFromCloud() {
     if (!GOOGLE_SCRIPT_URL) return;
     updateSyncUI('syncing', 'Đang nạp...');
     try {
       const res = await fetch(GOOGLE_SCRIPT_URL);
       const data = await res.json();
-      if (data?.patients && data?.rooms) {
-        patients = data.patients; roomList = data.rooms;
+      if (data?.patients) {
+        patients = data.patients;
         localStorage.setItem('bs_patients_scroll_v3', JSON.stringify(patients));
-        localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
+      }
+      if (data?.medCategories && data.medCategories.length > 0) {
+        medCategories = data.medCategories;
+        localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
       }
       updateSyncUI('success', 'Đã đồng bộ');
       renderDashboardCounts();
       renderMedCategoriesUI();
     } catch { updateSyncUI('error', 'Lỗi kết nối'); }
   }
+
   async function syncDataToCloud() {
     localStorage.setItem('bs_patients_scroll_v3', JSON.stringify(patients));
     localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
@@ -1340,10 +1290,16 @@
     if (!GOOGLE_SCRIPT_URL) return;
     updateSyncUI('syncing', 'Đang lưu...');
     try {
-      await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ patients, rooms: roomList }) });
+      await fetch(GOOGLE_SCRIPT_URL, { 
+        method: 'POST', 
+        mode: 'no-cors', 
+        headers: {'Content-Type': 'text/plain'}, 
+        body: JSON.stringify({ patients, rooms: roomList, medCategories }) 
+      });
       updateSyncUI('success', 'Đã lưu');
     } catch { updateSyncUI('error', 'Không thể lưu'); }
   }
+
   function updateSyncUI(st, txt) {
     const el = document.getElementById('syncStatus');
     if (!el) return;
@@ -1352,7 +1308,7 @@
     el.style.color = st === 'syncing' ? '#92400e' : st === 'success' ? '#0369a1' : '#991b1b';
   }
 
-  /* BỆNH ÁN & TIẾП NHẬН */
+  /* BỆNH ÁN & TIẾP NHẬN */
   function handleBedClick(room, bed) {
     const existing = getPatientInBed(room, bed);
     if (existing) { currentActiveIndex = existing.entries.length - 1; openSummaryView(existing.id); }
@@ -1442,7 +1398,6 @@
     }
   }
 
-  /* BẢNG CHỌN CHUYỂN VỊ TRÍ */
   function openTransferBedModal() {
     const p = patients.find(x => x.id === currentViewingPatientId); 
     if (!p) return;

@@ -984,7 +984,9 @@
     const newId = String(Date.now());
     roomList.push({ id: newId, name, rows: 2, cols: 2, hiddenBeds: [] });
     input.value = '';
+    localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
     syncDataToCloud();
+    renderRoomsGrid();
     renderRoomSettingsList();
   }
 
@@ -1001,6 +1003,7 @@
           pat.room = newName;
         }
       });
+      localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
       syncDataToCloud();
       renderDashboardCounts();
       alert("Đã đổi tên phòng thành công!");
@@ -1035,7 +1038,9 @@
 
     if (confirm(`Xóa phòng ${r.name}?`)) {
       roomList = roomList.filter(x => x.id !== roomId);
+      localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
       syncDataToCloud();
+      renderRoomsGrid();
       renderRoomSettingsList();
     }
   }
@@ -1086,7 +1091,9 @@
     const r = roomList.find(x => x.id === currentEditingRoomId);
     if (!r) return;
     r.rows = (r.rows || 2) + 1;
+    localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
     syncDataToCloud();
+    renderRoomsGrid();
     openEditRoomModal(r.id);
   }
 
@@ -1120,7 +1127,9 @@
 
     r.rows = rowCount - 1;
     r.hiddenBeds = (r.hiddenBeds || []).filter(b => !b.startsWith(rowChar));
+    localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
     syncDataToCloud();
+    renderRoomsGrid();
     openEditRoomModal(r.id);
   }
 
@@ -1128,7 +1137,9 @@
     const r = roomList.find(x => x.id === currentEditingRoomId);
     if (!r) return;
     r.cols = (r.cols || 2) + 1;
+    localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
     syncDataToCloud();
+    renderRoomsGrid();
     openEditRoomModal(r.id);
   }
 
@@ -1187,7 +1198,9 @@
 
     r.cols = newCols;
     r.hiddenBeds = newHiddenBeds;
+    localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
     syncDataToCloud();
+    renderRoomsGrid();
     openEditRoomModal(r.id);
   }
 
@@ -1238,7 +1251,9 @@
       }
       r.hiddenBeds.push(cellName);
     }
+    localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
     syncDataToCloud();
+    renderRoomsGrid();
     renderCellVisibilityMatrix();
   }
 
@@ -1305,7 +1320,6 @@
     if (!GOOGLE_SCRIPT_URL) return;
     updateSyncUI('syncing', 'Đang nạp...');
     try {
-      // Thêm tham số ngẫu nhiên ?t=... để chống cache trên điện thoại
       const res = await fetch(GOOGLE_SCRIPT_URL + "?t=" + new Date().getTime(), { cache: "no-store" });
       const data = await res.json();
       
@@ -1331,6 +1345,12 @@
   }
 
   async function syncDataToCloud() {
+    const uniquePatientsMap = {};
+    patients.forEach(p => {
+      if (p && p.id) uniquePatientsMap[String(p.id)] = p;
+    });
+    patients = Object.values(uniquePatientsMap);
+
     localStorage.setItem('bs_patients_scroll_v3', JSON.stringify(patients));
     localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
     localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));

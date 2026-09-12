@@ -26,7 +26,9 @@
     .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
     .btn-top, .btn-back { background: #fff; border: 1px solid var(--border); padding: 7px 14px; border-radius: 24px; font-size: 13px; font-weight: 600; color: #334155; cursor: pointer; display: flex; align-items: center; gap: 6px; }
     .btn-back { border-radius: var(--radius-sm); background: #e2e8f0; border: none; }
-    .sync-status-bar { font-size: 11.5px; font-weight: 600; color: #0369a1; background: #e0f2fe; border-radius: 20px; padding: 3px 12px; }
+    
+    /* Ô ký hiệu cập nhật trực quan */
+    .sync-status-bar { font-size: 12px; font-weight: 700; color: #0369a1; background: #e0f2fe; border-radius: 20px; padding: 5px 14px; display: flex; align-items: center; gap: 6px; border: 1px solid #7dd3fc; box-shadow: 0 2px 6px rgba(2,132,199,0.1); }
 
     .btn-menu-list { display: flex; flex-direction: column; gap: 14px; margin-top: 8px; }
     .big-btn { background: #fff; border: 2px solid var(--border); border-radius: var(--radius-lg); padding: 30px 16px; text-align: center; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,0.03); }
@@ -120,7 +122,8 @@
   <div id="homeView">
     <div class="top-bar">
       <button type="button" class="btn-top" onclick="showView('profileView')">👨‍⚕️ Giới thiệu cá nhân</button>
-      <div class="sync-status-bar" id="syncStatus">☁️ Đang kết nối...</div>
+      <!-- Ô ký hiệu cập nhật trạng thái trực quan -->
+      <div class="sync-status-bar" id="syncStatus">🔄 Đang kết nối...</div>
     </div>
     <div class="btn-menu-list">
       <div class="big-btn btn-blue" onclick="showView('roomGridView')">
@@ -593,7 +596,7 @@
         input.value = '';
         resetInactivityTimer();
         
-        // Tải thẳng dữ liệu gốc từ Sheets khi mở khóa hệ thống
+        // Tải thẳng dữ liệu gốc chuẩn xác từ Sheets ngay khi mở khóa
         loadDataFromCloud();
       } else {
         input.value = '';
@@ -1320,7 +1323,7 @@
 
   async function loadDataFromCloud() {
     if (!GOOGLE_SCRIPT_URL) return;
-    updateSyncUI('syncing', 'Đang nạp dữ liệu gốc...');
+    updateSyncUI('syncing', 'Đang tải dữ liệu gốc...');
     try {
       const res = await fetch(GOOGLE_SCRIPT_URL + "?t=" + new Date().getTime(), { cache: "no-store" });
       const data = await res.json();
@@ -1338,7 +1341,7 @@
         localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
       }
       
-      updateSyncUI('success', 'Đã đồng bộ');
+      updateSyncUI('success', 'Đã cập nhật');
       renderDashboardCounts();
       renderMedCategoriesUI();
     } catch (err) {
@@ -1386,14 +1389,13 @@
     
     if (!GOOGLE_SCRIPT_URL) return;
     
-    // Xử lý hàng đợi mượt mà cho phép thực hiện liên tiếp các thao tác
     if (isSyncingToCloud) {
-      setTimeout(() => { syncDataToCloud(); }, 600);
+      setTimeout(() => { syncDataToCloud(); }, 500);
       return;
     }
     
     isSyncingToCloud = true;
-    updateSyncUI('syncing', 'Đang lưu...');
+    updateSyncUI('syncing', 'Đang lưu lên Sheets...');
     
     try {
       const payload = JSON.stringify({ patients, rooms: roomList, medCategories });
@@ -1406,31 +1408,37 @@
         body: payload 
       });
       
-      updateSyncUI('success', 'Đã lưu');
+      updateSyncUI('success', 'Đã cập nhật');
     } catch (err) { 
       console.error("Lỗi lưu:", err);
       updateSyncUI('error', 'Không thể lưu'); 
     } finally {
-      // Mở khóa siêu nhanh để nhận ngay thao tác kế tiếp
-      setTimeout(() => { isSyncingToCloud = false; }, 300);
+      setTimeout(() => { isSyncingToCloud = false; }, 200);
     }
   }
 
+  // Cải tiến hiển thị ký hiệu trạng thái kèm mốc thời gian cụ thể
   function updateSyncUI(st, txt) {
     const el = document.getElementById('syncStatus');
     if (!el) return;
-    el.textContent = (st === 'syncing' ? '🔄 ' : st === 'success' ? '☁️ ' : '⚠️ ') + txt;
-    el.style.background = st === 'syncing' ? '#fef3c7' : st === 'success' ? '#e0f2fe' : '#fee2e2';
-    el.style.color = st === 'syncing' ? '#92400e' : st === 'success' ? '#0369a1' : '#991b1b';
+    const now = new Date();
+    const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
 
     if (st === 'syncing') {
-      setTimeout(() => {
-        if (el.textContent.includes('Đang')) {
-          el.textContent = '☁️ Đã đồng bộ';
-          el.style.background = '#e0f2fe';
-          el.style.color = '#0369a1';
-        }
-      }, 4000);
+      el.innerHTML = `🔄 ${txt}`;
+      el.style.background = '#fef3c7';
+      el.style.color = '#92400e';
+      el.style.borderColor = '#fcd34d';
+    } else if (st === 'success') {
+      el.innerHTML = `🟢 Đã cập nhật (${timeStr})`;
+      el.style.background = '#f0fdf4';
+      el.style.color = '#15803d';
+      el.style.borderColor = '#86efac';
+    } else {
+      el.innerHTML = `🔴 ${txt}`;
+      el.style.background = '#fef2f2';
+      el.style.color = '#b91c1c';
+      el.style.borderColor = '#fca5a5';
     }
   }
 

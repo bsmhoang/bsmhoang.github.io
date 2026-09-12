@@ -593,7 +593,7 @@
         input.value = '';
         resetInactivityTimer();
         
-        // Bắt buộc nạp dữ liệu chuẩn trực tiếp từ Google Sheets làm gốc ngay khi mở khóa
+        // Buộc xóa cache cục bộ cũ và nạp thẳng dữ liệu từ Google Sheets làm gốc
         loadDataFromCloud();
       } else {
         input.value = '';
@@ -1320,8 +1320,9 @@
 
   async function loadDataFromCloud() {
     if (!GOOGLE_SCRIPT_URL) return;
-    updateSyncUI('syncing', 'Đang nạp dữ liệu gốc...');
+    updateSyncUI('syncing', 'Đang tải dữ liệu gốc từ Sheets...');
     try {
+      // Thêm tham số ngẫu nhiên t để trình duyệt không bị cache cũ
       const res = await fetch(GOOGLE_SCRIPT_URL + "?t=" + new Date().getTime(), { cache: "no-store" });
       const data = await res.json();
       
@@ -1341,8 +1342,9 @@
       updateSyncUI('success', 'Đã đồng bộ');
       renderDashboardCounts();
       renderMedCategoriesUI();
-    } catch { 
-      updateSyncUI('error', 'Lỗi kết nối'); 
+    } catch (err) {
+      console.error("Lỗi đọc dữ liệu:", err);
+      updateSyncUI('error', 'Lỗi kết nối Sheets'); 
     }
   }
 
@@ -1391,11 +1393,10 @@
       return;
     }
     
-    updateSyncUI('syncing', 'Đang lưu...');
+    updateSyncUI('syncing', 'Đang lưu lên Sheets...');
     try {
       const payload = JSON.stringify({ patients, rooms: roomList, medCategories });
       
-      // Sử dụng fetch chuẩn tương thích hoàn hảo cho máy tính và điện thoại
       await fetch(GOOGLE_SCRIPT_URL, { 
         method: 'POST', 
         mode: 'no-cors', 
@@ -1405,7 +1406,8 @@
       });
       
       updateSyncUI('success', 'Đã lưu');
-    } catch { 
+    } catch (err) { 
+      console.error("Lỗi lưu:", err);
       updateSyncUI('error', 'Không thể lưu'); 
     } finally {
       setTimeout(() => { isSyncingToCloud = false; }, 1500);

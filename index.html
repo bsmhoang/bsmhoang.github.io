@@ -593,7 +593,7 @@
         input.value = '';
         resetInactivityTimer();
         
-        // Buộc xóa cache cục bộ cũ và nạp thẳng dữ liệu từ Google Sheets làm gốc
+        // Tải thẳng dữ liệu gốc từ Sheets khi mở khóa hệ thống
         loadDataFromCloud();
       } else {
         input.value = '';
@@ -1320,9 +1320,8 @@
 
   async function loadDataFromCloud() {
     if (!GOOGLE_SCRIPT_URL) return;
-    updateSyncUI('syncing', 'Đang tải dữ liệu gốc từ Sheets...');
+    updateSyncUI('syncing', 'Đang nạp dữ liệu gốc...');
     try {
-      // Thêm tham số ngẫu nhiên t để trình duyệt không bị cache cũ
       const res = await fetch(GOOGLE_SCRIPT_URL + "?t=" + new Date().getTime(), { cache: "no-store" });
       const data = await res.json();
       
@@ -1343,17 +1342,14 @@
       renderDashboardCounts();
       renderMedCategoriesUI();
     } catch (err) {
-      console.error("Lỗi đọc dữ liệu:", err);
-      updateSyncUI('error', 'Lỗi kết nối Sheets'); 
+      console.error("Lỗi nạp dữ liệu:", err);
+      updateSyncUI('error', 'Lỗi kết nối'); 
     }
   }
 
   let isSyncingToCloud = false;
 
   async function syncDataToCloud() {
-    if (isSyncingToCloud) return;
-    isSyncingToCloud = true;
-
     const uniquePatientsMap = {};
     patients.forEach(p => {
       if (p && p.id) uniquePatientsMap[String(p.id)] = p;
@@ -1388,12 +1384,17 @@
     localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
     renderDashboardCounts();
     
-    if (!GOOGLE_SCRIPT_URL) {
-      isSyncingToCloud = false;
+    if (!GOOGLE_SCRIPT_URL) return;
+    
+    // Xử lý hàng đợi mượt mà cho phép thực hiện liên tiếp các thao tác
+    if (isSyncingToCloud) {
+      setTimeout(() => { syncDataToCloud(); }, 600);
       return;
     }
     
-    updateSyncUI('syncing', 'Đang lưu lên Sheets...');
+    isSyncingToCloud = true;
+    updateSyncUI('syncing', 'Đang lưu...');
+    
     try {
       const payload = JSON.stringify({ patients, rooms: roomList, medCategories });
       
@@ -1410,7 +1411,8 @@
       console.error("Lỗi lưu:", err);
       updateSyncUI('error', 'Không thể lưu'); 
     } finally {
-      setTimeout(() => { isSyncingToCloud = false; }, 1500);
+      // Mở khóa siêu nhanh để nhận ngay thao tác kế tiếp
+      setTimeout(() => { isSyncingToCloud = false; }, 300);
     }
   }
 

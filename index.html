@@ -42,7 +42,7 @@ let isSyncingToCloud = false;
     } catch { 
       updateSyncUI('error', 'Không thể lưu'); 
     } finally {
-      // Mở khóa an toàn sau 1.5 giây để các thao tác nhập/xóa trên điện thoại diễn ra ổn định, tuần tự
+      // Mở khóa an toàn sau 1.5 giây để các thao tác nhập/xóa diễn ra ổn định, tuần tự
       setTimeout(() => { isSyncingToCloud = false; }, 1500);
     }
   }
@@ -54,7 +54,7 @@ let isSyncingToCloud = false;
     el.style.background = st === 'syncing' ? '#fef3c7' : st === 'success' ? '#e0f2fe' : '#fee2e2';
     el.style.color = st === 'syncing' ? '#92400e' : st === 'success' ? '#0369a1' : '#991b1b';
 
-    // Tránh việc giao diện bị kẹt chữ "Đang..." khi mạng trên điện thoại bị chập chờn
+    // Tránh việc giao diện bị kẹt chữ "Đang..." khi mạng bị chập chờn
     if (st === 'syncing') {
       setTimeout(() => {
         if (el.textContent.includes('Đang')) {

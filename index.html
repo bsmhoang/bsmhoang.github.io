@@ -16,8 +16,11 @@
       --radius-sm: 8px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Google Sans','Roboto',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background: var(--bg); color: var(--text-main); min-height: 100vh; padding: 12px 10px 40px; letter-spacing: -0.01em; overflow-y: auto; }
+    body { background: var(--bg); color: var(--text-main); min-height: 100vh; padding: 50px 10px 40px; letter-spacing: -0.01em; overflow-y: auto; }
     .container { max-width: 1100px; margin: 0 auto; width: 100%; }
+
+    /* Thanh trạng thái nổi cố định ở trên cùng màn hình, xuất hiện ở khắp mọi nơi */
+    #globalFloatingStatus { position: fixed; top: 0; left: 0; right: 0; height: 38px; background: #e0f2fe; color: #0369a1; border-bottom: 1px solid #7dd3fc; display: flex; align-items: center; justify-content: center; font-size: 12.5px; font-weight: 700; z-index: 999999; box-shadow: 0 2px 6px rgba(0,0,0,0.06); transition: all 0.3s ease; }
 
     #lockScreenView { position: fixed; inset: 0; background: var(--bg); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; }
     .pin-input-minimal { width: 100%; max-width: 280px; padding: 16px; font-size: 28px; text-align: center; letter-spacing: 12px; border: 2px solid var(--border); border-radius: var(--radius-md); outline: none; background: #fff; color: #0f172a; font-weight: 700; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
@@ -26,9 +29,6 @@
     .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
     .btn-top, .btn-back { background: #fff; border: 1px solid var(--border); padding: 7px 14px; border-radius: 24px; font-size: 13px; font-weight: 600; color: #334155; cursor: pointer; display: flex; align-items: center; gap: 6px; }
     .btn-back { border-radius: var(--radius-sm); background: #e2e8f0; border: none; }
-    
-    /* Ô ký hiệu cập nhật trực quan */
-    .sync-status-bar { font-size: 12px; font-weight: 700; color: #0369a1; background: #e0f2fe; border-radius: 20px; padding: 5px 14px; display: flex; align-items: center; gap: 6px; border: 1px solid #7dd3fc; box-shadow: 0 2px 6px rgba(2,132,199,0.1); }
 
     .btn-menu-list { display: flex; flex-direction: column; gap: 14px; margin-top: 8px; }
     .big-btn { background: #fff; border: 2px solid var(--border); border-radius: var(--radius-lg); padding: 30px 16px; text-align: center; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,0.03); }
@@ -112,6 +112,9 @@
 </head>
 <body>
 
+<!-- Thanh trạng thái toàn cục hiển thị ở khắp mọi nơi -->
+<div id="globalFloatingStatus">🔄 Đang kết nối hệ thống dữ liệu gốc...</div>
+
 <div id="lockScreenView">
   <div class="lock-minimal-box">
     <input type="password" id="pinInput" class="pin-input-minimal" maxlength="6" inputmode="numeric" placeholder="••••••" oninput="checkPinAuto(this)" onkeydown="if(event.key==='Enter')checkPinAuto(this)">
@@ -122,8 +125,7 @@
   <div id="homeView">
     <div class="top-bar">
       <button type="button" class="btn-top" onclick="showView('profileView')">👨‍⚕️ Giới thiệu cá nhân</button>
-      <!-- Ô ký hiệu cập nhật trạng thái trực quan -->
-      <div class="sync-status-bar" id="syncStatus">🔄 Đang kết nối...</div>
+      <div style="width: 10px;"></div>
     </div>
     <div class="btn-menu-list">
       <div class="big-btn btn-blue" onclick="showView('roomGridView')">
@@ -596,7 +598,7 @@
         input.value = '';
         resetInactivityTimer();
         
-        // Tải thẳng dữ liệu gốc chuẩn xác từ Sheets ngay khi mở khóa
+        // Tải toàn bộ dữ liệu gốc chuẩn từ Sheets ngay khi đăng nhập thành công
         loadDataFromCloud();
       } else {
         input.value = '';
@@ -1323,7 +1325,7 @@
 
   async function loadDataFromCloud() {
     if (!GOOGLE_SCRIPT_URL) return;
-    updateSyncUI('syncing', 'Đang tải dữ liệu gốc...');
+    updateSyncUI('syncing', 'Đang nạp dữ liệu từ Sheets...');
     try {
       const res = await fetch(GOOGLE_SCRIPT_URL + "?t=" + new Date().getTime(), { cache: "no-store" });
       const data = await res.json();
@@ -1346,7 +1348,7 @@
       renderMedCategoriesUI();
     } catch (err) {
       console.error("Lỗi nạp dữ liệu:", err);
-      updateSyncUI('error', 'Lỗi kết nối'); 
+      updateSyncUI('error', 'Lỗi kết nối Sheets'); 
     }
   }
 
@@ -1390,7 +1392,7 @@
     if (!GOOGLE_SCRIPT_URL) return;
     
     if (isSyncingToCloud) {
-      setTimeout(() => { syncDataToCloud(); }, 500);
+      setTimeout(() => { syncDataToCloud(); }, 400);
       return;
     }
     
@@ -1417,9 +1419,9 @@
     }
   }
 
-  // Cải tiến hiển thị ký hiệu trạng thái kèm mốc thời gian cụ thể
+  // Cập nhật giao diện thanh trạng thái nổi ở mọi nơi
   function updateSyncUI(st, txt) {
-    const el = document.getElementById('syncStatus');
+    const el = document.getElementById('globalFloatingStatus');
     if (!el) return;
     const now = new Date();
     const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
@@ -1430,7 +1432,7 @@
       el.style.color = '#92400e';
       el.style.borderColor = '#fcd34d';
     } else if (st === 'success') {
-      el.innerHTML = `🟢 Đã cập nhật (${timeStr})`;
+      el.innerHTML = `🟢 Đã cập nhật trên Google Sheets lúc ${timeStr}`;
       el.style.background = '#f0fdf4';
       el.style.color = '#15803d';
       el.style.borderColor = '#86efac';

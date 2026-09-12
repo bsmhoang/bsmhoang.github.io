@@ -591,9 +591,12 @@
         document.getElementById('appMainContainer').style.display = 'block';
         input.value = '';
         resetInactivityTimer();
-        renderDashboardCounts();
-        renderDoctorProfileUI();
-        loadDataFromCloud();
+        
+        // Bắt buộc lấy dữ liệu gốc chuẩn từ Google Sheets làm nguồn chân lý ngay khi mở khóa
+        loadDataFromCloud().then(() => {
+          renderDashboardCounts();
+          renderMedCategoriesUI();
+        });
       } else {
         input.value = '';
         input.focus();
@@ -1318,7 +1321,7 @@
 
   async function loadDataFromCloud() {
     if (!GOOGLE_SCRIPT_URL) return;
-    updateSyncUI('syncing', 'Đang nạp...');
+    updateSyncUI('syncing', 'Đang tải dữ liệu gốc...');
     try {
       const res = await fetch(GOOGLE_SCRIPT_URL + "?t=" + new Date().getTime(), { cache: "no-store" });
       const data = await res.json();
@@ -1355,6 +1358,29 @@
       if (p && p.id) uniquePatientsMap[String(p.id)] = p;
     });
     patients = Object.values(uniquePatientsMap);
+
+    const uniqueMedCatsMap = {};
+    medCategories.forEach(cat => {
+      if (!cat.name) return;
+      if (!uniqueMedCatsMap[cat.name]) {
+        uniqueMedCatsMap[cat.name] = { id: cat.id || Date.now(), name: cat.name, groups: [] };
+      }
+      const uniqueGroupsMap = {};
+      (cat.groups || []).forEach(g => {
+        if (!g.name) return;
+        if (!uniqueGroupsMap[g.name]) {
+          uniqueGroupsMap[g.name] = { id: g.id || Date.now(), name: g.name, medicines: [] };
+        }
+        const uniqueMedsMap = {};
+        (g.medicines || []).forEach(m => {
+          if (!m.name) return;
+          uniqueMedsMap[m.name] = m;
+        });
+        uniqueGroupsMap[g.name].medicines = Object.values(uniqueMedsMap);
+      });
+      uniqueMedCatsMap[cat.name].groups = Object.values(uniqueGroupsMap);
+    });
+    medCategories = Object.values(uniqueMedCatsMap);
 
     localStorage.setItem('bs_patients_scroll_v3', JSON.stringify(patients));
     localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));

@@ -583,6 +583,7 @@
     clearTimeout(inactivityTimer);
     inactivityTimer = setTimeout(lockSystem, 60000);
   }
+
   function checkPinAuto(input) {
     if (input.value.length === 6) {
       if (input.value === CORRECT_PIN) {
@@ -592,17 +593,15 @@
         input.value = '';
         resetInactivityTimer();
         
-        // Bắt buộc lấy dữ liệu gốc chuẩn từ Google Sheets làm nguồn chân lý ngay khi mở khóa
-        loadDataFromCloud().then(() => {
-          renderDashboardCounts();
-          renderMedCategoriesUI();
-        });
+        // Bắt buộc nạp dữ liệu chuẩn trực tiếp từ Google Sheets làm gốc ngay khi mở khóa
+        loadDataFromCloud();
       } else {
         input.value = '';
         input.focus();
       }
     }
   }
+
   function lockSystem() {
     isAuthenticated = false;
     clearTimeout(inactivityTimer);
@@ -1321,7 +1320,7 @@
 
   async function loadDataFromCloud() {
     if (!GOOGLE_SCRIPT_URL) return;
-    updateSyncUI('syncing', 'Đang tải dữ liệu gốc...');
+    updateSyncUI('syncing', 'Đang nạp dữ liệu gốc...');
     try {
       const res = await fetch(GOOGLE_SCRIPT_URL + "?t=" + new Date().getTime(), { cache: "no-store" });
       const data = await res.json();
@@ -1396,18 +1395,15 @@
     try {
       const payload = JSON.stringify({ patients, rooms: roomList, medCategories });
       
-      if (navigator.sendBeacon) {
-        const blob = new Blob([payload], { type: 'text/plain; charset=UTF-8' });
-        navigator.sendBeacon(GOOGLE_SCRIPT_URL, blob);
-      } else {
-        await fetch(GOOGLE_SCRIPT_URL, { 
-          method: 'POST', 
-          mode: 'no-cors', 
-          cache: 'no-cache',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
-          body: payload 
-        });
-      }
+      // Sử dụng fetch chuẩn tương thích hoàn hảo cho máy tính và điện thoại
+      await fetch(GOOGLE_SCRIPT_URL, { 
+        method: 'POST', 
+        mode: 'no-cors', 
+        cache: 'no-cache',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+        body: payload 
+      });
+      
       updateSyncUI('success', 'Đã lưu');
     } catch { 
       updateSyncUI('error', 'Không thể lưu'); 

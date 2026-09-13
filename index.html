@@ -744,16 +744,52 @@
     openAddMedGroupModal(activeMedCatId);
   }
 
+  // --- CÁC HÀM ĐIỀU CHỈNH LÊN / XUỐNG ĐÃ ĐƯỢC SỬA LỖI HOẠT ĐỘNG ---
   function moveMedCategory(index, direction) {
     const newIdx = index + direction;
     if (newIdx < 0 || newIdx >= medCategories.length) return;
     const temp = medCategories[index];
     medCategories[index] = medCategories[newIdx];
     medCategories[newIdx] = temp;
+    
     localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
-    syncDataToCloud();
     renderMedCategoriesUI();
+    syncDataToCloud();
   }
+
+  function moveMedGroup(catId, groupIndex, direction) {
+    const cat = medCategories.find(c => c.id === catId);
+    if (!cat || !cat.groups) return;
+    const newIdx = groupIndex + direction;
+    if (newIdx < 0 || newIdx >= cat.groups.length) return;
+    
+    const temp = cat.groups[groupIndex];
+    cat.groups[groupIndex] = cat.groups[newIdx];
+    cat.groups[newIdx] = temp;
+    
+    localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
+    renderMedCategoriesUI();
+    syncDataToCloud();
+  }
+
+  function moveMedicineItem(index, direction) {
+    const cat = medCategories.find(c => c.id === activeMedCatId);
+    const group = cat?.groups.find(g => g.id === activeMedGroupId);
+    if (!group || !group.medicines) return;
+    
+    const newIdx = index + direction;
+    if (newIdx < 0 || newIdx >= group.medicines.length) return;
+    
+    const temp = group.medicines[index];
+    group.medicines[index] = group.medicines[newIdx];
+    group.medicines[newIdx] = temp;
+    
+    localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
+    renderMedTable(group.medicines);
+    renderMedCategoriesUI();
+    syncDataToCloud();
+  }
+  // -------------------------------------------------------------
 
   function openAddMedGroupModal(catId) {
     activeMedCatId = catId;
@@ -883,21 +919,6 @@
         renderMedCategoriesUI();
       }
     }
-  }
-
-  function moveMedicineItem(index, direction) {
-    const cat = medCategories.find(c => c.id === activeMedCatId);
-    const group = cat?.groups.find(g => g.id === activeMedGroupId);
-    if (!group) return;
-    const newIdx = index + direction;
-    if (newIdx < 0 || newIdx >= group.medicines.length) return;
-    const temp = group.medicines[index];
-    group.medicines[index] = group.medicines[newIdx];
-    group.medicines[newIdx] = temp;
-    localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
-    syncDataToCloud();
-    renderMedTable(group.medicines);
-    renderMedCategoriesUI();
   }
 
   function renderMedTable(medicines) {
@@ -1419,7 +1440,6 @@
     }
   }
 
-  // Cập nhật giao diện thanh trạng thái nổi ở mọi nơi
   function updateSyncUI(st, txt) {
     const el = document.getElementById('globalFloatingStatus');
     if (!el) return;

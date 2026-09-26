@@ -101,7 +101,7 @@ body{background:var(--bg);color:var(--text-main);min-height:100vh;padding:50px 1
     </div>
     <div class="big-btn btn-purple" onclick="showView('medicationView')">
       <h2>💊 Thuốc</h2><p>Danh mục và tra cứu thuốc điều trị</p>
-      <span class="count-tag" id="homeMedCount">0 Danh mục</span>
+      <span class="count-tag" id="homeMedCount">0 Nhóm • 0 Thuốc</span>
     </div>
     <div class="big-btn btn-green" onclick="showView('dischargedView')">
       <h2>🏥 Ra viện</h2><p>Lưu trữ bệnh nhân đã xuất viện</p>
@@ -144,7 +144,7 @@ body{background:var(--bg);color:var(--text-main);min-height:100vh;padding:50px 1
       <thead><tr>
         <th style="min-width:140px;">Tên thuốc</th><th style="min-width:180px;">Chỉ định</th>
         <th style="min-width:180px;">Chống chỉ định</th><th style="min-width:180px;">TDKM</th>
-        <th style="min-width:150px;">Liều dùng</th><th style="width:130px;text-align:center;">Thao tác</th>
+        <th style="min-width:150px;">Liều dùng</th><th style="width:200px;text-align:center;">Thao tác</th>
       </tr></thead>
       <tbody id="medTableBody"></tbody>
     </table>
@@ -328,11 +328,12 @@ body{background:var(--bg);color:var(--text-main);min-height:100vh;padding:50px 1
       </div>
     </div>
     <div style="margin-bottom:14px;text-align:left;">
-      <label style="font-size:12px;font-weight:600;color:var(--text-muted);">Danh sách nhóm thuốc:</label>
-      <div id="editCategoryGroupsList" style="max-height:150px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-top:4px;border:1px solid var(--border-light);padding:8px;border-radius:8px;background:#fafafa;"></div>
+      <label style="font-size:12px;font-weight:600;color:var(--text-muted);">Danh sách nhóm thuốc (💾 Lưu tên • 🗑️ Xóa nhóm):</label>
+      <div id="editCategoryGroupsList" style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-top:4px;border:1px solid var(--border-light);padding:8px;border-radius:8px;background:#fafafa;"></div>
     </div>
     <div style="border-top:1px solid var(--border-light);padding-top:12px;margin-top:12px;">
       <button type="button" class="btn-confirm-submit" style="background:#e0f2fe;color:#0369a1;width:100%;" onclick="openAddMedGroupFromEdit()">➕ Thêm nhóm thuốc mới</button>
+      <button type="button" class="btn-confirm-submit" style="background:#fef2f2;color:#dc2626;border:1.5px solid #fca5a5;width:100%;margin-top:8px;" onclick="deleteMedCategory(activeMedCatId)">🗑️ Xóa danh mục này</button>
     </div>
     <button type="button" class="btn-modal-cancel" style="margin-top:16px;" onclick="closeEditMedCategoryModal()">Đóng</button>
   </div>
@@ -402,18 +403,24 @@ body{background:var(--bg);color:var(--text-main);min-height:100vh;padding:50px 1
 </div>
 </div><script>
 /* ============================================================
-   CẤU HÌNH SUPABASE — URL ĐÃ ĐÚNG
+   CẤU HÌNH SUPABASE
    ============================================================ */
 const SUPABASE_URL = 'https://emdizgyhlyzdftacewmy.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtZGl6Z3lobHl6ZGZ0YWNld215Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0MjA4NjMsImV4cCI6MjEwNTk5Njg2M30.Q3HG0TDY4W3yfMRHZPTr-FRL8-GEkNJyeFMLV1bgO8M';
 const ROW_LABELS = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P'];
 
+/* ============================================================
+   HELPERS
+   ============================================================ */
 function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 let _lastId = 0;
 function makeId() { const now = Date.now(); _lastId = now > _lastId ? now : _lastId + 1; return _lastId; }
 function safeGetLocal(key, fallback) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; } }
 function safeSetLocal(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch (e) { if (e.name === 'QuotaExceededError' || String(e).includes('quota')) updateSyncUI('error', '⚠️ Bộ nhớ đầy'); return false; } }
 
+/* ============================================================
+   STATE
+   ============================================================ */
 const defaultRooms = [
   { id:'825', name:'P 825', rows:2, cols:2, hiddenBeds:[] },
   { id:'817', name:'P 817', rows:1, cols:2, hiddenBeds:[] },
@@ -433,7 +440,13 @@ let isSyncingToCloud = false;
 let hasPendingSync = false;
 let syncDebounceTimer = null;
 let isFirstLoad = true;
+// Chống race condition: bỏ qua realtime khi vừa lưu
+let lastLocalSaveAt = 0;
+let lastSaveSource = '';
 
+/* ============================================================
+   UI HELPERS
+   ============================================================ */
 function showView(viewId) {
   ['homeView','roomGridView','medicationView','medGroupDetailView','summaryFullView','patientFormView','dischargedView','profileView'].forEach(v => { const el = document.getElementById(v); if (el) el.style.display = 'none'; });
   const target = document.getElementById(viewId);
@@ -456,6 +469,9 @@ const getNowForInput = () => { const d = new Date(); d.setMinutes(d.getMinutes()
 const formatDisplayTime = iso => { if (!iso) return ''; const d = new Date(iso); return isNaN(d) ? iso : `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} ${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}`; };
 const getPatientInBed = (room, bed) => patients.find(p => p.status === 'active' && String(p.room).trim() === String(room).trim() && String(p.bed).trim() === String(bed).trim());
 
+/* ============================================================
+   IMAGES
+   ============================================================ */
 const triggerPickImage = f => document.getElementById(`fileInput_${f}`)?.click();
 const handleImageFileSelected = (inp, f) => { if (inp.files?.[0]) { compressAndAddImage(inp.files[0], f); inp.value = ''; } };
 const handlePasteImage = (e, f) => { for (let item of (e.clipboardData || e.originalEvent.clipboardData).items) { if (item.type.includes('image')) { compressAndAddImage(item.getAsFile(), f); e.preventDefault(); break; } } };
@@ -485,6 +501,9 @@ function renderFormImagePreviews(f) {
 }
 function viewLargeImage(src) { document.getElementById('modalViewerImg').src = src; document.getElementById('imageModalViewer').style.display = 'flex'; }
 
+/* ============================================================
+   SUPABASE INIT
+   ============================================================ */
 function initSupabase() {
   if (typeof window.supabase === 'undefined') { updateSyncUI('error', 'Chưa tải được thư viện Supabase'); return false; }
   try { supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); return true; }
@@ -493,8 +512,16 @@ function initSupabase() {
 function rowToPatient(row) { return { id: row.id, room: row.room || '', bed: row.bed || '', name: row.ho_ten || '', initialDiag: row.initial_diag || '', status: row.status || 'active', dateOut: row.date_out || '', entries: row.entries || [], updatedAt: row.updated_at ? new Date(row.updated_at).getTime() : Date.now() }; }
 function patientToRow(p) { return { id: p.id, room: p.room || '', bed: p.bed || '', ho_ten: p.name || '', initial_diag: p.initialDiag || '', status: p.status || 'active', date_out: p.dateOut || '', entries: p.entries || [], updated_at: new Date().toISOString() }; }
 
+/* ============================================================
+   TẢI DỮ LIỆU TỪ SUPABASE
+   ============================================================ */
 async function loadDataFromCloud(silent) {
   if (!supabaseClient) return;
+  // Nếu vừa lưu xong trong 3 giây → bỏ qua để tránh tự đè
+  if (Date.now() - lastLocalSaveAt < 3000) {
+    console.log('Bỏ qua load — vừa lưu gần đây');
+    return;
+  }
   if (!silent) updateSyncUI('syncing', 'Đang tải dữ liệu từ Supabase...');
   try {
     const { data: patientRows, error: pErr } = await supabaseClient.from('patients').select('*');
@@ -513,10 +540,22 @@ async function loadDataFromCloud(silent) {
       patients = merged;
       safeSetLocal('bs_patients_scroll_v3', patients);
     }
-    const { data: medRows, error: mErr } = await supabaseClient.from('med_categories').select('*').order('id').limit(1);
-    if (!mErr && medRows && medRows.length > 0 && Array.isArray(medRows[0].groups) && medRows[0].groups.length > 0) { medCategories = medRows[0].groups; safeSetLocal('bs_med_categories_v14', medCategories); }
-    const { data: roomRows, error: rErr } = await supabaseClient.from('rooms_config').select('*').order('id').limit(1);
-    if (!rErr && roomRows && roomRows.length > 0 && Array.isArray(roomRows[0].config) && roomRows[0].config.length > 0) { roomList = roomRows[0].config; safeSetLocal('bs_room_configs_v21', roomList); }
+    // Chỉ ghi đè medCategories nếu chưa vừa lưu
+    if (lastSaveSource !== 'meds' || Date.now() - lastLocalSaveAt > 3000) {
+      const { data: medRows, error: mErr } = await supabaseClient.from('med_categories').select('*').order('id').limit(1);
+      if (!mErr && medRows && medRows.length > 0 && Array.isArray(medRows[0].groups) && medRows[0].groups.length > 0) {
+        medCategories = medRows[0].groups;
+        safeSetLocal('bs_med_categories_v14', medCategories);
+      }
+    }
+    // Chỉ ghi đè roomList nếu chưa vừa lưu
+    if (lastSaveSource !== 'rooms' || Date.now() - lastLocalSaveAt > 3000) {
+      const { data: roomRows, error: rErr } = await supabaseClient.from('rooms_config').select('*').order('id').limit(1);
+      if (!rErr && roomRows && roomRows.length > 0 && Array.isArray(roomRows[0].config) && roomRows[0].config.length > 0) {
+        roomList = roomRows[0].config;
+        safeSetLocal('bs_room_configs_v21', roomList);
+      }
+    }
     if (!silent) updateSyncUI('success');
     renderDashboardCounts();
     renderMedCategoriesUI();
@@ -525,8 +564,14 @@ async function loadDataFromCloud(silent) {
 }
 async function forceReloadFromCloud() {
   if (!confirm('Tải lại toàn bộ dữ liệu mới nhất từ Supabase?\n\nDữ liệu chưa đồng bộ có thể bị ghi đè.')) return;
+  lastLocalSaveAt = 0;
+  lastSaveSource = '';
   await loadDataFromCloud(false);
 }
+
+/* ============================================================
+   LƯU DỮ LIỆU LÊN SUPABASE
+   ============================================================ */
 function syncDataToCloud() {
   safeSetLocal('bs_patients_scroll_v3', patients);
   safeSetLocal('bs_room_configs_v21', roomList);
@@ -539,6 +584,7 @@ async function doSyncToCloud() {
   if (!supabaseClient) return;
   if (isSyncingToCloud) { hasPendingSync = true; return; }
   isSyncingToCloud = true;
+  lastLocalSaveAt = Date.now();
   updateSyncUI('syncing', 'Đang lưu lên Supabase...');
   try {
     if (patients.length > 0) {
@@ -555,10 +601,15 @@ async function doSyncToCloud() {
     const { data: roomExisting } = await supabaseClient.from('rooms_config').select('id').order('id').limit(1);
     if (roomExisting && roomExisting.length > 0) { await supabaseClient.from('rooms_config').update({ config: roomList, updated_at: new Date().toISOString() }).eq('id', roomExisting[0].id); }
     else { await supabaseClient.from('rooms_config').insert({ config: roomList }); }
+    lastLocalSaveAt = Date.now();
     updateSyncUI('success');
   } catch (err) { console.error('Lỗi lưu:', err); updateSyncUI('error', 'Lỗi lưu: ' + (err.message || 'không xác định')); }
   finally { isSyncingToCloud = false; if (hasPendingSync) { hasPendingSync = false; setTimeout(() => doSyncToCloud(), 200); } }
 }
+
+/* ============================================================
+   REALTIME
+   ============================================================ */
 function setupRealtime() {
   if (!supabaseClient) return;
   supabaseClient.channel('db-changes')
@@ -568,6 +619,9 @@ function setupRealtime() {
     .subscribe((status) => { console.log('Realtime status:', status); if (status === 'SUBSCRIBED') isFirstLoad = false; });
 }
 
+/* ============================================================
+   PROFILE BÁC SĨ
+   ============================================================ */
 function renderDoctorProfileUI() {
   document.getElementById('doctorNameText').textContent = doctorProfile.name;
   document.getElementById('doctorTitleText').textContent = doctorProfile.title;
@@ -611,12 +665,16 @@ function handleDoctorAvatarSelected(input) {
   reader.readAsDataURL(input.files[0]);
 }
 
+/* ============================================================
+   THUỐC — Danh mục & Nhóm
+   ============================================================ */
 function openAddMedCategoryModal() { document.getElementById('medCategoryNameInput').value = ''; document.getElementById('addMedCategoryModal').style.display = 'flex'; }
 const closeAddMedCategoryModal = () => { document.getElementById('addMedCategoryModal').style.display = 'none'; };
 function saveMedCategory() {
   const name = document.getElementById('medCategoryNameInput').value.trim();
   if (!name) return alert("Vui lòng nhập tên danh mục thuốc!");
   medCategories.push({ id: makeId(), name, groups: [] });
+  lastSaveSource = 'meds';
   syncDataToCloud(); renderMedCategoriesUI(); closeAddMedCategoryModal();
 }
 function openEditMedCategoryModal(catId) {
@@ -626,7 +684,12 @@ function openEditMedCategoryModal(catId) {
   document.getElementById('editCatNameInput').value = cat.name || '';
   const g = document.getElementById('editCategoryGroupsList');
   if (cat.groups && cat.groups.length > 0) {
-    g.innerHTML = cat.groups.map(gr => `<div style="display:flex;gap:6px;align-items:center;"><input type="text" id="editGroupInline_${esc(gr.id)}" value="${esc(gr.name)}" style="flex:1;padding:6px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-weight:600;"><button type="button" class="btn-bed-ctrl" style="background:#e0f2fe;color:#0369a1;border-color:#7dd3fc;padding:6px 10px;" onclick="saveInlineGroupName('${esc(cat.id)}','${esc(gr.id)}')">Lưu</button></div>`).join('');
+    g.innerHTML = cat.groups.map(gr => `
+      <div style="display:flex;gap:6px;align-items:center;background:#fff;padding:6px;border-radius:6px;border:1px solid var(--border-light);">
+        <input type="text" id="editGroupInline_${esc(gr.id)}" value="${esc(gr.name)}" style="flex:1;padding:6px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-weight:600;">
+        <button type="button" class="btn-bed-ctrl" style="background:#e0f2fe;color:#0369a1;border-color:#7dd3fc;padding:6px 8px;font-size:11px;" onclick="saveInlineGroupName('${esc(cat.id)}','${esc(gr.id)}')">💾</button>
+        <button type="button" class="btn-bed-ctrl" style="background:#fef2f2;color:#dc2626;border-color:#fca5a5;padding:6px 8px;font-size:11px;" onclick="deleteMedGroup('${esc(cat.id)}','${esc(gr.id)}')">🗑️</button>
+      </div>`).join('');
   } else { g.innerHTML = `<span style="font-size:12px;color:var(--text-muted);font-style:italic;">Chưa có nhóm thuốc.</span>`; }
   document.getElementById('editMedCategoryModal').style.display = 'flex';
 }
@@ -635,7 +698,7 @@ function saveCatNameOnly() {
   const newName = document.getElementById('editCatNameInput').value.trim();
   if (!newName) return alert("Vui lòng nhập tên danh mục!");
   const cat = medCategories.find(c => String(c.id) === String(activeMedCatId));
-  if (cat) { cat.name = newName; syncDataToCloud(); renderMedCategoriesUI(); closeEditMedCategoryModal(); }
+  if (cat) { cat.name = newName; lastSaveSource = 'meds'; syncDataToCloud(); renderMedCategoriesUI(); closeEditMedCategoryModal(); }
 }
 function saveInlineGroupName(catId, groupId) {
   const input = document.getElementById('editGroupInline_' + groupId);
@@ -643,13 +706,44 @@ function saveInlineGroupName(catId, groupId) {
   if (!newName) return alert("Tên nhóm không được để trống!");
   const cat = medCategories.find(c => String(c.id) === String(catId));
   const group = cat?.groups.find(g => String(g.id) === String(groupId));
-  if (group) { group.name = newName; syncDataToCloud(); renderMedCategoriesUI(); alert("Đã lưu tên nhóm!"); }
+  if (group) { group.name = newName; lastSaveSource = 'meds'; syncDataToCloud(); renderMedCategoriesUI(); alert("Đã lưu tên nhóm!"); }
+}
+function deleteMedGroup(catId, groupId) {
+  const cat = medCategories.find(c => String(c.id) === String(catId));
+  if (!cat) return;
+  const group = cat.groups.find(g => String(g.id) === String(groupId));
+  if (!group) return;
+  const medCount = group.medicines?.length || 0;
+  const msg = medCount > 0 ? `Xóa nhóm "${group.name}" và ${medCount} loại thuốc bên trong?` : `Xóa nhóm "${group.name}"?`;
+  if (!confirm(msg)) return;
+  cat.groups = cat.groups.filter(g => String(g.id) !== String(groupId));
+  lastSaveSource = 'meds';
+  syncDataToCloud();
+  renderMedCategoriesUI();
+  openEditMedCategoryModal(catId);
+  alert("Đã xóa nhóm!");
+}
+function deleteMedCategory(catId) {
+  const cat = medCategories.find(c => String(c.id) === String(catId));
+  if (!cat) return;
+  const groupCount = cat.groups?.length || 0;
+  let medCount = 0;
+  (cat.groups || []).forEach(g => { medCount += (g.medicines?.length || 0); });
+  const msg = `XÓA DANH MỤC "${cat.name}"?\n\nSẽ xóa luôn ${groupCount} nhóm và ${medCount} loại thuốc bên trong.\n\nKhông thể hoàn tác!`;
+  if (!confirm(msg)) return;
+  medCategories = medCategories.filter(c => String(c.id) !== String(catId));
+  lastSaveSource = 'meds';
+  syncDataToCloud();
+  renderMedCategoriesUI();
+  closeEditMedCategoryModal();
+  alert("Đã xóa danh mục!");
 }
 function openAddMedGroupFromEdit() { closeEditMedCategoryModal(); openAddMedGroupModal(activeMedCatId); }
 function moveMedCategory(index, direction) {
   const newIdx = index + direction;
   if (newIdx < 0 || newIdx >= medCategories.length) return;
   [medCategories[index], medCategories[newIdx]] = [medCategories[newIdx], medCategories[index]];
+  lastSaveSource = 'meds';
   syncDataToCloud(); renderMedCategoriesUI();
 }
 function moveMedGroup(catId, groupIndex, direction) {
@@ -658,6 +752,7 @@ function moveMedGroup(catId, groupIndex, direction) {
   const newIdx = groupIndex + direction;
   if (newIdx < 0 || newIdx >= cat.groups.length) return;
   [cat.groups[groupIndex], cat.groups[newIdx]] = [cat.groups[newIdx], cat.groups[groupIndex]];
+  lastSaveSource = 'meds';
   syncDataToCloud(); renderMedCategoriesUI();
 }
 function moveMedicineItem(index, direction) {
@@ -667,6 +762,7 @@ function moveMedicineItem(index, direction) {
   const newIdx = index + direction;
   if (newIdx < 0 || newIdx >= group.medicines.length) return;
   [group.medicines[index], group.medicines[newIdx]] = [group.medicines[newIdx], group.medicines[index]];
+  lastSaveSource = 'meds';
   syncDataToCloud(); renderMedTable(group.medicines); renderMedCategoriesUI();
 }
 function openAddMedGroupModal(catId) { activeMedCatId = catId; document.getElementById('medGroupNameInput').value = ''; document.getElementById('addMedGroupModal').style.display = 'flex'; }
@@ -679,6 +775,7 @@ function saveMedGroupAndCreateFirstMed() {
     cat.groups = cat.groups || [];
     const newGroupId = makeId();
     cat.groups.push({ id: newGroupId, name, medicines: [] });
+    lastSaveSource = 'meds';
     syncDataToCloud(); renderMedCategoriesUI(); closeAddMedGroupModal();
     openMedGroupDetail(cat.id, newGroupId); openAddMedicineModal();
   }
@@ -693,6 +790,31 @@ function openMedGroupDetail(catId, groupId) {
   showView('medGroupDetailView');
 }
 function openEditFromDetailTitle() { const cat = medCategories.find(c => String(c.id) === String(activeMedCatId)); if (cat) openEditMedCategoryModal(cat.id); }
+
+/* ============================================================
+   THUỐC — Ẩn / Hiện
+   ============================================================ */
+function toggleShowHiddenMeds() {
+  window._showHiddenMeds = !window._showHiddenMeds;
+  renderMedCategoriesUI();
+}
+function toggleMedHidden(catId, groupId, medId) {
+  const cat = medCategories.find(c => String(c.id) === String(catId));
+  const group = cat?.groups.find(g => String(g.id) === String(groupId));
+  const med = group?.medicines.find(m => String(m.id) === String(medId));
+  if (!med) return;
+  med.hidden = !med.hidden;
+  lastSaveSource = 'meds';
+  syncDataToCloud();
+  renderMedCategoriesUI();
+  if (String(activeMedCatId) === String(catId) && String(activeMedGroupId) === String(groupId)) {
+    renderMedTable(group.medicines);
+  }
+}
+
+/* ============================================================
+   THUỐC — Chi tiết (bảng)
+   ============================================================ */
 function openAddMedicineModal() {
   document.getElementById('editingMedId').value = '';
   document.getElementById('medModalTitle').textContent = 'Thêm Thuốc Mới';
@@ -729,7 +851,8 @@ function saveMedicineItem() {
     if (editingId) {
       const med = group.medicines.find(m => String(m.id) === String(editingId));
       if (med) { med.name = name; med.indication = indication; med.contraindication = contraindication; med.sideEffects = sideEffects; med.dose = dose; }
-    } else { group.medicines.push({ id: makeId(), name, indication, contraindication, sideEffects, dose }); }
+    } else { group.medicines.push({ id: makeId(), name, indication, contraindication, sideEffects, dose, hidden: false }); }
+    lastSaveSource = 'meds';
     syncDataToCloud(); renderMedTable(group.medicines); renderMedCategoriesUI();
   }
   closeAddMedicineModal();
@@ -740,27 +863,97 @@ function deleteMedicineItem(medId) {
   const group = cat?.groups.find(g => String(g.id) === String(activeMedGroupId));
   if (!group) return;
   group.medicines = group.medicines.filter(m => String(m.id) !== String(medId));
-  if (group.medicines.length === 0) {
-    cat.groups = cat.groups.filter(g => String(g.id) !== String(activeMedGroupId));
-    if (cat.groups.length === 0) medCategories = medCategories.filter(c => String(c.id) !== String(activeMedCatId));
-    showView('medicationView');
-  }
-  syncDataToCloud(); renderMedTable(group.medicines); renderMedCategoriesUI();
+  lastSaveSource = 'meds';
+  syncDataToCloud();
+  renderMedTable(group.medicines);
+  renderMedCategoriesUI();
 }
 function renderMedTable(medicines) {
   const tbody = document.getElementById('medTableBody'); if (!tbody) return;
-  if (!medicines.length) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);font-style:italic;padding:16px;">Chưa có thuốc nào trong nhóm này.</td></tr>`; return; }
-  tbody.innerHTML = medicines.map((m, idx) => `<tr><td style="font-weight:700;color:var(--primary);">${esc(m.name)}</td><td>${esc(m.indication) || '—'}</td><td>${esc(m.contraindication) || '—'}</td><td>${esc(m.sideEffects) || '—'}</td><td>${esc(m.dose) || '—'}</td><td style="text-align:center;white-space:nowrap;"><button type="button" class="btn-bed-ctrl" style="padding:2px 5px;" onclick="moveMedicineItem(${idx},-1)">⬆️</button><button type="button" class="btn-bed-ctrl" style="padding:2px 5px;" onclick="moveMedicineItem(${idx},1)">⬇️</button><button type="button" class="btn-bed-ctrl" style="background:#f0f9ff;border-color:#7dd3fc;color:#0369a1;padding:2px 6px;" onclick="openEditMedicineModal('${esc(m.id)}')">✏️</button><button type="button" class="btn-bed-ctrl" style="background:#fef2f2;border-color:#fca5a5;color:#dc2626;padding:2px 6px;" onclick="deleteMedicineItem('${esc(m.id)}')">🗑️</button></td></tr>`).join('');
+  if (!medicines.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);font-style:italic;padding:16px;">Chưa có thuốc nào trong nhóm này.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = medicines.map((m, idx) => `
+    <tr style="${m.hidden ? 'opacity:.5;background:#f8fafc;' : ''}">
+      <td style="font-weight:700;color:${m.hidden ? '#94a3b8' : 'var(--primary)'};">${m.hidden ? '🚫 ' : ''}${esc(m.name)}</td>
+      <td>${esc(m.indication) || '—'}</td>
+      <td>${esc(m.contraindication) || '—'}</td>
+      <td>${esc(m.sideEffects) || '—'}</td>
+      <td>${esc(m.dose) || '—'}</td>
+      <td style="text-align:center;white-space:nowrap;">
+        <button type="button" class="btn-bed-ctrl" style="padding:2px 5px;" onclick="moveMedicineItem(${idx},-1)">⬆️</button>
+        <button type="button" class="btn-bed-ctrl" style="padding:2px 5px;" onclick="moveMedicineItem(${idx},1)">⬇️</button>
+        <button type="button" class="btn-bed-ctrl" style="background:${m.hidden ? '#dcfce7' : '#fef3c7'};border-color:${m.hidden ? '#86efac' : '#fcd34d'};color:${m.hidden ? '#15803d' : '#92400e'};padding:2px 6px;" onclick="toggleMedHidden('${esc(activeMedCatId)}','${esc(activeMedGroupId)}','${esc(m.id)}')" title="${m.hidden ? 'Hiện lại' : 'Ẩn khỏi giao diện chính'}">${m.hidden ? '👁️ Hiện' : '🚫 Ẩn'}</button>
+        <button type="button" class="btn-bed-ctrl" style="background:#f0f9ff;border-color:#7dd3fc;color:#0369a1;padding:2px 6px;" onclick="openEditMedicineModal('${esc(m.id)}')">✏️</button>
+        <button type="button" class="btn-bed-ctrl" style="background:#fef2f2;border-color:#fca5a5;color:#dc2626;padding:2px 6px;" onclick="deleteMedicineItem('${esc(m.id)}')">🗑️</button>
+      </td>
+    </tr>`).join('');
 }
 function renderMedCategoriesUI() {
   const container = document.getElementById('medCategoryContainer');
-  let totalGroups = 0;
-  medCategories.forEach(c => totalGroups += (c.groups?.length || 0));
+  let totalGroups = 0, totalMeds = 0, totalHidden = 0;
+  medCategories.forEach(c => {
+    totalGroups += (c.groups?.length || 0);
+    (c.groups || []).forEach(g => {
+      (g.medicines || []).forEach(m => { totalMeds++; if (m.hidden) totalHidden++; });
+    });
+  });
   const medCount = document.getElementById('homeMedCount');
-  if (medCount) medCount.textContent = `${totalGroups} Nhóm thuốc`;
+  if (medCount) medCount.textContent = `${totalGroups} Nhóm • ${totalMeds} Thuốc`;
   if (!container) return;
-  if (!medCategories.length) { container.innerHTML = `<div style="background:#fff;border-radius:var(--radius-lg);padding:20px;border:1.5px solid var(--border);text-align:center;color:var(--text-muted);">Chưa có danh mục thuốc nào.</div>`; return; }
-  container.innerHTML = medCategories.map((cat, catIdx) => `<div style="background:#fff;border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:16px;"><div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:8px;margin-bottom:10px;flex-wrap:wrap;gap:6px;"><h3 style="font-size:16px;font-weight:700;color:var(--primary);">💊 ${esc(cat.name)}</h3><div style="display:flex;gap:6px;align-items:center;"><button type="button" class="btn-bed-ctrl" onclick="moveMedCategory(${catIdx},-1)">⬆️</button><button type="button" class="btn-bed-ctrl" onclick="moveMedCategory(${catIdx},1)">⬇️</button><button type="button" class="btn-bed-ctrl" style="background:#f0f9ff;border-color:#7dd3fc;color:#0369a1;" onclick="openEditMedCategoryModal('${esc(cat.id)}')">✏️ Sửa</button></div></div><div style="display:flex;flex-direction:column;gap:8px;">${cat.groups?.length ? cat.groups.map((g, gIdx) => `<div style="background:#f8fafc;border:1px solid var(--border-light);padding:10px 12px;border-radius:8px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="font-size:13.5px;font-weight:700;color:#1e293b;cursor:pointer;" onclick="openMedGroupDetail('${esc(cat.id)}','${esc(g.id)}')">📁 ${esc(g.name)} (${g.medicines?.length || 0} thuốc)</span><div style="display:flex;gap:4px;"><button type="button" class="btn-bed-ctrl" style="padding:2px 5px;" onclick="moveMedGroup('${esc(cat.id)}',${gIdx},-1)">⬆️</button><button type="button" class="btn-bed-ctrl" style="padding:2px 5px;" onclick="moveMedGroup('${esc(cat.id)}',${gIdx},1)">⬇️</button></div></div><div style="display:flex;flex-direction:column;gap:4px;">${g.medicines?.length ? g.medicines.map(m => `<div style="background:#e0f2fe;color:#0369a1;font-size:12px;font-weight:600;padding:4px 8px;border-radius:6px;cursor:pointer;" onclick="openMedGroupDetail('${esc(cat.id)}','${esc(g.id)}')">• ${esc(m.name)} <span style="font-weight:400;color:#475569;">(${esc(m.dose) || 'Chưa rõ liều'})</span></div>`).join('') : '<span style="font-size:12px;color:var(--text-muted);font-style:italic;">Chưa có thuốc.</span>'}</div></div>`).join('') : '<p style="font-size:13px;color:var(--text-muted);font-style:italic;">Chưa có nhóm thuốc. Bấm Sửa để thêm.</p>'}</div></div>`).join('');
+  if (!medCategories.length) {
+    container.innerHTML = `<div style="background:#fff;border-radius:var(--radius-lg);padding:20px;border:1.5px solid var(--border);text-align:center;color:var(--text-muted);">Chưa có danh mục thuốc nào.</div>`;
+    return;
+  }
+  const showHidden = window._showHiddenMeds === true;
+  const toolbarHtml = `
+    <div style="background:#fff;border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+      <div style="font-size:13px;color:var(--text-muted);">
+        <strong>${totalMeds}</strong> loại thuốc • <strong>${totalHidden}</strong> đang ẩn
+      </div>
+      <button type="button" class="btn-top" style="background:${showHidden?'#fef3c7':'#f0f9ff'};border-color:${showHidden?'#fcd34d':'#7dd3fc'};color:${showHidden?'#92400e':'#0369a1'};" onclick="toggleShowHiddenMeds()">
+        ${showHidden ? '🙈 Ẩn thuốc đã ẩn' : '👁️ Hiện thuốc đã ẩn'}
+      </button>
+    </div>`;
+  container.innerHTML = toolbarHtml + medCategories.map((cat, catIdx) => {
+    let visibleMedsInCat = 0;
+    (cat.groups || []).forEach(g => { (g.medicines || []).forEach(m => { if (!m.hidden) visibleMedsInCat++; }); });
+    return `<div style="background:#fff;border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-light);padding-bottom:8px;margin-bottom:10px;flex-wrap:wrap;gap:6px;">
+        <h3 style="font-size:16px;font-weight:700;color:var(--primary);">💊 ${esc(cat.name)} <span style="font-size:12px;color:var(--text-muted);font-weight:400;">(${visibleMedsInCat} thuốc hiện)</span></h3>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <button type="button" class="btn-bed-ctrl" onclick="moveMedCategory(${catIdx},-1)">⬆️</button>
+          <button type="button" class="btn-bed-ctrl" onclick="moveMedCategory(${catIdx},1)">⬇️</button>
+          <button type="button" class="btn-bed-ctrl" style="background:#f0f9ff;border-color:#7dd3fc;color:#0369a1;" onclick="openEditMedCategoryModal('${esc(cat.id)}')">✏️ Sửa</button>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        ${cat.groups?.length ? cat.groups.map((g, gIdx) => {
+          const visibleMeds = (g.medicines || []).filter(m => showHidden || !m.hidden);
+          if (visibleMeds.length === 0 && !showHidden) return '';
+          return `<div style="background:#f8fafc;border:1px solid var(--border-light);padding:10px 12px;border-radius:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <span style="font-size:13.5px;font-weight:700;color:#1e293b;cursor:pointer;" onclick="openMedGroupDetail('${esc(cat.id)}','${esc(g.id)}')">📁 ${esc(g.name)} (${visibleMeds.length} thuốc)</span>
+              <div style="display:flex;gap:4px;">
+                <button type="button" class="btn-bed-ctrl" style="padding:2px 5px;" onclick="moveMedGroup('${esc(cat.id)}',${gIdx},-1)">⬆️</button>
+                <button type="button" class="btn-bed-ctrl" style="padding:2px 5px;" onclick="moveMedGroup('${esc(cat.id)}',${gIdx},1)">⬇️</button>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              ${visibleMeds.length ? visibleMeds.map(m => `
+                <div style="display:flex;align-items:center;gap:6px;background:${m.hidden ? '#f1f5f9' : '#e0f2fe'};color:${m.hidden ? '#94a3b8' : '#0369a1'};font-size:12px;font-weight:600;padding:4px 8px;border-radius:6px;${m.hidden ? 'opacity:.6;' : ''}">
+                  <span style="cursor:pointer;flex:1;" onclick="openMedGroupDetail('${esc(cat.id)}','${esc(g.id)}')">
+                    ${m.hidden ? '🚫' : '•'} ${esc(m.name)} <span style="font-weight:400;color:#475569;">(${esc(m.dose) || 'Chưa rõ liều'})</span>
+                  </span>
+                  <button type="button" class="btn-bed-ctrl" style="padding:2px 6px;font-size:11px;background:${m.hidden ? '#dcfce7' : '#fee2e2'};color:${m.hidden ? '#15803d' : '#991b1b'};border-color:${m.hidden ? '#86efac' : '#fca5a5'};" onclick="event.stopPropagation();toggleMedHidden('${esc(cat.id)}','${esc(g.id)}','${esc(m.id)}')" title="${m.hidden ? 'Hiện lại' : 'Ẩn thuốc này'}">${m.hidden ? '👁️' : '🚫'}</button>
+                </div>`).join('') : '<span style="font-size:12px;color:var(--text-muted);font-style:italic;">Tất cả thuốc đều bị ẩn.</span>'}
+            </div>
+          </div>`;
+        }).join('') : '<p style="font-size:13px;color:var(--text-muted);font-style:italic;">Chưa có nhóm thuốc. Bấm Sửa để thêm.</p>'}
+      </div>
+    </div>`;
+  }).join('');
 }
 function askAIToSuggestMed() {
   const medName = document.getElementById('medNameInput').value.trim().toLowerCase();
@@ -774,7 +967,11 @@ function askAIToSuggestMed() {
 function exportMedicationPDF() {
   if (!medCategories.length) return alert("Chưa có danh mục thuốc nào!");
   const win = window.open('', '_blank'); if (!win) return alert("Bật quyền pop-up!");
-  const bodyHtml = medCategories.map((cat, cIdx) => `<div style="margin-bottom:20px;"><h3 style="color:#0284c7;border-bottom:2px solid #0284c7;padding-bottom:4px;">${cIdx+1}. ${esc(cat.name)}</h3>${cat.groups && cat.groups.length ? cat.groups.map(g => `<div style="margin-bottom:12px;margin-left:10px;"><h4 style="color:#1e293b;">📁 ${esc(g.name)}</h4>${g.medicines && g.medicines.length ? `<table style="width:100%;border-collapse:collapse;font-size:11.5px;"><thead><tr style="background:#f1f5f9;"><th style="border:1px solid #cbd5e1;padding:6px;text-align:left;">Tên</th><th style="border:1px solid #cbd5e1;padding:6px;text-align:left;">Chỉ định</th><th style="border:1px solid #cbd5e1;padding:6px;text-align:left;">CCĐ</th><th style="border:1px solid #cbd5e1;padding:6px;text-align:left;">TDKM</th><th style="border:1px solid #cbd5e1;padding:6px;text-align:left;">Liều</th></tr></thead><tbody>${g.medicines.map(m => `<tr><td style="border:1px solid #cbd5e1;padding:6px;font-weight:bold;color:#0284c7;">${esc(m.name)}</td><td style="border:1px solid #cbd5e1;padding:6px;">${esc(m.indication) || '—'}</td><td style="border:1px solid #cbd5e1;padding:6px;">${esc(m.contraindication) || '—'}</td><td style="border:1px solid #cbd5e1;padding:6px;">${esc(m.sideEffects) || '—'}</td><td style="border:1px solid #cbd5e1;padding:6px;">${esc(m.dose) || '—'}</td></tr>`).join('')}</tbody></table>` : '<p style="font-size:12px;color:#64748b;font-style:italic;">Chưa có thuốc.</p>'}</div>`).join('') : '<p style="font-size:12px;color:#64748b;font-style:italic;">Chưa có nhóm thuốc.</p>'}</div>`).join('');
+  const bodyHtml = medCategories.map((cat, cIdx) => `<div style="margin-bottom:20px;"><h3 style="color:#0284c7;border-bottom:2px solid #0284c7;padding-bottom:4px;">${cIdx+1}. ${esc(cat.name)}</h3>${cat.groups && cat.groups.length ? cat.groups.map(g => {
+    const visibleMeds = (g.medicines || []).filter(m => !m.hidden);
+    if (!visibleMeds.length) return '';
+    return `<div style="margin-bottom:12px;margin-left:10px;"><h4 style="color:#1e293b;">📁 ${esc(g.name)}</h4><table style="width:100%;border-collapse:collapse;font-size:11.5px;"><thead><tr style="background:#f1f5f9;"><th style="border:1px solid #cbd5e1;padding:6px;text-align:left;">Tên</th><th style="border:1px solid #cbd5e1;padding:6px;text-align:left;">Chỉ định</th><th style="border:1px solid #cbd5e1;padding:6px;text-align:left;">CCĐ</th><th style="border:1px solid #cbd5e1;padding:6px;text-align:left;">TDKM</th><th style="border:1px solid #cbd5e1;padding:6px;text-align:left;">Liều</th></tr></thead><tbody>${visibleMeds.map(m => `<tr><td style="border:1px solid #cbd5e1;padding:6px;font-weight:bold;color:#0284c7;">${esc(m.name)}</td><td style="border:1px solid #cbd5e1;padding:6px;">${esc(m.indication) || '—'}</td><td style="border:1px solid #cbd5e1;padding:6px;">${esc(m.contraindication) || '—'}</td><td style="border:1px solid #cbd5e1;padding:6px;">${esc(m.sideEffects) || '—'}</td><td style="border:1px solid #cbd5e1;padding:6px;">${esc(m.dose) || '—'}</td></tr>`).join('')}</tbody></table></div>`;
+  }).join('') : '<p style="font-size:12px;color:#64748b;font-style:italic;">Chưa có nhóm thuốc.</p>'}</div>`).join('');
   win.document.write(`<!DOCTYPE html><html><head><title>Danh Mục Thuốc</title><style>body{font-family:sans-serif;padding:20px;color:#0f172a}@media print{body{padding:0}}</style></head><body><h2 style="text-align:center;color:#0284c7;">DANH MỤC THUỐC ĐIỀU TRỊ</h2>${bodyHtml}</body></html>`);
   win.document.close(); win.focus(); setTimeout(() => win.print(), 400);
 }/* ============================================================
@@ -801,6 +998,7 @@ function addNewRoom() {
   if (!name) return alert("Vui lòng nhập tên phòng!");
   roomList.push({ id: String(makeId()), name, rows: 2, cols: 2, hiddenBeds: [] });
   input.value = '';
+  lastSaveSource = 'rooms';
   syncDataToCloud();
   renderRoomsGrid();
   renderRoomSettingsList();
@@ -816,6 +1014,7 @@ function saveRoomName(roomId) {
     patients.forEach(pat => {
       if (String(pat.room).trim() === String(oldName).trim()) pat.room = newName;
     });
+    lastSaveSource = 'rooms';
     syncDataToCloud();
     renderRoomsGrid();
     renderRoomSettingsList();
@@ -838,6 +1037,7 @@ function deleteRoom(roomId) {
   if (hasPatient) return alert("Không thể xóa phòng đang có bệnh nhân!");
   if (confirm(`Xóa phòng ${r.name}?`)) {
     roomList = roomList.filter(x => String(x.id) !== String(roomId));
+    lastSaveSource = 'rooms';
     syncDataToCloud();
     renderRoomsGrid();
     renderRoomSettingsList();
@@ -852,16 +1052,13 @@ function openEditRoomModal(roomId) {
   document.getElementById('editRoomModal').style.display = 'flex';
 }
 const closeEditRoomModal = () => { document.getElementById('editRoomModal').style.display = 'none'; currentEditingRoomId = null; };
-function switchEditMode(mode) {
-  currentActiveTab = mode;
-  ['row','col','cell'].forEach(m => {
-    const btn = document.getElementById('tab' + m.charAt(0).toUpperCase() + m.slice(1));
-    const panel = document.getElementById('panelMode' + m.charAt(0).toUpperCase() + m.slice(1));
-    if (btn) btn.classList.toggle('active', m === mode);
-    if (panel) panel.classList.toggle('active', m === mode);
-  });
+
+/* Refresh nội dung modal không đóng/mở lại (tránh lag + mất focus) */
+function refreshEditRoomModalContent() {
   const r = roomList.find(x => String(x.id) === String(currentEditingRoomId));
   if (!r) return;
+  document.getElementById('editRoomModalTitle').textContent = `Sửa phòng - ${r.name}`;
+  const mode = currentActiveTab;
   const rowCount = r.rows || 2, colCount = r.cols || 2;
   if (mode === 'row') {
     const sel = document.getElementById('selectRowToRemove');
@@ -875,13 +1072,25 @@ function switchEditMode(mode) {
     renderCellVisibilityMatrix();
   }
 }
+function switchEditMode(mode) {
+  currentActiveTab = mode;
+  ['row','col','cell'].forEach(m => {
+    const btn = document.getElementById('tab' + m.charAt(0).toUpperCase() + m.slice(1));
+    const panel = document.getElementById('panelMode' + m.charAt(0).toUpperCase() + m.slice(1));
+    if (btn) btn.classList.toggle('active', m === mode);
+    if (panel) panel.classList.toggle('active', m === mode);
+  });
+  refreshEditRoomModalContent();
+}
 function addRowToRoom() {
   const r = roomList.find(x => String(x.id) === String(currentEditingRoomId));
   if (!r) return;
   r.rows = (r.rows || 2) + 1;
+  lastSaveSource = 'rooms';
+  lastLocalSaveAt = Date.now();
   syncDataToCloud();
   renderRoomsGrid();
-  openEditRoomModal(r.id);
+  refreshEditRoomModalContent();
 }
 function removeRowFromRoom() {
   const r = roomList.find(x => String(x.id) === String(currentEditingRoomId));
@@ -899,17 +1108,21 @@ function removeRowFromRoom() {
   if (hasPatient) return alert("Không thể xóa hàng đang có bệnh nhân!");
   r.rows = rowCount - 1;
   r.hiddenBeds = (r.hiddenBeds || []).filter(b => !b.startsWith(rowChar));
+  lastSaveSource = 'rooms';
+  lastLocalSaveAt = Date.now();
   syncDataToCloud();
   renderRoomsGrid();
-  openEditRoomModal(r.id);
+  refreshEditRoomModalContent();
 }
 function addColToRoom() {
   const r = roomList.find(x => String(x.id) === String(currentEditingRoomId));
   if (!r) return;
   r.cols = (r.cols || 2) + 1;
+  lastSaveSource = 'rooms';
+  lastLocalSaveAt = Date.now();
   syncDataToCloud();
   renderRoomsGrid();
-  openEditRoomModal(r.id);
+  refreshEditRoomModalContent();
 }
 function removeColFromRoom() {
   const r = roomList.find(x => String(x.id) === String(currentEditingRoomId));
@@ -943,9 +1156,11 @@ function removeColFromRoom() {
   }
   r.cols = colCount - 1;
   r.hiddenBeds = newHiddenBeds;
+  lastSaveSource = 'rooms';
+  lastLocalSaveAt = Date.now();
   syncDataToCloud();
   renderRoomsGrid();
-  openEditRoomModal(r.id);
+  refreshEditRoomModalContent();
 }
 function renderCellVisibilityMatrix() {
   const r = roomList.find(x => String(x.id) === String(currentEditingRoomId));
@@ -961,13 +1176,7 @@ function renderCellVisibilityMatrix() {
     for (let j = 1; j <= colCount; j++) {
       const cellName = `${rowChar}${j}`;
       const isHidden = r.hiddenBeds.includes(cellName);
-      html += `
-        <div style="background:#fff;border:1px solid var(--border);border-radius:6px;padding:6px;text-align:center;">
-          <span style="font-size:11px;font-weight:700;display:block;margin-bottom:4px;">${cellName}</span>
-          <button type="button" class="btn-bed-ctrl" style="width:100%;font-size:11px;padding:3px;background:${isHidden?'#dcfce7':'#fee2e2'};color:${isHidden?'#15803d':'#991b1b'};" onclick="toggleCellVisibility('${esc(r.id)}','${cellName}')">
-            ${isHidden ? '👁️ Hiện' : '🔒 Ẩn'}
-          </button>
-        </div>`;
+      html += `<div style="background:#fff;border:1px solid var(--border);border-radius:6px;padding:6px;text-align:center;"><span style="font-size:11px;font-weight:700;display:block;margin-bottom:4px;">${cellName}</span><button type="button" class="btn-bed-ctrl" style="width:100%;font-size:11px;padding:3px;background:${isHidden?'#dcfce7':'#fee2e2'};color:${isHidden?'#15803d':'#991b1b'};" onclick="toggleCellVisibility('${esc(r.id)}','${cellName}')">${isHidden ? '👁️ Hiện' : '🔒 Ẩn'}</button></div>`;
     }
     html += `</div>`;
   }
@@ -983,6 +1192,8 @@ function toggleCellVisibility(roomId, cellName) {
     if (getPatientInBed(r.name, cellName)) return alert("Không thể ẩn ô đang có bệnh nhân!");
     r.hiddenBeds.push(cellName);
   }
+  lastSaveSource = 'rooms';
+  lastLocalSaveAt = Date.now();
   syncDataToCloud();
   renderRoomsGrid();
   renderCellVisibilityMatrix();
@@ -1002,22 +1213,10 @@ function renderRoomsGrid() {
         const isHidden = r.hiddenBeds.includes(cellName);
         if (!isHidden) totalVisibleBeds++;
         const p = getPatientInBed(r.name, cellName);
-        cellsHtml += `
-          <div class="bed-cell-item ${p ? 'occupied' : ''} ${isHidden ? 'is-hidden-slot' : ''}" onclick="handleBedClick('${esc(r.name)}','${cellName}')">
-            ${p ? `<span class="bed-cell-name">👤 ${esc(p.name)}</span>` : `<span class="bed-cell-empty">+ Trống (${cellName})</span>`}
-          </div>`;
+        cellsHtml += `<div class="bed-cell-item ${p ? 'occupied' : ''} ${isHidden ? 'is-hidden-slot' : ''}" onclick="handleBedClick('${esc(r.name)}','${cellName}')">${p ? `<span class="bed-cell-name">👤 ${esc(p.name)}</span>` : `<span class="bed-cell-empty">+ Trống (${cellName})</span>`}</div>`;
       }
     }
-    return `
-      <div class="room-box-card">
-        <div class="room-box-title">
-          <span>🚪 ${esc(r.name)} (${totalVisibleBeds} Vị trí)</span>
-          <button type="button" class="btn-bed-ctrl" onclick="openEditRoomModal('${esc(r.id)}')">✏️ Sửa phòng</button>
-        </div>
-        <div class="beds-grid-box" style="grid-template-columns:repeat(${colCount},1fr);">
-          ${cellsHtml}
-        </div>
-      </div>`;
+    return `<div class="room-box-card"><div class="room-box-title"><span>🚪 ${esc(r.name)} (${totalVisibleBeds} Vị trí)</span><button type="button" class="btn-bed-ctrl" onclick="openEditRoomModal('${esc(r.id)}')">✏️ Sửa phòng</button></div><div class="beds-grid-box" style="grid-template-columns:repeat(${colCount},1fr);">${cellsHtml}</div></div>`;
   }).join('');
 }
 
@@ -1109,6 +1308,8 @@ function saveRecord() {
       if (currentEditing.mode === 'edit_day') p.entries[currentEditing.entryIndex] = entry;
       else p.entries.push(entry);
       p.entries.sort((a, b) => a.timestamp - b.timestamp);
+      lastSaveSource = 'patients';
+      lastLocalSaveAt = Date.now();
       syncDataToCloud();
       currentActiveIndex = currentEditing.mode === 'edit_day' ? currentEditing.entryIndex : p.entries.length - 1;
       openSummaryView(p.id);
@@ -1125,6 +1326,8 @@ function saveRecord() {
       updatedAt: Date.now()
     };
     patients.unshift(newP);
+    lastSaveSource = 'patients';
+    lastLocalSaveAt = Date.now();
     syncDataToCloud();
     currentActiveIndex = 0;
     openSummaryView(newP.id);
@@ -1134,6 +1337,8 @@ function deleteActivePatient() {
   const p = patients.find(x => x.id === currentViewingPatientId);
   if (p && confirm(`XÓA HOÀN TOÀN hồ sơ bệnh nhân "${p.name}"?`)) {
     patients = patients.filter(x => x.id !== p.id);
+    lastSaveSource = 'patients';
+    lastLocalSaveAt = Date.now();
     syncDataToCloud();
     showView('roomGridView');
   }
@@ -1155,23 +1360,15 @@ function openTransferBedModal() {
         const occupant = getPatientInBed(r.name, cellName);
         const isCurrent = (String(r.name).trim() === String(p.room).trim() && String(cellName).trim() === String(p.bed).trim());
         if (isCurrent) {
-          roomCellsHtml += `<div style="background:#e0f2fe;border:1px solid #0284c7;border-radius:6px;padding:6px;text-align:center;">
-            <span style="font-size:11px;font-weight:700;color:#0369a1;">${cellName} (Hiện tại)</span></div>`;
+          roomCellsHtml += `<div style="background:#e0f2fe;border:1px solid #0284c7;border-radius:6px;padding:6px;text-align:center;"><span style="font-size:11px;font-weight:700;color:#0369a1;">${cellName} (Hiện tại)</span></div>`;
         } else if (occupant) {
-          roomCellsHtml += `<div style="background:#f1f5f9;border:1px solid var(--border);border-radius:6px;padding:6px;text-align:center;opacity:.4;">
-            <span style="font-size:11px;font-weight:700;color:#64748b;display:block;">${cellName}</span>
-            <span style="font-size:10px;color:#64748b;">${esc(occupant.name)}</span></div>`;
+          roomCellsHtml += `<div style="background:#f1f5f9;border:1px solid var(--border);border-radius:6px;padding:6px;text-align:center;opacity:.4;"><span style="font-size:11px;font-weight:700;color:#64748b;display:block;">${cellName}</span><span style="font-size:10px;color:#64748b;">${esc(occupant.name)}</span></div>`;
         } else {
-          roomCellsHtml += `<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:6px;text-align:center;cursor:pointer;" onclick="executeTransferBed('${esc(r.name)}','${cellName}')">
-            <span style="font-size:11px;font-weight:700;color:#15803d;display:block;">${cellName}</span>
-            <span style="font-size:10px;font-weight:600;color:#16a34a;">+ Chọn</span></div>`;
+          roomCellsHtml += `<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:6px;text-align:center;cursor:pointer;" onclick="executeTransferBed('${esc(r.name)}','${cellName}')"><span style="font-size:11px;font-weight:700;color:#15803d;display:block;">${cellName}</span><span style="font-size:10px;font-weight:600;color:#16a34a;">+ Chọn</span></div>`;
         }
       }
     }
-    return `<div style="border-bottom:1px solid var(--border-light);padding-bottom:8px;">
-      <div style="font-size:13px;font-weight:700;color:var(--primary);margin-bottom:6px;">🚪 ${esc(r.name)}</div>
-      <div style="display:grid;grid-template-columns:repeat(${colCount},1fr);gap:6px;">${roomCellsHtml}</div>
-    </div>`;
+    return `<div style="border-bottom:1px solid var(--border-light);padding-bottom:8px;"><div style="font-size:13px;font-weight:700;color:var(--primary);margin-bottom:6px;">🚪 ${esc(r.name)}</div><div style="display:grid;grid-template-columns:repeat(${colCount},1fr);gap:6px;">${roomCellsHtml}</div></div>`;
   }).join('');
   document.getElementById('transferBedModal').style.display = 'flex';
 }
@@ -1182,6 +1379,8 @@ function executeTransferBed(targetRoom, targetBed) {
     p.room = targetRoom;
     p.bed = targetBed;
     p.updatedAt = Date.now();
+    lastSaveSource = 'patients';
+    lastLocalSaveAt = Date.now();
     syncDataToCloud();
     closeTransferBedModal();
     openSummaryView(p.id);
@@ -1193,6 +1392,8 @@ function finishCurrentTreatment() {
     p.status = 'discharged';
     p.dateOut = formatDisplayTime(new Date().toISOString());
     p.updatedAt = Date.now();
+    lastSaveSource = 'patients';
+    lastLocalSaveAt = Date.now();
     syncDataToCloud();
     showView('roomGridView');
   }
@@ -1204,14 +1405,9 @@ function openSummaryView(id) {
   p.entries.sort((a, b) => a.timestamp - b.timestamp);
   document.getElementById('summaryBedBadge').textContent = `${p.room} - Vị trí ${p.bed}`;
   document.getElementById('summaryPatientTitle').textContent = p.name;
-  document.getElementById('dayTabsContainer').innerHTML = p.entries.map((item, idx) => `
-    <button class="day-tab-btn ${idx === currentActiveIndex ? 'active' : ''}" onclick="currentActiveIndex=${idx};openSummaryView('${esc(id)}')">
-      Ngày ${idx + 1} (${formatDisplayTime(item.isoTime)})
-    </button>`).join('');
+  document.getElementById('dayTabsContainer').innerHTML = p.entries.map((item, idx) => `<button class="day-tab-btn ${idx === currentActiveIndex ? 'active' : ''}" onclick="currentActiveIndex=${idx};openSummaryView('${esc(id)}')">Ngày ${idx + 1} (${formatDisplayTime(item.isoTime)})</button>`).join('');
   const entry = p.entries[currentActiveIndex] || {};
-  const imgHtml = arr => arr?.length
-    ? `<div class="images-grid-preview" style="display:flex;background:#fff;">${arr.map(src => `<div class="img-preview-card"><img src="${src}" onclick='viewLargeImage(${JSON.stringify(src)})'></div>`).join('')}</div>`
-    : '';
+  const imgHtml = arr => arr?.length ? `<div class="images-grid-preview" style="display:flex;background:#fff;">${arr.map(src => `<div class="img-preview-card"><img src="${src}" onclick='viewLargeImage(${JSON.stringify(src)})'></div>`).join('')}</div>` : '';
   document.getElementById('singleDayDisplayBody').innerHTML = `
     <div class="section-block-box"><div class="section-block-head-bar"><span class="section-block-tag">Chẩn đoán</span></div><div class="section-block-body">${esc(entry.diag) || '—'}</div>${imgHtml(entry.images?.diag)}</div>
     <div class="section-block-box"><div class="section-block-head-bar"><span class="section-block-tag">Theo dõi</span></div><div class="section-block-body">${esc(entry.tracking) || '—'}</div>${imgHtml(entry.images?.tracking)}</div>
@@ -1232,9 +1428,7 @@ function exportAllPatientsPDF() {
 function openPrintWindow(list, title) {
   const win = window.open('', '_blank');
   if (!win) return alert("Bật quyền pop-up để in PDF!");
-  const makeImgs = arr => arr?.length
-    ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">${arr.map(s => `<img src="${s}" style="max-height:130px;max-width:180px;border-radius:4px;border:1px solid #cbd5e1;">`).join('')}</div>`
-    : '';
+  const makeImgs = arr => arr?.length ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">${arr.map(s => `<img src="${s}" style="max-height:130px;max-width:180px;border-radius:4px;border:1px solid #cbd5e1;">`).join('')}</div>` : '';
   const body = list.map((p, pi) => `
     <div style="page-break-after:always;margin-bottom:24px;">
       <div style="background:#f1f5f9;padding:10px 14px;border-left:5px solid #0284c7;margin-bottom:12px;">
@@ -1293,6 +1487,8 @@ function renderDashboardCounts() {
 function deleteDischarged(id) {
   if (!confirm("Xóa vĩnh viễn hồ sơ này?")) return;
   patients = patients.filter(p => p.id !== id);
+  lastSaveSource = 'patients';
+  lastLocalSaveAt = Date.now();
   syncDataToCloud();
   renderDashboardCounts();
 }
@@ -1305,7 +1501,6 @@ window.addEventListener('load', () => {
   renderMedCategoriesUI();
   renderRoomsGrid();
   renderDashboardCounts();
-
   if (initSupabase()) {
     loadDataFromCloud().then(() => {
       setupRealtime();

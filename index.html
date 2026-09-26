@@ -9,14 +9,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230284c7'/><path d='M40 20h20v20h20v20H60v20H40V60H20V40h20z' fill='white'/></svg>">
 <style>
-:root{--primary:#0284c7;--primary-hover:#0369a1;--primary-light:#e0f2fe;--bg:#f1f5f9;--text-main:#0f172a;--text-muted:#64748b;--border:#cbd5e1;--border-light:#e2e8f0;--radius-lg:16px;--radius-md:12px;--radius-sm:8px}
+:root{--primary:#0284c7;--bg:#f1f5f9;--text-main:#0f172a;--text-muted:#64748b;--border:#cbd5e1;--border-light:#e2e8f0;--radius-lg:16px;--radius-md:12px;--radius-sm:8px}
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Google Sans','Roboto',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;-webkit-tap-highlight-color:transparent}
 body{background:var(--bg);color:var(--text-main);min-height:100vh;padding:50px 10px 40px;letter-spacing:-.01em;overflow-y:auto}
 .container{max-width:1100px;margin:0 auto;width:100%}
 #globalFloatingStatus{position:fixed;top:0;left:0;right:0;height:38px;background:#e0f2fe;color:#0369a1;border-bottom:1px solid #7dd3fc;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;z-index:999999;box-shadow:0 2px 6px rgba(0,0,0,.06);transition:all .3s ease;padding:0 10px;text-align:center}
-#lockScreenView{position:fixed;inset:0;background:var(--bg);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px}
-.pin-input-minimal{width:100%;max-width:280px;padding:16px;font-size:28px;text-align:center;letter-spacing:12px;border:2px solid var(--border);border-radius:var(--radius-md);outline:none;background:#fff;color:#0f172a;font-weight:700;box-shadow:0 4px 20px rgba(0,0,0,.05)}
-.pin-input-minimal:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(2,132,199,.18)}
 .top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;flex-wrap:wrap}
 .btn-top,.btn-back{background:#fff;border:1px solid var(--border);padding:7px 14px;border-radius:24px;font-size:13px;font-weight:600;color:#334155;cursor:pointer;display:flex;align-items:center;gap:6px}
 .btn-back{border-radius:var(--radius-sm);background:#e2e8f0;border:none}
@@ -29,7 +26,7 @@ body{background:var(--bg);color:var(--text-main);min-height:100vh;padding:50px 1
 .btn-green{border-color:#86efac}.btn-green .count-tag{background:#bbf7d0;color:#15803d}
 .btn-purple{border-color:#d8b4fe}.btn-purple .count-tag{background:#f3e8ff;color:#7e22ce}
 .view-section{display:none}
-.view-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.view-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
 .rooms-column-list{display:flex;flex-direction:column;gap:16px;margin-top:10px}
 .room-box-card{background:#fff;border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.02)}
 .room-box-title{font-size:16px;font-weight:700;color:#0f172a;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-light);padding-bottom:8px;flex-wrap:wrap;gap:8px}
@@ -53,7 +50,7 @@ body{background:var(--bg);color:var(--text-main);min-height:100vh;padding:50px 1
 .summary-page-header,.form-fullpage-header{padding:14px;border-bottom:1px solid var(--border-light)}
 .header-action-group{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .btn-edit-day-pill,.btn-add-day-pill{border:1.5px solid #64748b;color:#334155;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;background:#f8fafc}
-.btn-add-day-pill{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}
+.btn-add-day-pill{border-color:var(--primary);color:var(--primary);background:#e0f2fe}
 .day-tab-scroll{display:flex;align-items:center;gap:8px;overflow-x:auto;padding-bottom:4px;margin-top:10px;scrollbar-width:none}
 .day-tab-btn{background:#f1f5f9;border:1px solid var(--border);padding:7px 14px;border-radius:12px;font-size:12.5px;font-weight:600;color:#334155;white-space:nowrap;cursor:pointer;flex-shrink:0}
 .day-tab-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
@@ -89,20 +86,14 @@ body{background:var(--bg);color:var(--text-main);min-height:100vh;padding:50px 1
 </head>
 <body>
 
-<div id="globalFloatingStatus">🔄 Đang kết nối hệ thống dữ liệu gốc...</div>
+<div id="globalFloatingStatus">🔄 Đang kết nối hệ thống dữ liệu...</div>
 
-<div id="lockScreenView">
-  <div>
-    <input type="password" id="pinInput" class="pin-input-minimal" maxlength="6" inputmode="numeric" placeholder="••••••" oninput="checkPinAuto(this)">
-  </div>
-</div>
-
-<div class="container" id="appMainContainer" style="display:none;">
+<div class="container" id="appMainContainer">
 
   <div id="homeView" class="view-section" style="display:block;">
     <div class="top-bar">
       <button type="button" class="btn-top" onclick="showView('profileView')">👨‍⚕️ Giới thiệu cá nhân</button>
-      <button type="button" class="btn-top" onclick="forceReloadFromCloud()" title="Tải lại dữ liệu mới nhất từ Google Sheets">🔄 Tải lại</button>
+      <button type="button" class="btn-top" onclick="forceReloadFromCloud()">🔄 Tải lại</button>
     </div>
     <div class="btn-menu-list">
       <div class="big-btn btn-blue" onclick="showView('roomGridView')">
@@ -147,7 +138,7 @@ body{background:var(--bg);color:var(--text-main);min-height:100vh;padding:50px 1
       <div style="background:#fff;border:1.5px solid var(--border);padding:6px 14px;border-radius:10px;">
         <span style="font-size:13.5px;font-weight:700;color:var(--primary);" id="medGroupDetailTitle">Nhóm Thuốc</span>
       </div>
-      <button type="button" class="btn-top" onclick="openAddMedicineModal()">➕ Thêm thuốc vào nhóm</button>
+      <button type="button" class="btn-top" onclick="openAddMedicineModal()">➕ Thêm thuốc</button>
     </div>
     <div style="background:#fff;border-radius:var(--radius-lg);padding:20px;border:1.5px solid var(--border);overflow-x:auto;margin-bottom:14px;">
       <table class="med-table">
@@ -238,7 +229,7 @@ body{background:var(--bg);color:var(--text-main);min-height:100vh;padding:50px 1
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;background:#fff;padding:12px 14px;border-radius:var(--radius-md);border:1.5px solid var(--border);flex-wrap:wrap;gap:8px;">
       <div id="dischargedSummaryText" style="font-size:13.5px;font-weight:700;">Tổng: 0 hồ sơ</div>
-      <button type="button" style="background:#dc2626;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;" onclick="exportAllPatientsPDF()">📑 Xuất toàn bộ hồ sơ (PDF)</button>
+      <button type="button" style="background:#dc2626;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;" onclick="exportAllPatientsPDF()">📑 Xuất toàn bộ (PDF)</button>
     </div>
     <div id="dischargedListContainer"></div>
   </div>
@@ -247,27 +238,25 @@ body{background:var(--bg);color:var(--text-main);min-height:100vh;padding:50px 1
     <div class="view-header">
       <button type="button" class="btn-back" onclick="showView('homeView')">⬅️ Trang chủ</button>
       <h3 style="font-size:16px;font-weight:700;">Hồ Sơ Bác Sĩ</h3>
-      <button type="button" class="btn-top" onclick="openEditProfileModal()">✏️ Sửa thông tin</button>
+      <button type="button" class="btn-top" onclick="openEditProfileModal()">✏️ Sửa</button>
     </div>
     <input type="file" id="fileInput_doctorAvatar" accept="image/*" style="display:none" onchange="handleDoctorAvatarSelected(this)">
     <div style="background:#fff;border-radius:var(--radius-lg);padding:32px 20px;text-align:center;border:1px solid var(--border);max-width:500px;margin:0 auto;">
-      <div id="doctorAvatarBox" style="width:90px;height:90px;background:var(--primary);color:#fff;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:bold;overflow:hidden;border:3px solid #bae6fd;cursor:pointer;" onclick="document.getElementById('fileInput_doctorAvatar').click()" title="Bấm vào để đổi ảnh đại diện">
+      <div id="doctorAvatarBox" style="width:90px;height:90px;background:var(--primary);color:#fff;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:bold;overflow:hidden;border:3px solid #bae6fd;cursor:pointer;" onclick="document.getElementById('fileInput_doctorAvatar').click()">
         <span id="doctorAvatarInitial">BS</span>
         <img id="doctorAvatarImg" src="" style="width:100%;height:100%;object-fit:cover;display:none;">
       </div>
       <h2 id="doctorNameText" style="font-size:20px;font-weight:700;color:#0f172a;">Bác sĩ Minh Hoàng</h2>
       <p id="doctorTitleText" style="color:var(--primary);font-weight:700;font-size:14.5px;margin-top:2px;">Bác sĩ Điều trị</p>
-      <p id="doctorBioText" style="color:#64748b;font-size:13.5px;margin-top:12px;line-height:1.6;white-space:pre-wrap;">Hệ thống sơ đồ buồng bệnh & theo dõi lâm sàng thông minh.</p>
+      <p id="doctorBioText" style="color:#64748b;font-size:13.5px;margin-top:12px;line-height:1.6;white-space:pre-wrap;">Hệ thống sơ đồ buồng bệnh.</p>
     </div>
   </div>
 
-  <div id="imageModalViewer" onclick="this.style.display='none'"><img id="modalViewerImg" src="" alt="Ảnh bệnh án"></div>
-
-  <!-- ==================== MODALS ==================== -->
+  <div id="imageModalViewer" onclick="this.style.display='none'"><img id="modalViewerImg" src="" alt="Ảnh"></div>
 
   <div id="roomSettingsModal" class="custom-modal-overlay" onclick="closeRoomSettingsModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()">
-      <div style="font-size:17px;font-weight:700;color:#0f172a;margin-bottom:14px;">Cài Đặt Phòng Bệnh</div>
+      <div style="font-size:17px;font-weight:700;margin-bottom:14px;">Cài Đặt Phòng Bệnh</div>
       <div style="background:#f8fafc;padding:12px;border-radius:10px;border:1px solid var(--border-light);margin-bottom:14px;text-align:left;">
         <label style="font-size:12px;font-weight:700;color:var(--primary);">➕ Thêm phòng mới:</label>
         <div style="display:flex;gap:6px;margin-top:6px;">
@@ -275,7 +264,7 @@ body{background:var(--bg);color:var(--text-main);min-height:100vh;padding:50px 1
           <button type="button" class="btn-confirm-submit" style="padding:7px 12px;font-size:12px;" onclick="addNewRoom()">Thêm</button>
         </div>
       </div>
-      <div style="font-size:12.5px;font-weight:700;color:var(--text-muted);text-align:left;margin-bottom:6px;">Danh sách phòng hiện tại:</div>
+      <div style="font-size:12.5px;font-weight:700;color:var(--text-muted);text-align:left;margin-bottom:6px;">Danh sách phòng:</div>
       <div id="roomSettingsListContainer" style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;text-align:left;margin-bottom:16px;"></div>
       <button type="button" class="btn-modal-cancel" style="margin-top:0;" onclick="closeRoomSettingsModal()">Đóng</button>
     </div>
@@ -283,14 +272,14 @@ body{background:var(--bg);color:var(--text-main);min-height:100vh;padding:50px 1
 
   <div id="editRoomModal" class="custom-modal-overlay" onclick="closeEditRoomModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()">
-      <div style="font-size:17px;font-weight:700;color:#0f172a;margin-bottom:12px;" id="editRoomModalTitle">Sửa Phòng Bệnh</div>
+      <div style="font-size:17px;font-weight:700;margin-bottom:12px;" id="editRoomModalTitle">Sửa Phòng Bệnh</div>
       <div class="mode-tab-group">
         <button type="button" id="tabRow" class="btn-mode-tab active" onclick="switchEditMode('row')">Hàng</button>
         <button type="button" id="tabCol" class="btn-mode-tab" onclick="switchEditMode('col')">Cột</button>
         <button type="button" id="tabCell" class="btn-mode-tab" onclick="switchEditMode('cell')">Ô</button>
       </div>
       <div id="panelModeRow" class="mode-panel active">
-        <p style="font-size:12.5px;color:var(--text-muted);">Thêm hàng mới hoặc chọn hàng để xóa:</p>
+        <p style="font-size:12.5px;color:var(--text-muted);">Thêm hàng hoặc chọn hàng để xóa:</p>
         <button type="button" class="btn-confirm-submit" style="padding:9px;font-size:12.5px;" onclick="addRowToRoom()">➕ Thêm hàng</button>
         <div style="margin-top:6px;font-size:12.5px;font-weight:600;color:var(--text-muted);">Chọn hàng để xóa:</div>
         <div style="display:flex;gap:8px;">
@@ -299,7 +288,7 @@ body{background:var(--bg);color:var(--text-main);min-height:100vh;padding:50px 1
         </div>
       </div>
       <div id="panelModeCol" class="mode-panel">
-        <p style="font-size:12.5px;color:var(--text-muted);">Thêm cột mới hoặc chọn cột để xóa:</p>
+        <p style="font-size:12.5px;color:var(--text-muted);">Thêm cột hoặc chọn cột để xóa:</p>
         <button type="button" class="btn-confirm-submit" style="padding:9px;font-size:12.5px;" onclick="addColToRoom()">➕ Thêm cột</button>
         <div style="margin-top:6px;font-size:12.5px;font-weight:600;color:var(--text-muted);">Chọn cột để xóa:</div>
         <div style="display:flex;gap:8px;">
@@ -308,7 +297,7 @@ body{background:var(--bg);color:var(--text-main);min-height:100vh;padding:50px 1
         </div>
       </div>
       <div id="panelModeCell" class="mode-panel">
-        <p style="font-size:12.5px;color:var(--text-muted);">Ẩn hoặc hiện từng ô riêng lẻ:</p>
+        <p style="font-size:12.5px;color:var(--text-muted);">Ẩn/hiện từng ô:</p>
         <div id="cellVisibilityMatrixContainer" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;border:1px solid var(--border-light);padding:8px;border-radius:8px;background:#fafafa;"></div>
       </div>
       <button type="button" class="btn-modal-cancel" style="margin-top:16px;" onclick="closeEditRoomModal()">Đóng</button>
@@ -317,7 +306,7 @@ body{background:var(--bg);color:var(--text-main);min-height:100vh;padding:50px 1
 
   <div id="addMedCategoryModal" class="custom-modal-overlay" onclick="closeAddMedCategoryModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()">
-      <div style="font-size:17px;font-weight:700;color:#0f172a;margin-bottom:12px;">Thêm Danh Mục Thuốc</div>
+      <div style="font-size:17px;font-weight:700;margin-bottom:12px;">Thêm Danh Mục Thuốc</div>
       <div style="margin-bottom:14px;text-align:left;">
         <label style="font-size:12px;font-weight:600;color:var(--text-muted);">Tên danh mục:</label>
         <input type="text" id="medCategoryNameInput" placeholder="Ví dụ: Tim mạch, Kháng sinh..." style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:4px;font-size:14px;font-weight:600;">
@@ -331,7 +320,7 @@ body{background:var(--bg);color:var(--text-main);min-height:100vh;padding:50px 1
 
   <div id="editMedCategoryModal" class="custom-modal-overlay" onclick="closeEditMedCategoryModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()">
-      <div style="font-size:17px;font-weight:700;color:#0f172a;margin-bottom:12px;">Sửa Danh Mục & Nhóm Thuốc</div>
+      <div style="font-size:17px;font-weight:700;margin-bottom:12px;">Sửa Danh Mục & Nhóm Thuốc</div>
       <div style="margin-bottom:14px;text-align:left;">
         <label style="font-size:12px;font-weight:600;color:var(--text-muted);">Tên danh mục:</label>
         <div style="display:flex;gap:6px;margin-top:4px;">
@@ -352,7 +341,7 @@ body{background:var(--bg);color:var(--text-main);min-height:100vh;padding:50px 1
 
   <div id="addMedGroupModal" class="custom-modal-overlay" onclick="closeAddMedGroupModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()">
-      <div style="font-size:17px;font-weight:700;color:#0f172a;margin-bottom:12px;">Thêm Nhóm Thuốc Mới</div>
+      <div style="font-size:17px;font-weight:700;margin-bottom:12px;">Thêm Nhóm Thuốc Mới</div>
       <div style="margin-bottom:14px;text-align:left;">
         <label style="font-size:12px;font-weight:600;color:var(--text-muted);">Tên nhóm thuốc:</label>
         <input type="text" id="medGroupNameInput" placeholder="Ví dụ: Beta-blocker..." style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:4px;font-size:14px;font-weight:600;">
@@ -367,17 +356,17 @@ body{background:var(--bg);color:var(--text-main);min-height:100vh;padding:50px 1
   <div id="addMedicineModal" class="custom-modal-overlay" onclick="closeAddMedicineModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()" style="text-align:left;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <div style="font-size:17px;font-weight:700;color:#0f172a;" id="medModalTitle">Thêm Thuốc Mới</div>
+        <div style="font-size:17px;font-weight:700;" id="medModalTitle">Thêm Thuốc Mới</div>
         <button type="button" class="btn-bed-ctrl" style="background:#e0f2fe;color:#0369a1;border-color:#7dd3fc;" onclick="askAIToSuggestMed()">🤖 Gợi ý AI</button>
       </div>
       <input type="hidden" id="editingMedId" value="">
       <div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:600;color:var(--text-muted);">Tên thuốc:</label>
-        <input type="text" id="medNameInput" placeholder="Nhập tên thuốc hoặc hoạt chất..." style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;margin-top:2px;font-size:13.5px;font-weight:600;"></div>
+        <input type="text" id="medNameInput" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;margin-top:2px;font-size:13.5px;font-weight:600;"></div>
       <div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:600;color:var(--text-muted);">Chỉ định:</label>
         <input type="text" id="medIndicationInput" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;margin-top:2px;font-size:13.5px;"></div>
       <div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:600;color:var(--text-muted);">Chống chỉ định:</label>
         <input type="text" id="medContraindicationInput" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;margin-top:2px;font-size:13.5px;"></div>
-      <div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:600;color:var(--text-muted);">Tác dụng không mong muốn (TDKM):</label>
+      <div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:600;color:var(--text-muted);">TDKM:</label>
         <input type="text" id="medSideEffectsInput" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;margin-top:2px;font-size:13.5px;"></div>
       <div style="margin-bottom:16px;"><label style="font-size:12px;font-weight:600;color:var(--text-muted);">Liều dùng:</label>
         <input type="text" id="medDoseInput" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;margin-top:2px;font-size:13.5px;"></div>
@@ -390,8 +379,8 @@ body{background:var(--bg);color:var(--text-main);min-height:100vh;padding:50px 1
 
   <div id="transferBedModal" class="custom-modal-overlay" onclick="closeTransferBedModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()">
-      <div style="font-size:17px;font-weight:700;color:#0f172a;margin-bottom:4px;">Chuyển Vị Trí Bệnh Nhân</div>
-      <p style="font-size:13px;color:var(--text-muted);margin-bottom:10px;" id="transferBedSubtitle">Chọn vị trí trống để chuyển đến:</p>
+      <div style="font-size:17px;font-weight:700;margin-bottom:4px;">Chuyển Vị Trí</div>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:10px;" id="transferBedSubtitle">Chọn vị trí trống:</p>
       <div id="transferRoomMatrixContainer" style="max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;border:1px solid var(--border-light);padding:10px;border-radius:12px;background:#fafafa;text-align:left;"></div>
       <button type="button" class="btn-modal-cancel" style="margin-top:16px;" onclick="closeTransferBedModal()">Hủy</button>
     </div>
@@ -399,12 +388,12 @@ body{background:var(--bg);color:var(--text-main);min-height:100vh;padding:50px 1
 
   <div id="editProfileModal" class="custom-modal-overlay" onclick="closeEditProfileModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()" style="text-align:left;">
-      <div style="font-size:17px;font-weight:700;color:#0f172a;margin-bottom:14px;text-align:center;">Sửa Thông Tin Bác Sĩ</div>
+      <div style="font-size:17px;font-weight:700;margin-bottom:14px;text-align:center;">Sửa Thông Tin Bác Sĩ</div>
       <div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:600;color:var(--text-muted);">Họ và tên:</label>
         <input type="text" id="editDocNameInput" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:3px;font-size:14px;font-weight:600;"></div>
-      <div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:600;color:var(--text-muted);">Chức danh / Khoa:</label>
+      <div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:600;color:var(--text-muted);">Chức danh:</label>
         <input type="text" id="editDocTitleInput" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:3px;font-size:14px;"></div>
-      <div style="margin-bottom:16px;"><label style="font-size:12px;font-weight:600;color:var(--text-muted);">Giới thiệu bản thân:</label>
+      <div style="margin-bottom:16px;"><label style="font-size:12px;font-weight:600;color:var(--text-muted);">Giới thiệu:</label>
         <textarea id="editDocBioInput" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;margin-top:3px;font-size:14px;min-height:80px;resize:vertical;"></textarea></div>
       <div style="display:flex;gap:8px;">
         <button type="button" class="btn-modal-cancel" onclick="closeEditProfileModal()">Hủy</button>
@@ -412,23 +401,11 @@ body{background:var(--bg);color:var(--text-main);min-height:100vh;padding:50px 1
       </div>
     </div>
   </div>
-</div>
-
-<script>
+</div><script>
 /* ============================================================
    CẤU HÌNH
    ============================================================ */
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxVVVoEdjNY5fsWGuJegc9EHAcrzTFaty4VEhMeyo5HsKdT-U89s9SlT7R-zdaXuMayzw/exec";
-
-/* ⚠️ ĐỔI PIN NGAY SAU KHI DÁN CODE:
-   Bước 1: Mở trang web → F12 → Console
-   Bước 2: Chạy:
-     crypto.subtle.digest('SHA-256', new TextEncoder().encode('PIN_6_SO_MOI'))
-       .then(b => console.log(Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('')))
-   Bước 3: Copy chuỗi hash và dán vào dòng dưới
-*/
-const PIN_HASH = "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"; // PIN = "000000"
-
 const ROW_LABELS = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P'];
 const FETCH_TIMEOUT = 30000;
 const MAX_RETRY = 3;
@@ -438,12 +415,8 @@ const MAX_RETRY = 3;
    ============================================================ */
 function esc(s) {
   return String(s == null ? '' : s)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
-async function sha256(str) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 let _lastId = 0;
 function makeId() {
@@ -453,12 +426,11 @@ function makeId() {
 }
 function safeGetLocal(key, fallback) {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
-  catch (e) { console.warn('localStorage read error:', key, e); return fallback; }
+  catch (e) { return fallback; }
 }
 function safeSetLocal(key, value) {
   try { localStorage.setItem(key, JSON.stringify(value)); return true; }
   catch (e) {
-    console.warn('localStorage write error:', key, e);
     if (e.name === 'QuotaExceededError' || String(e).includes('quota')) {
       updateSyncUI('error', '⚠️ Bộ nhớ đầy — cần xóa cache hoặc ảnh cũ');
     }
@@ -489,56 +461,10 @@ let currentEditing = { room:null, bed:null, id:null, mode:'create', entryIndex:n
 let currentViewingPatientId = null, currentActiveIndex = 0, currentEditingRoomId = null;
 let currentActiveTab = 'row';
 let activeMedCatId = null, activeMedGroupId = null;
-let inactivityTimer = null, isAuthenticated = false;
 
-/* Chỉ load cloud 1 lần mỗi session */
-let hasLoadedOnce = false;
-
-/* Sync state */
 let isSyncingToCloud = false;
 let hasPendingSync = false;
 let syncDebounceTimer = null;
-
-/* ============================================================
-   PIN AUTH
-   ============================================================ */
-async function checkPinAuto(input) {
-  if (input.value.length !== 6) return;
-  const h = await sha256(input.value);
-  if (h === PIN_HASH) {
-    isAuthenticated = true;
-    document.getElementById('lockScreenView').style.display = 'none';
-    document.getElementById('appMainContainer').style.display = 'block';
-    input.value = '';
-    resetInactivityTimer();
-
-    if (!hasLoadedOnce) {
-      hasLoadedOnce = true;
-      loadDataFromCloud();
-    } else {
-      renderDashboardCounts();
-      renderMedCategoriesUI();
-    }
-  } else {
-    input.value = '';
-    input.focus();
-  }
-}
-function resetInactivityTimer() {
-  if (!isAuthenticated) return;
-  clearTimeout(inactivityTimer);
-  inactivityTimer = setTimeout(lockSystem, 60000);
-}
-function lockSystem() {
-  isAuthenticated = false;
-  clearTimeout(inactivityTimer);
-  document.getElementById('appMainContainer').style.display = 'none';
-  document.getElementById('lockScreenView').style.display = 'flex';
-  const input = document.getElementById('pinInput');
-  if (input) { input.value = ''; input.focus(); }
-}
-['touchstart','mousemove','scroll','keydown','click'].forEach(evt =>
-  window.addEventListener(evt, resetInactivityTimer, true));
 
 /* ============================================================
    UI HELPERS
@@ -568,7 +494,6 @@ function updateSyncUI(st, txt) {
     el.style.background = '#fef2f2'; el.style.color = '#b91c1c'; el.style.borderColor = '#fca5a5';
   }
 }
-
 const autoExpandTextarea = el => { if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; } };
 const resizeAllTextareas = () => setTimeout(() => ['recordDiagnosis','recordTracking','recordTests','recordImagingText']
   .forEach(id => autoExpandTextarea(document.getElementById(id))), 50);
@@ -584,7 +509,7 @@ const getPatientInBed = (room, bed) => patients.find(p =>
   String(p.bed).trim() === String(bed).trim());
 
 /* ============================================================
-   IMAGE HANDLING
+   IMAGES
    ============================================================ */
 const triggerPickImage = f => document.getElementById(`fileInput_${f}`)?.click();
 const handleImageFileSelected = (inp, f) => { if (inp.files?.[0]) { compressAndAddImage(inp.files[0], f); inp.value = ''; } };
@@ -628,7 +553,7 @@ function viewLargeImage(src) {
 }
 
 /* ============================================================
-   CLOUD SYNC — JSONP cho GET, fetch no-cors cho POST
+   CLOUD SYNC
    ============================================================ */
 function jsonpGet(url, timeoutMs) {
   return new Promise((resolve, reject) => {
@@ -643,29 +568,25 @@ function jsonpGet(url, timeoutMs) {
     window[cbName] = (data) => { if (done) return; cleanup(); resolve(data); };
     const script = document.createElement('script');
     script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cbName + '&_t=' + Date.now();
-    script.onerror = () => { if (done) return; cleanup(); reject(new Error('Network error')); };
+    script.onerror = () => { if (done) return; cleanup(); reject(new Error('Lỗi mạng')); };
     document.body.appendChild(script);
-    const timer = setTimeout(() => { if (done) return; cleanup(); reject(new Error('Timeout')); }, timeoutMs || FETCH_TIMEOUT);
+    const timer = setTimeout(() => { if (done) return; cleanup(); reject(new Error('Hết thời gian chờ')); }, timeoutMs || FETCH_TIMEOUT);
   });
 }
 
 async function loadDataFromCloud(silent) {
   if (!GOOGLE_SCRIPT_URL) return;
-  if (!silent) updateSyncUI('syncing', 'Đang tải dữ liệu từ Sheets...');
+  if (!silent) updateSyncUI('syncing', 'Đang tải dữ liệu từ Google Sheets...');
   try {
     const data = await jsonpGet(GOOGLE_SCRIPT_URL, FETCH_TIMEOUT);
     if (!data || !data.ok) throw new Error(data?.error || 'Phản hồi không hợp lệ');
 
-    // Merge thông minh: giữ nguyên entries + images
     if (Array.isArray(data.patients)) {
-      // Cập nhật bệnh nhân local với dữ liệu server, giữ những gì local mới hơn
       const serverMap = {};
       data.patients.forEach(p => { if (p && p.id) serverMap[String(p.id)] = p; });
-
       const localMap = {};
       patients.forEach(p => { if (p && p.id) localMap[String(p.id)] = p; });
 
-      // Server là source of truth, nhưng nếu local có entries mới hơn thì giữ
       const merged = [];
       Object.keys(serverMap).forEach(id => {
         const srv = serverMap[id];
@@ -673,7 +594,6 @@ async function loadDataFromCloud(silent) {
         if (loc && (loc.updatedAt || 0) > (srv.updatedAt || 0)) merged.push(loc);
         else merged.push(srv);
       });
-      // Local có mà server không có → có thể do sync chưa thành công, giữ lại
       Object.keys(localMap).forEach(id => {
         if (!serverMap[id]) merged.push(localMap[id]);
       });
@@ -695,7 +615,7 @@ async function loadDataFromCloud(silent) {
     renderMedCategoriesUI();
     renderRoomsGrid();
   } catch (err) {
-    console.error('Load error:', err);
+    console.error('Lỗi tải dữ liệu:', err);
     updateSyncUI('error', 'Lỗi tải dữ liệu: ' + err.message);
   }
 }
@@ -705,29 +625,20 @@ async function forceReloadFromCloud() {
   await loadDataFromCloud(false);
 }
 
-/* Sync lên cloud — có debounce + retry + mutex */
 function syncDataToCloud() {
-  // Lưu local ngay lập tức
   safeSetLocal('bs_patients_scroll_v3', patients);
   safeSetLocal('bs_room_configs_v21', roomList);
   safeSetLocal('bs_med_categories_v14', medCategories);
   renderDashboardCounts();
-
-  // Debounce: chờ 800ms sau thao tác cuối mới gửi
   clearTimeout(syncDebounceTimer);
   syncDebounceTimer = setTimeout(() => doSyncToCloud(), 800);
 }
 
 async function doSyncToCloud() {
   if (!GOOGLE_SCRIPT_URL) return;
-
-  // Nếu đang sync → đánh dấu pending, không gửi chồng
-  if (isSyncingToCloud) {
-    hasPendingSync = true;
-    return;
-  }
+  if (isSyncingToCloud) { hasPendingSync = true; return; }
   isSyncingToCloud = true;
-  updateSyncUI('syncing', 'Đang lưu lên Sheets...');
+  updateSyncUI('syncing', 'Đang lưu lên Google Sheets...');
 
   const payload = JSON.stringify({
     patients: patients,
@@ -738,12 +649,9 @@ async function doSyncToCloud() {
 
   let attempt = 0;
   let success = false;
-
   while (attempt < MAX_RETRY && !success) {
     attempt++;
     try {
-      // Apps Script không hỗ trợ CORS header, phải dùng no-cors
-      // no-cors không đọc được response → phải verify riêng
       await fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
@@ -751,35 +659,21 @@ async function doSyncToCloud() {
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: payload
       });
-
-      // Verify bằng cách chờ + đọc lại (GET)
       await new Promise(r => setTimeout(r, 2000));
-
-      // Thử verify nhẹ — không bắt buộc thành công
       try {
         const check = await jsonpGet(GOOGLE_SCRIPT_URL, 15000);
         if (check && check.ok) success = true;
-      } catch (e) {
-        // Không verify được nhưng POST đã gửi → coi như OK
-        success = true;
-      }
+      } catch (e) { success = true; }
     } catch (err) {
-      console.error(`Sync attempt ${attempt} failed:`, err);
-      if (attempt < MAX_RETRY) {
-        await new Promise(r => setTimeout(r, attempt * 2000));
-      }
+      console.error(`Lần thử ${attempt} thất bại:`, err);
+      if (attempt < MAX_RETRY) await new Promise(r => setTimeout(r, attempt * 2000));
     }
   }
 
   isSyncingToCloud = false;
+  if (success) updateSyncUI('success');
+  else updateSyncUI('error', 'Không thể lưu sau ' + MAX_RETRY + ' lần thử');
 
-  if (success) {
-    updateSyncUI('success');
-  } else {
-    updateSyncUI('error', 'Không thể lưu lên Sheets sau ' + MAX_RETRY + ' lần thử');
-  }
-
-  // Nếu có thay đổi trong lúc sync → gửi tiếp
   if (hasPendingSync) {
     hasPendingSync = false;
     setTimeout(() => doSyncToCloud(), 500);
@@ -787,7 +681,7 @@ async function doSyncToCloud() {
 }
 
 /* ============================================================
-   PROFILE
+   PROFILE BÁC SĨ
    ============================================================ */
 function renderDoctorProfileUI() {
   document.getElementById('doctorNameText').textContent = doctorProfile.name;
@@ -841,7 +735,7 @@ function handleDoctorAvatarSelected(input) {
 }
 
 /* ============================================================
-   MEDICATIONS
+   THUỐC
    ============================================================ */
 function openAddMedCategoryModal() {
   document.getElementById('medCategoryNameInput').value = '';
@@ -858,7 +752,7 @@ function saveMedCategory() {
 }
 function openEditMedCategoryModal(catId) {
   activeMedCatId = catId;
-  const cat = medCategories.find(c => c.id === catId);
+  const cat = medCategories.find(c => String(c.id) === String(catId));
   if (!cat) return;
   document.getElementById('editCatNameInput').value = cat.name || '';
   const groupListContainer = document.getElementById('editCategoryGroupsList');
@@ -866,7 +760,7 @@ function openEditMedCategoryModal(catId) {
     groupListContainer.innerHTML = cat.groups.map(g => `
       <div style="display:flex;gap:6px;align-items:center;">
         <input type="text" id="editGroupInline_${esc(g.id)}" value="${esc(g.name)}" style="flex:1;padding:6px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-weight:600;">
-        <button type="button" class="btn-bed-ctrl" style="background:#e0f2fe;color:#0369a1;border-color:#7dd3fc;padding:6px 10px;" onclick="saveInlineGroupName('${esc(cat.id)}','${esc(g.id)}')">Lưu nhóm</button>
+        <button type="button" class="btn-bed-ctrl" style="background:#e0f2fe;color:#0369a1;border-color:#7dd3fc;padding:6px 10px;" onclick="saveInlineGroupName('${esc(cat.id)}','${esc(g.id)}')">Lưu</button>
       </div>`).join('');
   } else {
     groupListContainer.innerHTML = `<span style="font-size:12px;color:var(--text-muted);font-style:italic;">Chưa có nhóm thuốc nào.</span>`;
@@ -1015,7 +909,7 @@ function saveMedicineItem() {
   closeAddMedicineModal();
 }
 function deleteMedicineItem(medId) {
-  if (!confirm("Xóa thuốc này khỏi bảng?")) return;
+  if (!confirm("Xóa thuốc này?")) return;
   const cat = medCategories.find(c => String(c.id) === String(activeMedCatId));
   const group = cat?.groups.find(g => String(g.id) === String(activeMedGroupId));
   if (!group) return;
@@ -1100,12 +994,12 @@ function askAIToSuggestMed() {
   const db = {
     "paracetamol": { ind:"Giảm đau, hạ sốt", contra:"Suy gan nặng, mẫn cảm", side:"Hiếm gặp: phát ban, buồn nôn", dose:"500mg - 1g / lần, cách nhau 4-6 giờ" },
     "amoxicillin": { ind:"Nhiễm khuẩn đường hô hấp, tai mũi họng", contra:"Dị ứng nhóm penicillin", side:"Tiêu chảy, buồn nôn, phát ban", dose:"500mg / lần, 3 lần/ngày" },
-    "amlodipin": { ind:"Tăng huyết áp, đau thắt ngực", contra:"Suy tim mất bù, sốc tim", side:"Phù cổ chân, chóng mặt, đỏ bừng mặt", dose:"5mg - 10mg / ngày" },
-    "omeprazol": { ind:"Loét dạ dày tá tràng, trào ngược thực quản", contra:"Mẫn cảm với omeprazol", side:"Đau đầu, tiêu chảy, buồn nôn", dose:"20mg - 40mg / ngày" },
-    "metformin": { ind:"Đái tháo đường týp 2", contra:"Suy thận, nhiễm toan chuyển hóa", side:"Rối loạn tiêu hóa, buồn nôn", dose:"500mg - 1000mg / lần, 2 lần/ngày" },
-    "ibuprofen": { ind:"Giảm đau, kháng viêm, hạ sốt", contra:"Loét dạ dày tiến triển, suy thận nặng", side:"Đau thượng vị, ợ hơi, chóng mặt", dose:"400mg / lần, cách nhau 6-8 giờ" },
-    "ceftriaxon": { ind:"Nhiễm khuẩn nặng do vi khuẩn nhạy cảm", contra:"Dị ứng nhóm cephalosporin", side:"Tiêu chảy, phản ứng tại chỗ tiêm", dose:"1g - 2g / ngày, tiêm bắp hoặc TM" },
-    "salbutamol": { ind:"Hen phế quản, co thắt phế quản", contra:"Mẫn cảm, cường giáp nặng", side:"Run tay, đánh trống ngực, hồi hộp", dose:"2 - 4mg / lần, 3 lần/ngày" }
+    "amlodipin": { ind:"Tăng huyết áp, đau thắt ngực", contra:"Suy tim mất bù, sốc tim", side:"Phù cổ chân, chóng mặt", dose:"5mg - 10mg / ngày" },
+    "omeprazol": { ind:"Loét dạ dày tá tràng, trào ngược", contra:"Mẫn cảm với omeprazol", side:"Đau đầu, tiêu chảy", dose:"20mg - 40mg / ngày" },
+    "metformin": { ind:"Đái tháo đường týp 2", contra:"Suy thận, nhiễm toan", side:"Rối loạn tiêu hóa", dose:"500mg - 1000mg / lần, 2 lần/ngày" },
+    "ibuprofen": { ind:"Giảm đau, kháng viêm", contra:"Loét dạ dày tiến triển", side:"Đau thượng vị, chóng mặt", dose:"400mg / lần, cách 6-8 giờ" },
+    "ceftriaxon": { ind:"Nhiễm khuẩn nặng", contra:"Dị ứng cephalosporin", side:"Tiêu chảy", dose:"1g - 2g / ngày" },
+    "salbutamol": { ind:"Hen phế quản", contra:"Mẫn cảm, cường giáp nặng", side:"Run tay, hồi hộp", dose:"2 - 4mg / lần, 3 lần/ngày" }
   };
   let found = db[medName];
   if (!found) { const key = Object.keys(db).find(k => medName.includes(k) || k.includes(medName)); if (key) found = db[key]; }
@@ -1153,12 +1047,13 @@ function exportMedicationPDF() {
         </div>`).join('') : '<p style="font-size:12px;color:#64748b;font-style:italic;">Chưa có nhóm thuốc.</p>'}
     </div>`).join('');
   win.document.write(`<!DOCTYPE html><html><head><title>Danh Mục Thuốc</title><style>body{font-family:sans-serif;padding:20px;color:#0f172a}@media print{body{padding:0}}</style></head><body><h2 style="text-align:center;color:#0284c7;">DANH MỤC THUỐC ĐIỀU TRỊ</h2>${bodyHtml}</body></html>`);
-  win.document.close(); win.focus();
+  win.document.close();
+  win.focus();
   setTimeout(() => win.print(), 400);
 }
 
 /* ============================================================
-   ROOM CONFIG
+   PHÒNG
    ============================================================ */
 function openRoomSettingsModal() {
   renderRoomSettingsList();
@@ -1246,9 +1141,7 @@ function switchEditMode(mode) {
   if (mode === 'row') {
     const sel = document.getElementById('selectRowToRemove');
     sel.innerHTML = '';
-    for (let i = 0; i < rowCount; i++) {
-      sel.innerHTML += `<option value="${i}">Hàng ${ROW_LABELS[i] || (i+1)}</option>`;
-    }
+    for (let i = 0; i < rowCount; i++) sel.innerHTML += `<option value="${i}">Hàng ${ROW_LABELS[i] || (i+1)}</option>`;
   } else if (mode === 'col') {
     const sel = document.getElementById('selectColToRemove');
     sel.innerHTML = '';
@@ -1404,7 +1297,7 @@ function renderRoomsGrid() {
 }
 
 /* ============================================================
-   PATIENT LOGIC
+   BỆNH NHÂN
    ============================================================ */
 function handleBedClick(room, bed) {
   const existing = getPatientInBed(room, bed);
@@ -1680,14 +1573,14 @@ function deleteDischarged(id) {
 }
 
 /* ============================================================
-   INIT
+   KHỞI ĐỘNG — tự động vào thẳng, không cần PIN
    ============================================================ */
 window.addEventListener('load', () => {
   renderDoctorProfileUI();
   renderMedCategoriesUI();
   renderRoomsGrid();
   renderDashboardCounts();
-  setTimeout(() => document.getElementById('pinInput')?.focus(), 100);
+  loadDataFromCloud();
 });
 </script>
 </body>

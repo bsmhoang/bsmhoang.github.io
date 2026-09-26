@@ -357,7 +357,7 @@ body{background:var(--bg);color:var(--text-main);min-height:100vh;padding:50px 1
   <div class="custom-modal-card" onclick="event.stopPropagation()" style="text-align:left;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
       <div style="font-size:17px;font-weight:700;" id="medModalTitle">Thêm Thuốc Mới</div>
-      <button type="button" class="btn-bed-ctrl" style="background:#e0f2fe;color:#0369a1;border-color:#7dd3fc;" onclick="askAIToSuggestMed()">🤖 Gợi ý AI</button>
+      <button type="button" class="btn-bed-ctrl" style="background:#e0f2fe;color:#0369a1;border-color:#7dd3fc;" onclick="askAIToSuggestMed()">🤖 Tra cứu tự động</button>
     </div>
     <input type="hidden" id="editingMedId" value="">
     <div style="margin-bottom:10px;"><label style="font-size:12px;font-weight:600;color:var(--text-muted);">Tên thuốc:</label>
@@ -440,7 +440,7 @@ let isSyncingToCloud = false;
 let hasPendingSync = false;
 let syncDebounceTimer = null;
 let isFirstLoad = true;
-// Chống race condition: bỏ qua realtime khi vừa lưu
+/* Chống race condition: bỏ qua realtime khi vừa lưu */
 let lastLocalSaveAt = 0;
 let lastSaveSource = '';
 
@@ -513,15 +513,11 @@ function rowToPatient(row) { return { id: row.id, room: row.room || '', bed: row
 function patientToRow(p) { return { id: p.id, room: p.room || '', bed: p.bed || '', ho_ten: p.name || '', initial_diag: p.initialDiag || '', status: p.status || 'active', date_out: p.dateOut || '', entries: p.entries || [], updated_at: new Date().toISOString() }; }
 
 /* ============================================================
-   TẢI DỮ LIỆU TỪ SUPABASE
+   TẢI DỮ LIỆU
    ============================================================ */
 async function loadDataFromCloud(silent) {
   if (!supabaseClient) return;
-  // Nếu vừa lưu xong trong 3 giây → bỏ qua để tránh tự đè
-  if (Date.now() - lastLocalSaveAt < 3000) {
-    console.log('Bỏ qua load — vừa lưu gần đây');
-    return;
-  }
+  if (Date.now() - lastLocalSaveAt < 3000) { console.log('Bỏ qua load — vừa lưu gần đây'); return; }
   if (!silent) updateSyncUI('syncing', 'Đang tải dữ liệu từ Supabase...');
   try {
     const { data: patientRows, error: pErr } = await supabaseClient.from('patients').select('*');
@@ -540,7 +536,6 @@ async function loadDataFromCloud(silent) {
       patients = merged;
       safeSetLocal('bs_patients_scroll_v3', patients);
     }
-    // Chỉ ghi đè medCategories nếu chưa vừa lưu
     if (lastSaveSource !== 'meds' || Date.now() - lastLocalSaveAt > 3000) {
       const { data: medRows, error: mErr } = await supabaseClient.from('med_categories').select('*').order('id').limit(1);
       if (!mErr && medRows && medRows.length > 0 && Array.isArray(medRows[0].groups) && medRows[0].groups.length > 0) {
@@ -548,7 +543,6 @@ async function loadDataFromCloud(silent) {
         safeSetLocal('bs_med_categories_v14', medCategories);
       }
     }
-    // Chỉ ghi đè roomList nếu chưa vừa lưu
     if (lastSaveSource !== 'rooms' || Date.now() - lastLocalSaveAt > 3000) {
       const { data: roomRows, error: rErr } = await supabaseClient.from('rooms_config').select('*').order('id').limit(1);
       if (!rErr && roomRows && roomRows.length > 0 && Array.isArray(roomRows[0].config) && roomRows[0].config.length > 0) {
@@ -570,7 +564,7 @@ async function forceReloadFromCloud() {
 }
 
 /* ============================================================
-   LƯU DỮ LIỆU LÊN SUPABASE
+   LƯU DỮ LIỆU
    ============================================================ */
 function syncDataToCloud() {
   safeSetLocal('bs_patients_scroll_v3', patients);
@@ -675,6 +669,7 @@ function saveMedCategory() {
   if (!name) return alert("Vui lòng nhập tên danh mục thuốc!");
   medCategories.push({ id: makeId(), name, groups: [] });
   lastSaveSource = 'meds';
+  lastLocalSaveAt = Date.now();
   syncDataToCloud(); renderMedCategoriesUI(); closeAddMedCategoryModal();
 }
 function openEditMedCategoryModal(catId) {
@@ -698,7 +693,7 @@ function saveCatNameOnly() {
   const newName = document.getElementById('editCatNameInput').value.trim();
   if (!newName) return alert("Vui lòng nhập tên danh mục!");
   const cat = medCategories.find(c => String(c.id) === String(activeMedCatId));
-  if (cat) { cat.name = newName; lastSaveSource = 'meds'; syncDataToCloud(); renderMedCategoriesUI(); closeEditMedCategoryModal(); }
+  if (cat) { cat.name = newName; lastSaveSource = 'meds'; lastLocalSaveAt = Date.now(); syncDataToCloud(); renderMedCategoriesUI(); closeEditMedCategoryModal(); }
 }
 function saveInlineGroupName(catId, groupId) {
   const input = document.getElementById('editGroupInline_' + groupId);
@@ -706,7 +701,7 @@ function saveInlineGroupName(catId, groupId) {
   if (!newName) return alert("Tên nhóm không được để trống!");
   const cat = medCategories.find(c => String(c.id) === String(catId));
   const group = cat?.groups.find(g => String(g.id) === String(groupId));
-  if (group) { group.name = newName; lastSaveSource = 'meds'; syncDataToCloud(); renderMedCategoriesUI(); alert("Đã lưu tên nhóm!"); }
+  if (group) { group.name = newName; lastSaveSource = 'meds'; lastLocalSaveAt = Date.now(); syncDataToCloud(); renderMedCategoriesUI(); alert("Đã lưu tên nhóm!"); }
 }
 function deleteMedGroup(catId, groupId) {
   const cat = medCategories.find(c => String(c.id) === String(catId));
@@ -718,6 +713,7 @@ function deleteMedGroup(catId, groupId) {
   if (!confirm(msg)) return;
   cat.groups = cat.groups.filter(g => String(g.id) !== String(groupId));
   lastSaveSource = 'meds';
+  lastLocalSaveAt = Date.now();
   syncDataToCloud();
   renderMedCategoriesUI();
   openEditMedCategoryModal(catId);
@@ -733,18 +729,23 @@ function deleteMedCategory(catId) {
   if (!confirm(msg)) return;
   medCategories = medCategories.filter(c => String(c.id) !== String(catId));
   lastSaveSource = 'meds';
+  lastLocalSaveAt = Date.now();
   syncDataToCloud();
   renderMedCategoriesUI();
   closeEditMedCategoryModal();
   alert("Đã xóa danh mục!");
 }
 function openAddMedGroupFromEdit() { closeEditMedCategoryModal(); openAddMedGroupModal(activeMedCatId); }
+
+/* FIX: Lên/xuống danh mục — thêm lastLocalSaveAt chống race */
 function moveMedCategory(index, direction) {
   const newIdx = index + direction;
   if (newIdx < 0 || newIdx >= medCategories.length) return;
   [medCategories[index], medCategories[newIdx]] = [medCategories[newIdx], medCategories[index]];
   lastSaveSource = 'meds';
-  syncDataToCloud(); renderMedCategoriesUI();
+  lastLocalSaveAt = Date.now();
+  syncDataToCloud();
+  renderMedCategoriesUI();
 }
 function moveMedGroup(catId, groupIndex, direction) {
   const cat = medCategories.find(c => String(c.id) === String(catId));
@@ -753,7 +754,9 @@ function moveMedGroup(catId, groupIndex, direction) {
   if (newIdx < 0 || newIdx >= cat.groups.length) return;
   [cat.groups[groupIndex], cat.groups[newIdx]] = [cat.groups[newIdx], cat.groups[groupIndex]];
   lastSaveSource = 'meds';
-  syncDataToCloud(); renderMedCategoriesUI();
+  lastLocalSaveAt = Date.now();
+  syncDataToCloud();
+  renderMedCategoriesUI();
 }
 function moveMedicineItem(index, direction) {
   const cat = medCategories.find(c => String(c.id) === String(activeMedCatId));
@@ -763,8 +766,12 @@ function moveMedicineItem(index, direction) {
   if (newIdx < 0 || newIdx >= group.medicines.length) return;
   [group.medicines[index], group.medicines[newIdx]] = [group.medicines[newIdx], group.medicines[index]];
   lastSaveSource = 'meds';
-  syncDataToCloud(); renderMedTable(group.medicines); renderMedCategoriesUI();
+  lastLocalSaveAt = Date.now();
+  syncDataToCloud();
+  renderMedTable(group.medicines);
+  renderMedCategoriesUI();
 }
+
 function openAddMedGroupModal(catId) { activeMedCatId = catId; document.getElementById('medGroupNameInput').value = ''; document.getElementById('addMedGroupModal').style.display = 'flex'; }
 const closeAddMedGroupModal = () => { document.getElementById('addMedGroupModal').style.display = 'none'; };
 function saveMedGroupAndCreateFirstMed() {
@@ -776,6 +783,7 @@ function saveMedGroupAndCreateFirstMed() {
     const newGroupId = makeId();
     cat.groups.push({ id: newGroupId, name, medicines: [] });
     lastSaveSource = 'meds';
+    lastLocalSaveAt = Date.now();
     syncDataToCloud(); renderMedCategoriesUI(); closeAddMedGroupModal();
     openMedGroupDetail(cat.id, newGroupId); openAddMedicineModal();
   }
@@ -805,6 +813,7 @@ function toggleMedHidden(catId, groupId, medId) {
   if (!med) return;
   med.hidden = !med.hidden;
   lastSaveSource = 'meds';
+  lastLocalSaveAt = Date.now();
   syncDataToCloud();
   renderMedCategoriesUI();
   if (String(activeMedCatId) === String(catId) && String(activeMedGroupId) === String(groupId)) {
@@ -813,7 +822,7 @@ function toggleMedHidden(catId, groupId, medId) {
 }
 
 /* ============================================================
-   THUỐC — Chi tiết (bảng)
+   THUỐC — Chi tiết
    ============================================================ */
 function openAddMedicineModal() {
   document.getElementById('editingMedId').value = '';
@@ -853,6 +862,7 @@ function saveMedicineItem() {
       if (med) { med.name = name; med.indication = indication; med.contraindication = contraindication; med.sideEffects = sideEffects; med.dose = dose; }
     } else { group.medicines.push({ id: makeId(), name, indication, contraindication, sideEffects, dose, hidden: false }); }
     lastSaveSource = 'meds';
+    lastLocalSaveAt = Date.now();
     syncDataToCloud(); renderMedTable(group.medicines); renderMedCategoriesUI();
   }
   closeAddMedicineModal();
@@ -864,6 +874,7 @@ function deleteMedicineItem(medId) {
   if (!group) return;
   group.medicines = group.medicines.filter(m => String(m.id) !== String(medId));
   lastSaveSource = 'meds';
+  lastLocalSaveAt = Date.now();
   syncDataToCloud();
   renderMedTable(group.medicines);
   renderMedCategoriesUI();
@@ -955,14 +966,238 @@ function renderMedCategoriesUI() {
     </div>`;
   }).join('');
 }
+
+/* ============================================================
+   TRA CỨU TỰ ĐỘNG — 180+ thuốc
+   ============================================================ */
 function askAIToSuggestMed() {
   const medName = document.getElementById('medNameInput').value.trim().toLowerCase();
   if (!medName) return alert("Vui lòng nhập tên thuốc trước!");
-  const db = { "paracetamol": { ind:"Giảm đau, hạ sốt", contra:"Suy gan nặng, mẫn cảm", side:"Hiếm gặp: phát ban, buồn nôn", dose:"500mg - 1g / lần, cách nhau 4-6 giờ" }, "amoxicillin": { ind:"Nhiễm khuẩn đường hô hấp, tai mũi họng", contra:"Dị ứng nhóm penicillin", side:"Tiêu chảy, buồn nôn, phát ban", dose:"500mg / lần, 3 lần/ngày" }, "amlodipin": { ind:"Tăng huyết áp, đau thắt ngực", contra:"Suy tim mất bù, sốc tim", side:"Phù cổ chân, chóng mặt", dose:"5mg - 10mg / ngày" }, "omeprazol": { ind:"Loét dạ dày tá tràng, trào ngược", contra:"Mẫn cảm với omeprazol", side:"Đau đầu, tiêu chảy", dose:"20mg - 40mg / ngày" }, "metformin": { ind:"Đái tháo đường týp 2", contra:"Suy thận, nhiễm toan", side:"Rối loạn tiêu hóa", dose:"500mg - 1000mg / lần, 2 lần/ngày" }, "ibuprofen": { ind:"Giảm đau, kháng viêm", contra:"Loét dạ dày tiến triển", side:"Đau thượng vị, chóng mặt", dose:"400mg / lần, cách 6-8 giờ" }, "ceftriaxon": { ind:"Nhiễm khuẩn nặng", contra:"Dị ứng cephalosporin", side:"Tiêu chảy", dose:"1g - 2g / ngày" }, "salbutamol": { ind:"Hen phế quản", contra:"Mẫn cảm, cường giáp nặng", side:"Run tay, hồi hộp", dose:"2 - 4mg / lần, 3 lần/ngày" } };
+  const db = {
+    /* GIẢM ĐAU - HẠ SỐT - KHÁNG VIÊM */
+    "paracetamol":{ind:"Giảm đau, hạ sốt",contra:"Suy gan nặng, mẫn cảm",side:"Hiếm gặp: phát ban, buồn nôn",dose:"500mg - 1g/lần, cách 4-6 giờ, tối đa 4g/ngày"},
+    "acetaminophen":{ind:"Giảm đau, hạ sốt",contra:"Suy gan nặng",side:"Hiếm gặp: phát ban",dose:"500mg - 1g/lần, cách 4-6 giờ"},
+    "ibuprofen":{ind:"Giảm đau, kháng viêm, hạ sốt",contra:"Loét dạ dày tiến triển, suy thận nặng",side:"Đau thượng vị, ợ hơi, chóng mặt",dose:"400mg/lần, cách 6-8 giờ, sau ăn"},
+    "aspirin":{ind:"Giảm đau, kháng viêm, chống kết tập tiểu cầu",contra:"Loét dạ dày, hen nặng, trẻ <16 tuổi",side:"Đau dạ dày, xuất huyết tiêu hóa",dose:"81mg - 325mg/ngày"},
+    "diclofenac":{ind:"Giảm đau, kháng viêm mạnh",contra:"Loét dạ dày, suy tim nặng, suy thận",side:"Đau dạ dày, phù, tăng HA",dose:"50mg x 2-3 lần/ngày, sau ăn"},
+    "meloxicam":{ind:"Thoái hóa khớp, viêm khớp dạng thấp",contra:"Loét dạ dày, suy thận nặng",side:"Đau dạ dày, phù",dose:"7.5mg - 15mg/ngày"},
+    "celecoxib":{ind:"Thoái hóa khớp, viêm khớp",contra:"Bệnh tim mạch, dị ứng sulfonamid",side:"Đau dạ dày, phù",dose:"100mg - 200mg x 2 lần/ngày"},
+    "ketorolac":{ind:"Giảm đau trung bình - nặng",contra:"Loét dạ dày, suy thận, chảy máu",side:"Buồn nôn, đau dạ dày",dose:"15-30mg TM/IM, tối đa 5 ngày"},
+    "tramadol":{ind:"Giảm đau trung bình - nặng",contra:"Động kinh, dùng MAOI, suy hô hấp",side:"Buồn nôn, chóng mặt, táo bón",dose:"50mg - 100mg, cách 4-6 giờ"},
+    "morphin":{ind:"Giảm đau nặng",contra:"Suy hô hấp, tắc ruột",side:"Ức chế hô hấp, táo bón, nghiện",dose:"Theo chỉ định, TM hoặc uống"},
+    /* KHÁNG SINH */
+    "amoxicillin":{ind:"Nhiễm khuẩn hô hấp, tai mũi họng, tiết niệu",contra:"Dị ứng penicillin",side:"Tiêu chảy, buồn nôn, phát ban",dose:"500mg x 3 lần/ngày, 5-7 ngày"},
+    "amoxicillin-clavulanat":{ind:"Nhiễm khuẩn nặng, vi khuẩn tiết beta-lactamase",contra:"Dị ứng penicillin, tiền sử vàng da",side:"Tiêu chảy, buồn nôn",dose:"625mg x 3 lần/ngày"},
+    "ampicillin":{ind:"Nhiễm khuẩn đường ruột, hô hấp",contra:"Dị ứng penicillin",side:"Phát ban, tiêu chảy",dose:"500mg x 4 lần/ngày"},
+    "cefuroxim":{ind:"Nhiễm khuẩn hô hấp, da, tiết niệu",contra:"Dị ứng cephalosporin",side:"Tiêu chảy, phát ban",dose:"500mg x 2 lần/ngày"},
+    "cefixim":{ind:"Nhiễm khuẩn hô hấp, tiết niệu",contra:"Dị ứng cephalosporin",side:"Tiêu chảy, đau bụng",dose:"200mg - 400mg/ngày"},
+    "ceftriaxon":{ind:"Nhiễm khuẩn nặng (viêm phổi, viêm màng não)",contra:"Dị ứng cephalosporin",side:"Tiêu chảy, phản ứng tại chỗ tiêm",dose:"1g - 2g/ngày, TM/IM"},
+    "cefepim":{ind:"Nhiễm khuẩn nặng bệnh viện",contra:"Dị ứng cephalosporin",side:"Tiêu chảy, phát ban",dose:"1g - 2g x 2-3 lần/ngày"},
+    "azithromycin":{ind:"Nhiễm khuẩn hô hấp, sinh dục, da",contra:"Dị ứng macrolid, suy gan nặng",side:"Buồn nôn, tiêu chảy, đau bụng",dose:"500mg/ngày x 3 ngày"},
+    "clarithromycin":{ind:"Nhiễm khuẩn hô hấp, diệt H.pylori",contra:"Dị ứng macrolid, dùng ergotamin",side:"Rối loạn vị giác, buồn nôn",dose:"250mg - 500mg x 2 lần/ngày"},
+    "erythromycin":{ind:"Nhiễm khuẩn hô hấp, da, mắt",contra:"Suy gan nặng",side:"Buồn nôn, tiêu chảy",dose:"250mg - 500mg x 4 lần/ngày"},
+    "levofloxacin":{ind:"Nhiễm khuẩn hô hấp, tiết niệu, da",contra:"Trẻ <18 tuổi, có thai, động kinh",side:"Chóng mặt, buồn nôn, đau gân",dose:"500mg - 750mg/ngày"},
+    "ciprofloxacin":{ind:"Nhiễm khuẩn tiết niệu, tiêu hóa, da",contra:"Trẻ <18 tuổi, có thai",side:"Buồn nôn, tiêu chảy, đau gân",dose:"500mg x 2 lần/ngày"},
+    "moxifloxacin":{ind:"Viêm phổi cộng đồng, xoang",contra:"Trẻ <18, có thai, bệnh tim",side:"Chóng mặt, QT kéo dài",dose:"400mg/ngày"},
+    "metronidazol":{ind:"Nhiễm khuẩn kỵ khí, amip, H.pylori",contra:"3 tháng đầu thai kỳ, dùng rượu",side:"Vị kim loại, buồn nôn",dose:"250mg - 500mg x 3 lần/ngày"},
+    "doxycyclin":{ind:"Nhiễm khuẩn hô hấp, mụn trứng cá, sốt rét",contra:"Phụ nữ có thai, trẻ <8 tuổi",side:"Buồn nôn, nhạy cảm ánh sáng",dose:"100mg x 2 lần/ngày"},
+    "tetracyclin":{ind:"Nhiễm khuẩn da, mắt, đường sinh dục",contra:"Trẻ <8 tuổi, có thai",side:"Vàng răng, buồn nôn",dose:"250mg - 500mg x 4 lần/ngày"},
+    "vancomycin":{ind:"Nhiễm khuẩn Gram dương nặng, MRSA",contra:"Suy thận nặng, dị ứng",side:"Độc thận, độc tai",dose:"15mg/kg cách 8-12 giờ"},
+    "gentamicin":{ind:"Nhiễm khuẩn Gram âm nặng",contra:"Suy thận, nhược cơ",side:"Độc thận, độc tai",dose:"3-5mg/kg/ngày"},
+    "meropenem":{ind:"Nhiễm khuẩn nặng bệnh viện, viêm màng não",contra:"Dị ứng carbapenem",side:"Tiêu chảy, phát ban",dose:"1g x 3 lần/ngày"},
+    "imipenem":{ind:"Nhiễm khuẩn nặng đa kháng",contra:"Dị ứng beta-lactam, động kinh",side:"Buồn nôn, co giật",dose:"500mg x 4 lần/ngày"},
+    /* TIM MẠCH - HUYẾT ÁP */
+    "amlodipin":{ind:"Tăng huyết áp, đau thắt ngực",contra:"Suy tim mất bù, sốc tim, hẹp ĐM chủ nặng",side:"Phù cổ chân, chóng mặt, đỏ bừng mặt",dose:"5mg - 10mg/ngày, uống 1 lần"},
+    "nifedipin":{ind:"Tăng huyết áp, đau thắt ngực",contra:"Sốc tim, hẹp ĐM chủ",side:"Đỏ mặt, đau đầu, phù",dose:"10mg - 20mg x 3 lần/ngày"},
+    "losartan":{ind:"Tăng huyết áp, bảo vệ thận ĐTĐ",contra:"Có thai, hẹp ĐM thận 2 bên",side:"Chóng mặt, tăng K máu",dose:"50mg - 100mg/ngày"},
+    "valsartan":{ind:"Tăng huyết áp, suy tim",contra:"Có thai, hẹp ĐM thận",side:"Chóng mặt, tụt HA",dose:"80mg - 160mg/ngày"},
+    "candesartan":{ind:"Tăng huyết áp, suy tim",contra:"Có thai",side:"Chóng mặt, tăng K",dose:"8mg - 16mg/ngày"},
+    "irbesartan":{ind:"Tăng huyết áp, bệnh thận ĐTĐ",contra:"Có thai",side:"Chóng mặt",dose:"150mg - 300mg/ngày"},
+    "enalapril":{ind:"Tăng huyết áp, suy tim",contra:"Có thai, phù mạch, hẹp ĐM thận 2 bên",side:"Ho khan, chóng mặt, tăng K",dose:"5mg - 20mg/ngày"},
+    "lisinopril":{ind:"Tăng huyết áp, suy tim",contra:"Có thai, phù mạch",side:"Ho khan",dose:"10mg - 40mg/ngày"},
+    "perindopril":{ind:"Tăng huyết áp, suy tim, bệnh mạch vành",contra:"Có thai, phù mạch",side:"Ho khan, chóng mặt",dose:"4mg - 8mg/ngày"},
+    "bisoprolol":{ind:"Tăng huyết áp, suy tim, đau thắt ngực",contra:"Hen nặng, block AV độ 2-3",side:"Mệt, chậm nhịp, lạnh chi",dose:"2.5mg - 10mg/ngày"},
+    "metoprolol":{ind:"Tăng huyết áp, đau thắt ngực, sau nhồi máu",contra:"Hen, block AV, nhịp chậm nặng",side:"Mệt, chóng mặt",dose:"50mg - 200mg/ngày"},
+    "atenolol":{ind:"Tăng huyết áp, đau thắt ngực",contra:"Hen, block AV",side:"Mệt, chậm nhịp",dose:"25mg - 100mg/ngày"},
+    "carvedilol":{ind:"Suy tim, tăng huyết áp",contra:"Hen, block AV, suy gan nặng",side:"Chóng mặt, mệt",dose:"6.25mg - 25mg x 2 lần/ngày"},
+    "propranolol":{ind:"Tăng huyết áp, lo âu, run, basedow",contra:"Hen, block AV, suy tim",side:"Mệt, chậm nhịp",dose:"10mg - 40mg x 2-3 lần/ngày"},
+    "furosemid":{ind:"Phù (tim, gan, thận), tăng HA, suy tim",contra:"Vô niệu, hạ K máu nặng",side:"Hạ K, mất nước, tụt HA",dose:"20mg - 40mg/ngày"},
+    "hydrochlorothiazid":{ind:"Tăng huyết áp, phù",contra:"Vô niệu, gút nặng",side:"Hạ K, tăng đường huyết, gút",dose:"12.5mg - 25mg/ngày"},
+    "spironolacton":{ind:"Suy tim, xơ gan cổ trướng",contra:"Tăng K máu, suy thận nặng",side:"Tăng K, gynecomastia",dose:"25mg - 100mg/ngày"},
+    "indapamid":{ind:"Tăng huyết áp",contra:"Suy thận nặng, gút",side:"Hạ K, chóng mặt",dose:"1.25mg - 2.5mg/ngày"},
+    "digoxin":{ind:"Suy tim, rung nhĩ",contra:"Block AV độ 2-3, hội chứng WPW",side:"Buồn nôn, nhìn vàng, loạn nhịp",dose:"0.125mg - 0.25mg/ngày"},
+    "atorvastatin":{ind:"Rối loạn lipid máu, dự phòng tim mạch",contra:"Bệnh gan hoạt động, có thai",side:"Đau cơ, tăng men gan",dose:"10mg - 80mg/ngày, uống tối"},
+    "rosuvastatin":{ind:"Rối loạn lipid máu",contra:"Bệnh gan hoạt động, có thai",side:"Đau cơ, tăng men gan",dose:"5mg - 40mg/ngày"},
+    "simvastatin":{ind:"Rối loạn lipid máu",contra:"Bệnh gan, có thai, dùng ritonavir",side:"Đau cơ, tiêu cơ vân",dose:"10mg - 40mg/ngày, uống tối"},
+    "ezetimib":{ind:"Rối loạn lipid máu",contra:"Bệnh gan hoạt động",side:"Đau đầu, tiêu chảy",dose:"10mg/ngày"},
+    "clopidogrel":{ind:"Dự phòng huyết khối, sau đặt stent",contra:"Chảy máu hoạt động, suy gan nặng",side:"Chảy máu, bầm tím",dose:"75mg/ngày"},
+    "ticagrelor":{ind:"Hội chứng vành cấp",contra:"Chảy máu nội sọ, suy gan nặng",side:"Khó thở, chảy máu",dose:"90mg x 2 lần/ngày"},
+    "warfarin":{ind:"Chống đông (rung nhĩ, huyết khối TM)",contra:"Chảy máu, có thai, tăng HA nặng",side:"Chảy máu, hoại tử da",dose:"Theo INR, thường 2-5mg/ngày"},
+    "rivaroxaban":{ind:"Dự phòng huyết khối TM sâu, rung nhĩ",contra:"Chảy máu hoạt động, suy gan nặng",side:"Chảy máu",dose:"10mg - 20mg/ngày"},
+    "apixaban":{ind:"Rung nhĩ, huyết khối TM",contra:"Chảy máu hoạt động",side:"Chảy máu",dose:"2.5mg - 5mg x 2 lần/ngày"},
+    "heparin":{ind:"Chống đông, huyết khối",contra:"Chảy máu, giảm tiểu cầu",side:"Chảy máu, giảm tiểu cầu",dose:"Theo aPTT, TM/TDD"},
+    "enoxaparin":{ind:"Dự phòng và điều trị huyết khối",contra:"Chảy máu, suy thận nặng",side:"Chảy máu, đau chỗ tiêm",dose:"40mg/ngày (dự phòng)"},
+    /* ĐÁI THÁO ĐƯỜNG */
+    "metformin":{ind:"Đái tháo đường type 2",contra:"Suy thận nặng (eGFR<30), nhiễm toan",side:"Rối loạn tiêu hóa, vị kim loại",dose:"500mg - 1000mg x 2-3 lần/ngày, sau ăn"},
+    "gliclazid":{ind:"Đái tháo đường type 2",contra:"Type 1, hôn mê ĐTĐ, suy thận nặng",side:"Hạ đường huyết, tăng cân",dose:"30mg - 120mg/ngày, trước ăn sáng"},
+    "glimepirid":{ind:"Đái tháo đường type 2",contra:"Type 1, suy thận nặng",side:"Hạ đường huyết",dose:"1mg - 4mg/ngày, trước ăn sáng"},
+    "glibenclamid":{ind:"Đái tháo đường type 2",contra:"Type 1, suy gan thận, người già",side:"Hạ đường huyết nặng",dose:"2.5mg - 15mg/ngày"},
+    "sitagliptin":{ind:"Đái tháo đường type 2",contra:"Type 1, suy thận nặng",side:"Đau đầu, viêm mũi họng",dose:"100mg/ngày"},
+    "empagliflozin":{ind:"ĐTĐ type 2, suy tim, bệnh thận mạn",contra:"Type 1, suy thận nặng",side:"Nhiễm nấm sinh dục, mất nước",dose:"10mg - 25mg/ngày"},
+    "dapagliflozin":{ind:"ĐTĐ type 2, suy tim",contra:"Type 1, suy thận nặng",side:"Nhiễm khuẩn tiết niệu",dose:"10mg/ngày"},
+    "insulin":{ind:"Đái tháo đường type 1, 2",contra:"Hạ đường huyết",side:"Hạ đường huyết, tăng cân",dose:"Theo chỉ định, tiêm dưới da"},
+    /* TIÊU HÓA */
+    "omeprazol":{ind:"Loét dạ dày tá tràng, trào ngược, H.pylori",contra:"Mẫn cảm, dùng clopidogrel",side:"Đau đầu, tiêu chảy, táo bón",dose:"20mg - 40mg/ngày, trước ăn 30 phút"},
+    "esomeprazol":{ind:"Trào ngược, loét dạ dày",contra:"Mẫn cảm",side:"Đau đầu, buồn nôn",dose:"20mg - 40mg/ngày"},
+    "pantoprazol":{ind:"Loét dạ dày, trào ngược",contra:"Mẫn cảm",side:"Tiêu chảy, đau đầu",dose:"20mg - 40mg/ngày"},
+    "lansoprazol":{ind:"Loét dạ dày, trào ngược",contra:"Mẫn cảm",side:"Tiêu chảy",dose:"15mg - 30mg/ngày"},
+    "ranitidin":{ind:"Loét dạ dày, trào ngược",contra:"Mẫn cảm",side:"Chóng mặt, táo bón",dose:"150mg x 2 lần/ngày"},
+    "famotidin":{ind:"Loét dạ dày",contra:"Mẫn cảm",side:"Đau đầu",dose:"20mg x 2 lần/ngày"},
+    "domperidon":{ind:"Buồn nôn, nôn, chậm rỗng dạ dày",contra:"U tủy thượng thận, tắc ruột, QT dài",side:"Khô miệng, đau đầu",dose:"10mg x 3 lần/ngày, trước ăn"},
+    "metoclopramid":{ind:"Buồn nôn, nôn, trào ngược",contra:"Tắc ruột, u tủy thượng thận, Parkinson",side:"Ngủ gà, loạn trương lực cơ",dose:"10mg x 3 lần/ngày"},
+    "ondansetron":{ind:"Buồn nôn, nôn do hóa trị, xạ trị",contra:"QT dài, dùng apomorphin",side:"Đau đầu, táo bón",dose:"4mg - 8mg x 2-3 lần/ngày"},
+    "simethicon":{ind:"Đầy hơi, chướng bụng",contra:"Tắc ruột",side:"Ít gặp",dose:"40mg - 125mg, 3-4 lần/ngày sau ăn"},
+    "loperamid":{ind:"Tiêu chảy cấp không do nhiễm khuẩn",contra:"Tiêu chảy nhiễm khuẩn xâm lấn",side:"Táo bón, chướng bụng",dose:"2mg sau mỗi lần đi, tối đa 8mg/ngày"},
+    "berberin":{ind:"Tiêu chảy, rối loạn tiêu hóa",contra:"Mẫn cảm",side:"Ít gặp",dose:"50mg - 100mg x 3 lần/ngày"},
+    "bifidobacterium":{ind:"Loạn khuẩn đường ruột",contra:"Mẫn cảm",side:"Ít gặp",dose:"1-2 gói x 2-3 lần/ngày"},
+    "lactulose":{ind:"Táo bón, bệnh não gan",contra:"Tắc ruột, galactose huyết",side:"Đầy hơi, tiêu chảy",dose:"15ml - 30ml/ngày"},
+    "bisacodyl":{ind:"Táo bón",contra:"Tắc ruột, đau bụng cấp",side:"Đau quặn bụng, tiêu chảy",dose:"5mg - 10mg trước ngủ"},
+    /* HÔ HẤP */
+    "salbutamol":{ind:"Hen phế quản, co thắt phế quản",contra:"Mẫn cảm, cường giáp nặng",side:"Run tay, đánh trống ngực, hồi hộp",dose:"2 - 4mg x 3 lần/ngày; khí dung 2.5-5mg"},
+    "terbutalin":{ind:"Hen, co thắt phế quản",contra:"Cường giáp, tim mạch nặng",side:"Run tay, nhịp nhanh",dose:"2.5mg - 5mg x 3 lần/ngày"},
+    "budesonid":{ind:"Hen, COPD (dạng hít)",contra:"Mẫn cảm",side:"Nhiễm nấm miệng, khàn tiếng",dose:"200mcg - 800mcg/ngày, súc miệng sau dùng"},
+    "beclomethason":{ind:"Hen phế quản",contra:"Mẫn cảm",side:"Nhiễm nấm miệng",dose:"200mcg - 800mcg/ngày"},
+    "montelukast":{ind:"Hen, viêm mũi dị ứng",contra:"Mẫn cảm",side:"Đau đầu, rối loạn giấc ngủ",dose:"10mg/ngày (người lớn), uống tối"},
+    "ambroxol":{ind:"Long đờm, viêm phế quản",contra:"Mẫn cảm",side:"Buồn nôn nhẹ",dose:"30mg x 3 lần/ngày"},
+    "acetylcystein":{ind:"Long đờm, giải độc paracetamol",contra:"Mẫn cảm",side:"Buồn nôn, nôn",dose:"200mg x 3 lần/ngày"},
+    "bromhexin":{ind:"Long đờm",contra:"Mẫn cảm",side:"Buồn nôn",dose:"8mg x 3 lần/ngày"},
+    "codein":{ind:"Ho khan, giảm đau",contra:"Trẻ <12 tuổi, suy hô hấp",side:"Táo bón, ngủ gà, nghiện",dose:"10mg - 30mg x 3 lần/ngày"},
+    "dextromethorphan":{ind:"Ho khan",contra:"Suy hô hấp, dùng MAOI",side:"Buồn nôn, chóng mặt",dose:"15mg x 3-4 lần/ngày"},
+    "theophylin":{ind:"Hen, COPD",contra:"Động kinh, loét dạ dày, nhịp nhanh",side:"Buồn nôn, nhịp nhanh, mất ngủ",dose:"100mg - 200mg x 2 lần/ngày"},
+    "ipratropium":{ind:"COPD, hen (khí dung)",contra:"Mẫn cảm atropin",side:"Khô miệng",dose:"Khí dung 250-500mcg x 3-4 lần/ngày"},
+    /* THẦN KINH - TÂM THẦN */
+    "diazepam":{ind:"Lo âu, co giật, cai rượu",contra:"Nhược cơ, suy hô hấp",side:"Ngủ gà, yếu cơ, nghiện",dose:"2mg - 10mg x 2-4 lần/ngày"},
+    "lorazepam":{ind:"Lo âu, mất ngủ, động kinh",contra:"Suy gan nặng, nhược cơ",side:"Ngủ gà, chóng mặt",dose:"1mg - 2mg x 2-3 lần/ngày"},
+    "alprazolam":{ind:"Lo âu, hoảng loạn",contra:"Hẹp góc tiền phòng, nhược cơ",side:"Ngủ gà, nghiện",dose:"0.25mg - 0.5mg x 3 lần/ngày"},
+    "zolpidem":{ind:"Mất ngủ ngắn hạn",contra:"Suy hô hấp nặng, ngưng thở khi ngủ",side:"Mộng du, nghiện",dose:"5mg - 10mg trước ngủ"},
+    "carbamazepin":{ind:"Động kinh, đau dây V, lưỡng cực",contra:"Block AV, suy tủy, dùng MAOI",side:"Chóng mặt, hạ Na máu",dose:"200mg x 2-3 lần/ngày"},
+    "phenytoin":{ind:"Động kinh",contra:"Block xoang, suy gan nặng",side:"Rậm lông, phì lợi, mất điều hòa",dose:"100mg x 3 lần/ngày"},
+    "valproat":{ind:"Động kinh, rối loạn lưỡng cực",contra:"Bệnh gan, có thai",side:"Tăng cân, run, độc gan",dose:"500mg - 2000mg/ngày"},
+    "levetiracetam":{ind:"Động kinh",contra:"Mẫn cảm",side:"Buồn ngủ, chóng mặt",dose:"500mg - 1500mg x 2 lần/ngày"},
+    "gabapentin":{ind:"Động kinh, đau thần kinh",contra:"Mẫn cảm",side:"Buồn ngủ, chóng mặt",dose:"300mg - 1200mg x 3 lần/ngày"},
+    "pregabalin":{ind:"Đau thần kinh, động kinh, lo âu",contra:"Mẫn cảm",side:"Buồn ngủ, phù, tăng cân",dose:"75mg - 300mg x 2 lần/ngày"},
+    "sumatriptan":{ind:"Đau nửa đầu migraine",contra:"Bệnh mạch vành, tăng HA nặng",side:"Đau ngực, chóng mặt",dose:"50mg - 100mg khi đau"},
+    "amitriptylin":{ind:"Trầm cảm, đau thần kinh",contra:"Nhồi máu cơ tim mới, glaucoma góc đóng",side:"Khô miệng, táo bón, ngủ gà",dose:"10mg - 75mg/ngày, uống tối"},
+    "fluoxetin":{ind:"Trầm cảm, OCD, bulimia",contra:"Dùng MAOI, suy gan nặng",side:"Buồn nôn, mất ngủ, lo âu",dose:"20mg/ngày, sáng"},
+    "sertralin":{ind:"Trầm cảm, lo âu, OCD, PTSD",contra:"Dùng MAOI, pimozid",side:"Buồn nôn, tiêu chảy, mất ngủ",dose:"50mg - 200mg/ngày"},
+    "escitalopram":{ind:"Trầm cảm, lo âu",contra:"Dùng MAOI, QT dài",side:"Buồn nôn, đau đầu",dose:"10mg - 20mg/ngày"},
+    "paroxetin":{ind:"Trầm cảm, lo âu, OCD",contra:"Dùng MAOI, thioridazin",side:"Buồn nôn, ngủ gà",dose:"20mg - 50mg/ngày"},
+    "olanzapin":{ind:"Tâm thần phân liệt, lưỡng cực",contra:"Glaucoma góc đóng, tăng nhãn áp",side:"Tăng cân, ngủ gà, ĐTĐ",dose:"5mg - 20mg/ngày"},
+    "risperidon":{ind:"Tâm thần phân liệt, hưng cảm",contra:"Mẫn cảm",side:"Tăng prolactin, tăng cân",dose:"2mg - 6mg/ngày"},
+    "quetiapin":{ind:"Tâm thần phân liệt, lưỡng cực",contra:"Mẫn cảm",side:"Ngủ gà, chóng mặt, tăng cân",dose:"150mg - 750mg/ngày"},
+    "haloperidol":{ind:"Tâm thần phân liệt, kích động",contra:"Parkinson, tổn thương hạch nền",side:"Loạn trương lực cơ",dose:"5mg - 20mg/ngày"},
+    /* CHỐNG DỊ ỨNG */
+    "loratadin":{ind:"Viêm mũi dị ứng, mày đay",contra:"Mẫn cảm",side:"Khô miệng, đau đầu (ít gặp)",dose:"10mg/ngày"},
+    "cetirizin":{ind:"Viêm mũi dị ứng, mày đay",contra:"Suy thận nặng",side:"Ngủ gà nhẹ, khô miệng",dose:"10mg/ngày, tối"},
+    "fexofenadin":{ind:"Viêm mũi dị ứng, mày đay",contra:"Mẫn cảm",side:"Ít gặp, không gây ngủ",dose:"120mg - 180mg/ngày"},
+    "chlorpheniramin":{ind:"Dị ứng, mày đay, sổ mũi",contra:"Glaucoma góc đóng, phì đại tiền liệt tuyến",side:"Ngủ gà, khô miệng",dose:"4mg x 3-4 lần/ngày"},
+    "diphenhydramin":{ind:"Dị ứng, mất ngủ, say tàu xe",contra:"Glaucoma, phì đại tiền liệt tuyến",side:"Ngủ gà, khô miệng",dose:"25mg - 50mg trước ngủ"},
+    "promethazin":{ind:"Dị ứng, buồn nôn, an thần",contra:"Suy hô hấp, trẻ <2 tuổi",side:"Ngủ gà, khô miệng",dose:"12.5mg - 25mg x 2-3 lần/ngày"},
+    /* KHÁNG VIRUS - NẤM - KÝ SINH TRÙNG */
+    "acyclovir":{ind:"Herpes simplex, zona",contra:"Suy thận nặng",side:"Buồn nôn, đau đầu, độc thận",dose:"400mg x 5 lần/ngày (herpes)"},
+    "valacyclovir":{ind:"Herpes, zona",contra:"Suy thận nặng",side:"Đau đầu, buồn nôn",dose:"500mg x 2 (herpes), 1g x 3 (zona)"},
+    "oseltamivir":{ind:"Cúm A, B",contra:"Suy thận nặng",side:"Buồn nôn, nôn",dose:"75mg x 2 lần/ngày x 5 ngày"},
+    "fluconazol":{ind:"Nấm Candida, Cryptococcus",contra:"Dùng terfenadin, có thai",side:"Buồn nôn, độc gan",dose:"150mg liều duy nhất (nấm âm đạo)"},
+    "ketoconazol":{ind:"Nấm da, lang ben",contra:"Suy gan, có thai",side:"Độc gan, buồn nôn",dose:"200mg/ngày x 5-10 ngày"},
+    "itraconazol":{ind:"Nấm da, móng",contra:"Suy tim, có thai",side:"Buồn nôn, đau bụng",dose:"100mg - 200mg x 2 lần/ngày"},
+    "nystatin":{ind:"Nấm Candida miệng, âm đạo",contra:"Mẫn cảm",side:"Ít gặp",dose:"100.000 UI x 4 lần/ngày"},
+    "terbinafin":{ind:"Nấm da, móng",contra:"Suy gan nặng",side:"Rối loạn vị giác, đau đầu",dose:"250mg/ngày"},
+    "albendazol":{ind:"Giun sán",contra:"Có thai 3 tháng đầu",side:"Đau bụng, buồn nôn",dose:"400mg liều duy nhất (giun)"},
+    "mebendazol":{ind:"Giun kim, giun đũa, móc",contra:"Có thai 3 tháng đầu",side:"Đau bụng nhẹ",dose:"100mg x 2 lần/ngày x 3 ngày"},
+    "ivermectin":{ind:"Ghẻ, giun chỉ",contra:"Trẻ <5 tuổi, có thai",side:"Ngứa, phát ban",dose:"200mcg/kg liều duy nhất"},
+    "chloroquin":{ind:"Sốt rét",contra:"Võng mạc, suy gan thận nặng",side:"Ngứa, rối loạn thị giác",dose:"Theo phác đồ"},
+    /* NỘI TIẾT - HORMONE */
+    "levothyroxin":{ind:"Suy giáp",contra:"Nhiễm độc giáp, nhồi máu cơ tim cấp",side:"Hồi hộp, run, sụt cân",dose:"25mcg - 200mcg/ngày, uống sáng đói"},
+    "methimazol":{ind:"Cường giáp",contra:"Suy gan nặng, mất bạch cầu hạt",side:"Mất bạch cầu hạt, ngứa",dose:"10mg - 40mg/ngày"},
+    "propylthiouracil":{ind:"Cường giáp (có thai)",contra:"Suy gan nặng",side:"Độc gan, mất bạch cầu hạt",dose:"100mg x 3 lần/ngày"},
+    "prednisolon":{ind:"Kháng viêm, dị ứng, tự miễn",contra:"Nhiễm khuẩn không kiểm soát, loét dạ dày",side:"Tăng đường huyết, loãng xương",dose:"5mg - 60mg/ngày, sáng sau ăn"},
+    "methylprednisolon":{ind:"Kháng viêm mạnh, hen nặng",contra:"Nhiễm khuẩn toàn thân",side:"Tăng đường huyết, loãng xương",dose:"4mg - 32mg/ngày"},
+    "dexamethason":{ind:"Kháng viêm mạnh, phù não",contra:"Nhiễm khuẩn không kiểm soát",side:"Tăng đường huyết, teo cơ",dose:"0.5mg - 10mg/ngày"},
+    "hydrocortison":{ind:"Suy thượng thận, sốc phản vệ",contra:"Nhiễm khuẩn không kiểm soát",side:"Giữ muối nước",dose:"100mg TM cấp cứu; uống 10-30mg/ngày"},
+    /* TIẾT NIỆU - SINH DỤC */
+    "tamsulosin":{ind:"Phì đại tiền liệt tuyến",contra:"Hạ HA tư thế, suy gan nặng",side:"Chóng mặt, xuất tinh ngược",dose:"0.4mg/ngày sau ăn tối"},
+    "finasterid":{ind:"Phì đại tiền liệt tuyến, hói đầu",contra:"Phụ nữ, trẻ em",side:"Giảm libido, rối loạn cương",dose:"5mg/ngày (tuyến tiền liệt), 1mg (hói)"},
+    "dutasterid":{ind:"Phì đại tiền liệt tuyến",contra:"Phụ nữ, trẻ em",side:"Giảm libido",dose:"0.5mg/ngày"},
+    "sildenafil":{ind:"Rối loạn cương dương, tăng áp phổi",contra:"Dùng nitrat, bệnh tim mạch nặng",side:"Đau đầu, đỏ mặt",dose:"50mg trước quan hệ 1 giờ"},
+    "tadalafil":{ind:"Rối loạn cương dương, phì đại tiền liệt tuyến",contra:"Dùng nitrat",side:"Đau lưng, đau cơ",dose:"10mg trước quan hệ; 5mg/ngày"},
+    "oxybutynin":{ind:"Bàng quang tăng hoạt",contra:"Glaucoma góc đóng, bí tiểu",side:"Khô miệng, táo bón",dose:"5mg x 2-3 lần/ngày"},
+    "tolterodin":{ind:"Bàng quang tăng hoạt",contra:"Bí tiểu, glaucoma góc đóng",side:"Khô miệng",dose:"2mg x 2 lần/ngày"},
+    /* CƠ XƯƠNG KHỚP */
+    "allopurinol":{ind:"Gút, tăng acid uric",contra:"Cơn gút cấp",side:"Phát ban, hội chứng Stevens-Johnson",dose:"100mg - 300mg/ngày sau ăn"},
+    "colchicin":{ind:"Cơn gút cấp, dự phòng gút",contra:"Suy thận nặng, suy gan nặng",side:"Tiêu chảy, buồn nôn",dose:"0.5mg - 1mg/ngày"},
+    "febuxostat":{ind:"Gút mạn",contra:"Dùng azathioprin",side:"Tăng men gan, đau khớp",dose:"40mg - 80mg/ngày"},
+    "methotrexat":{ind:"Viêm khớp dạng thấp, ung thư",contra:"Có thai, suy gan thận nặng",side:"Độc gan, độc tủy",dose:"7.5mg - 20mg/tuần (KHÔNG dùng hàng ngày)"},
+    "hydroxychloroquin":{ind:"Lupus, viêm khớp dạng thấp",contra:"Bệnh võng mạc, có thai",side:"Độc võng mạc, buồn nôn",dose:"200mg - 400mg/ngày"},
+    "calci-carbonat":{ind:"Bổ sung calci, loãng xương",contra:"Tăng calci máu, sỏi thận",side:"Táo bón, đầy hơi",dose:"500mg - 1000mg/ngày"},
+    "calci-d3":{ind:"Loãng xương, thiếu vitamin D",contra:"Tăng calci máu",side:"Táo bón",dose:"1 viên x 1-2 lần/ngày"},
+    "alendronat":{ind:"Loãng xương sau mãn kinh",contra:"Hẹp thực quản",side:"Viêm thực quản, đau cơ",dose:"70mg/tuần, uống sáng đói, ngồi thẳng 30 phút"},
+    "glucosamin":{ind:"Thoái hóa khớp",contra:"Dị ứng hải sản",side:"Đầy hơi, buồn nôn",dose:"1500mg/ngày"},
+    /* MẮT - TAI - DA */
+    "tobramycin-eye":{ind:"Nhiễm khuẩn mắt",contra:"Mẫn cảm",side:"Kích ứng mắt",dose:"1 giọt x 4-6 lần/ngày"},
+    "ofloxacin-eye":{ind:"Viêm kết mạc, loét giác mạc",contra:"Mẫn cảm",side:"Kích ứng",dose:"1 giọt x 4 lần/ngày"},
+    "moxifloxacin-eye":{ind:"Nhiễm khuẩn mắt",contra:"Mẫn cảm",side:"Kích ứng",dose:"1 giọt x 3 lần/ngày"},
+    "chloramphenicol-eye":{ind:"Nhiễm khuẩn mắt",contra:"Suy tủy xương",side:"Ít gặp",dose:"1 giọt x 4-6 lần/ngày"},
+    "betamethason-eye":{ind:"Viêm mắt không nhiễm khuẩn",contra:"Herpes mắt, nấm mắt",side:"Tăng nhãn áp, đục thủy tinh thể",dose:"1 giọt x 3-4 lần/ngày"},
+    "ciprofloxacin-ear":{ind:"Viêm tai ngoài, tai giữa",contra:"Thủng màng nhĩ (dạng dung dịch)",side:"Ít gặp",dose:"3-4 giọt x 2 lần/ngày"},
+    "clotrimazol":{ind:"Nấm da, âm đạo",contra:"Mẫn cảm",side:"Kích ứng tại chỗ",dose:"Bôi 2 lần/ngày; đặt âm đạo 100mg x 6 ngày"},
+    "miconazol":{ind:"Nấm da, âm đạo",contra:"Mẫn cảm",side:"Kích ứng",dose:"Bôi 2 lần/ngày"},
+    "betamethason-da":{ind:"Viêm da, dị ứng da",contra:"Nhiễm khuẩn/nấm da, trứng cá",side:"Teo da, rậm lông",dose:"Bôi mỏng 1-2 lần/ngày"},
+    "hydrocortison-da":{ind:"Viêm da nhẹ, dị ứng",contra:"Nhiễm khuẩn da",side:"Teo da (ít gặp)",dose:"Bôi 1-2 lần/ngày"},
+    "acid-fusidic":{ind:"Nhiễm khuẩn da, mụn nhọt",contra:"Mẫn cảm",side:"Ít gặp",dose:"Bôi 2-3 lần/ngày"},
+    "mupirocin":{ind:"Nhiễm khuẩn da, chốc",contra:"Mẫn cảm",side:"Kích ứng",dose:"Bôi 3 lần/ngày x 5-10 ngày"},
+    "povidon-iod":{ind:"Sát khuẩn da, vết thương",contra:"Suy giáp, trẻ sơ sinh",side:"Kích ứng da",dose:"Bôi tại chỗ"},
+    /* VITAMIN - KHOÁNG */
+    "vitamin-c":{ind:"Thiếu vitamin C, tăng đề kháng",contra:"Sỏi thận oxalat",side:"Tiêu chảy (liều cao)",dose:"500mg - 1000mg/ngày"},
+    "vitamin-b1":{ind:"Thiếu B1, beriberi, nghiện rượu",contra:"Mẫn cảm",side:"Ít gặp",dose:"100mg - 300mg/ngày"},
+    "vitamin-b12":{ind:"Thiếu B12, thiếu máu nguyên hồng cầu khổng lồ",contra:"Mẫn cảm",side:"Ít gặp",dose:"1000mcg/ngày (uống)"},
+    "acid-folic":{ind:"Thiếu máu, có thai",contra:"Mẫn cảm",side:"Ít gặp",dose:"400mcg - 5mg/ngày"},
+    "vitamin-d3":{ind:"Thiếu vitamin D, loãng xương",contra:"Tăng calci máu",side:"Ít gặp khi dùng đúng liều",dose:"800 IU - 2000 IU/ngày"},
+    "vitamin-e":{ind:"Bổ sung, chống oxy hóa",contra:"Thiếu vitamin K",side:"Ít gặp",dose:"400 IU/ngày"},
+    "vitamin-k1":{ind:"Chống chảy máu (do warfarin)",contra:"Mẫn cảm",side:"Ít gặp",dose:"10mg tiêm TM/IM"},
+    "sắt-sulfat":{ind:"Thiếu máu thiếu sắt",contra:"Thiếu máu tan máu, thalassemia",side:"Táo bón, phân đen",dose:"200mg x 1-3 lần/ngày"},
+    "acid-tranexamic":{ind:"Chảy máu, rong kinh",contra:"Huyết khối, chảy máu nội sọ",side:"Buồn nôn, tiêu chảy",dose:"500mg x 3 lần/ngày"},
+    "kẽm":{ind:"Tiêu chảy ở trẻ em, thiếu kẽm",contra:"Mẫn cảm",side:"Buồn nôn",dose:"10mg - 20mg/ngày (trẻ)"},
+    "magie-b6":{ind:"Bổ sung magie, chuột rút",contra:"Suy thận nặng",side:"Tiêu chảy",dose:"1-2 viên/ngày"},
+    "kali-clorid":{ind:"Hạ kali máu",contra:"Tăng kali máu, suy thận",side:"Kích ứng dạ dày",dose:"Theo nồng độ K máu"},
+    "natri-clorid":{ind:"Bù dịch",contra:"Tăng Na máu, phù phổi",side:"Quá tải dịch",dose:"Theo chỉ định"},
+    "glucose-5":{ind:"Bù nước, năng lượng",contra:"Tăng đường huyết nặng",side:"Tăng đường huyết",dose:"Theo chỉ định"},
+    "ringer-lactat":{ind:"Bù dịch, mất máu",contra:"Nhiễm toan lactic, suy gan nặng",side:"Quá tải dịch",dose:"Theo chỉ định"}
+  };
   let found = db[medName];
+  if (!found) { const key = Object.keys(db).find(k => medName === k); if (key) found = db[key]; }
   if (!found) { const key = Object.keys(db).find(k => medName.includes(k) || k.includes(medName)); if (key) found = db[key]; }
-  if (found) { document.getElementById('medIndicationInput').value = found.ind; document.getElementById('medContraindicationInput').value = found.contra; document.getElementById('medSideEffectsInput').value = found.side; document.getElementById('medDoseInput').value = found.dose; }
-  else { document.getElementById('medIndicationInput').value = "Điều trị triệu chứng theo chỉ định lâm sàng"; document.getElementById('medContraindicationInput').value = "Quá mẫn với thành phần của thuốc"; document.getElementById('medSideEffectsInput').value = "Thường nhẹ: rối loạn tiêu hóa nhẹ"; document.getElementById('medDoseInput').value = "Theo chỉ định của bác sĩ điều trị"; }
+  if (!found) {
+    const normalized = medName.replace(/[-\s]/g, '');
+    const key = Object.keys(db).find(k => { const kn = k.replace(/[-\s]/g, ''); return kn === normalized || kn.includes(normalized) || normalized.includes(kn); });
+    if (key) found = db[key];
+  }
+  if (!found && medName.length >= 4) {
+    const prefix = medName.slice(0, 5);
+    const key = Object.keys(db).find(k => k.startsWith(prefix));
+    if (key) found = db[key];
+  }
+  if (found) {
+    document.getElementById('medIndicationInput').value = found.ind;
+    document.getElementById('medContraindicationInput').value = found.contra;
+    document.getElementById('medSideEffectsInput').value = found.side;
+    document.getElementById('medDoseInput').value = found.dose;
+  } else {
+    document.getElementById('medIndicationInput').value = "Điều trị triệu chứng theo chỉ định lâm sàng";
+    document.getElementById('medContraindicationInput').value = "Quá mẫn với thành phần của thuốc";
+    document.getElementById('medSideEffectsInput').value = "Thường nhẹ: rối loạn tiêu hóa nhẹ";
+    document.getElementById('medDoseInput').value = "Theo chỉ định của bác sĩ điều trị";
+    alert('Không tìm thấy thuốc "' + medName + '" trong cơ sở dữ liệu.\n\nĐã điền thông tin mẫu — bạn vui lòng chỉnh sửa lại.');
+  }
 }
 function exportMedicationPDF() {
   if (!medCategories.length) return alert("Chưa có danh mục thuốc nào!");
@@ -977,10 +1212,7 @@ function exportMedicationPDF() {
 }/* ============================================================
    PHÒNG
    ============================================================ */
-function openRoomSettingsModal() {
-  renderRoomSettingsList();
-  document.getElementById('roomSettingsModal').style.display = 'flex';
-}
+function openRoomSettingsModal() { renderRoomSettingsList(); document.getElementById('roomSettingsModal').style.display = 'flex'; }
 const closeRoomSettingsModal = () => { document.getElementById('roomSettingsModal').style.display = 'none'; };
 function renderRoomSettingsList() {
   const c = document.getElementById('roomSettingsListContainer');
@@ -998,10 +1230,8 @@ function addNewRoom() {
   if (!name) return alert("Vui lòng nhập tên phòng!");
   roomList.push({ id: String(makeId()), name, rows: 2, cols: 2, hiddenBeds: [] });
   input.value = '';
-  lastSaveSource = 'rooms';
-  syncDataToCloud();
-  renderRoomsGrid();
-  renderRoomSettingsList();
+  lastSaveSource = 'rooms'; lastLocalSaveAt = Date.now();
+  syncDataToCloud(); renderRoomsGrid(); renderRoomSettingsList();
 }
 function saveRoomName(roomId) {
   const input = document.getElementById('roomNameEdit_' + roomId);
@@ -1011,13 +1241,9 @@ function saveRoomName(roomId) {
   if (r) {
     const oldName = r.name;
     r.name = newName;
-    patients.forEach(pat => {
-      if (String(pat.room).trim() === String(oldName).trim()) pat.room = newName;
-    });
-    lastSaveSource = 'rooms';
-    syncDataToCloud();
-    renderRoomsGrid();
-    renderRoomSettingsList();
+    patients.forEach(pat => { if (String(pat.room).trim() === String(oldName).trim()) pat.room = newName; });
+    lastSaveSource = 'rooms'; lastLocalSaveAt = Date.now();
+    syncDataToCloud(); renderRoomsGrid(); renderRoomSettingsList();
     alert("Đã đổi tên phòng!");
   }
 }
@@ -1030,17 +1256,14 @@ function deleteRoom(roomId) {
   for (let i = 0; i < rowCount && !hasPatient; i++) {
     const rowChar = ROW_LABELS[i];
     for (let j = 1; j <= colCount; j++) {
-      const cellName = `${rowChar}${j}`;
-      if (!r.hiddenBeds.includes(cellName) && getPatientInBed(r.name, cellName)) { hasPatient = true; break; }
+      if (!r.hiddenBeds.includes(`${rowChar}${j}`) && getPatientInBed(r.name, `${rowChar}${j}`)) { hasPatient = true; break; }
     }
   }
   if (hasPatient) return alert("Không thể xóa phòng đang có bệnh nhân!");
   if (confirm(`Xóa phòng ${r.name}?`)) {
     roomList = roomList.filter(x => String(x.id) !== String(roomId));
-    lastSaveSource = 'rooms';
-    syncDataToCloud();
-    renderRoomsGrid();
-    renderRoomSettingsList();
+    lastSaveSource = 'rooms'; lastLocalSaveAt = Date.now();
+    syncDataToCloud(); renderRoomsGrid(); renderRoomSettingsList();
   }
 }
 function openEditRoomModal(roomId) {
@@ -1053,7 +1276,6 @@ function openEditRoomModal(roomId) {
 }
 const closeEditRoomModal = () => { document.getElementById('editRoomModal').style.display = 'none'; currentEditingRoomId = null; };
 
-/* Refresh nội dung modal không đóng/mở lại (tránh lag + mất focus) */
 function refreshEditRoomModalContent() {
   const r = roomList.find(x => String(x.id) === String(currentEditingRoomId));
   if (!r) return;
@@ -1061,16 +1283,12 @@ function refreshEditRoomModalContent() {
   const mode = currentActiveTab;
   const rowCount = r.rows || 2, colCount = r.cols || 2;
   if (mode === 'row') {
-    const sel = document.getElementById('selectRowToRemove');
-    sel.innerHTML = '';
+    const sel = document.getElementById('selectRowToRemove'); sel.innerHTML = '';
     for (let i = 0; i < rowCount; i++) sel.innerHTML += `<option value="${i}">Hàng ${ROW_LABELS[i] || (i+1)}</option>`;
   } else if (mode === 'col') {
-    const sel = document.getElementById('selectColToRemove');
-    sel.innerHTML = '';
+    const sel = document.getElementById('selectColToRemove'); sel.innerHTML = '';
     for (let j = 1; j <= colCount; j++) sel.innerHTML += `<option value="${j}">Cột ${j}</option>`;
-  } else if (mode === 'cell') {
-    renderCellVisibilityMatrix();
-  }
+  } else if (mode === 'cell') { renderCellVisibilityMatrix(); }
 }
 function switchEditMode(mode) {
   currentActiveTab = mode;
@@ -1086,57 +1304,42 @@ function addRowToRoom() {
   const r = roomList.find(x => String(x.id) === String(currentEditingRoomId));
   if (!r) return;
   r.rows = (r.rows || 2) + 1;
-  lastSaveSource = 'rooms';
-  lastLocalSaveAt = Date.now();
-  syncDataToCloud();
-  renderRoomsGrid();
-  refreshEditRoomModalContent();
+  lastSaveSource = 'rooms'; lastLocalSaveAt = Date.now();
+  syncDataToCloud(); renderRoomsGrid(); refreshEditRoomModalContent();
 }
 function removeRowFromRoom() {
   const r = roomList.find(x => String(x.id) === String(currentEditingRoomId));
   if (!r) return;
   const rowCount = r.rows || 2;
   if (rowCount <= 1) return alert("Phòng phải còn ít nhất 1 hàng!");
-  const sel = document.getElementById('selectRowToRemove');
-  const rowIndex = parseInt(sel.value);
+  const rowIndex = parseInt(document.getElementById('selectRowToRemove').value);
   const rowChar = ROW_LABELS[rowIndex];
   const colCount = r.cols || 2;
-  let hasPatient = false;
   for (let j = 1; j <= colCount; j++) {
-    if (getPatientInBed(r.name, `${rowChar}${j}`)) { hasPatient = true; break; }
+    if (getPatientInBed(r.name, `${rowChar}${j}`)) return alert("Không thể xóa hàng đang có bệnh nhân!");
   }
-  if (hasPatient) return alert("Không thể xóa hàng đang có bệnh nhân!");
   r.rows = rowCount - 1;
   r.hiddenBeds = (r.hiddenBeds || []).filter(b => !b.startsWith(rowChar));
-  lastSaveSource = 'rooms';
-  lastLocalSaveAt = Date.now();
-  syncDataToCloud();
-  renderRoomsGrid();
-  refreshEditRoomModalContent();
+  lastSaveSource = 'rooms'; lastLocalSaveAt = Date.now();
+  syncDataToCloud(); renderRoomsGrid(); refreshEditRoomModalContent();
 }
 function addColToRoom() {
   const r = roomList.find(x => String(x.id) === String(currentEditingRoomId));
   if (!r) return;
   r.cols = (r.cols || 2) + 1;
-  lastSaveSource = 'rooms';
-  lastLocalSaveAt = Date.now();
-  syncDataToCloud();
-  renderRoomsGrid();
-  refreshEditRoomModalContent();
+  lastSaveSource = 'rooms'; lastLocalSaveAt = Date.now();
+  syncDataToCloud(); renderRoomsGrid(); refreshEditRoomModalContent();
 }
 function removeColFromRoom() {
   const r = roomList.find(x => String(x.id) === String(currentEditingRoomId));
   if (!r) return;
   const colCount = r.cols || 2;
   if (colCount <= 1) return alert("Phòng phải có ít nhất 1 cột!");
-  const sel = document.getElementById('selectColToRemove');
-  const colIndex = parseInt(sel.value);
+  const colIndex = parseInt(document.getElementById('selectColToRemove').value);
   const rowCount = r.rows || 2;
-  let hasPatient = false;
   for (let i = 0; i < rowCount; i++) {
-    if (getPatientInBed(r.name, `${ROW_LABELS[i]}${colIndex}`)) { hasPatient = true; break; }
+    if (getPatientInBed(r.name, `${ROW_LABELS[i]}${colIndex}`)) return alert("Không thể xóa cột đang có bệnh nhân!");
   }
-  if (hasPatient) return alert("Không thể xóa cột đang có bệnh nhân!");
   let newHiddenBeds = [];
   for (let i = 0; i < rowCount; i++) {
     const rowChar = ROW_LABELS[i];
@@ -1147,20 +1350,15 @@ function removeColFromRoom() {
       const newCellName = `${rowChar}${targetNewCol}`;
       if ((r.hiddenBeds || []).includes(oldCellName)) newHiddenBeds.push(newCellName);
       patients.forEach(pat => {
-        if (pat.status === 'active' && String(pat.room).trim() === String(r.name).trim() && String(pat.bed).trim() === oldCellName) {
-          pat.bed = newCellName;
-        }
+        if (pat.status === 'active' && String(pat.room).trim() === String(r.name).trim() && String(pat.bed).trim() === oldCellName) pat.bed = newCellName;
       });
       targetNewCol++;
     }
   }
   r.cols = colCount - 1;
   r.hiddenBeds = newHiddenBeds;
-  lastSaveSource = 'rooms';
-  lastLocalSaveAt = Date.now();
-  syncDataToCloud();
-  renderRoomsGrid();
-  refreshEditRoomModalContent();
+  lastSaveSource = 'rooms'; lastLocalSaveAt = Date.now();
+  syncDataToCloud(); renderRoomsGrid(); refreshEditRoomModalContent();
 }
 function renderCellVisibilityMatrix() {
   const r = roomList.find(x => String(x.id) === String(currentEditingRoomId));
@@ -1186,17 +1384,13 @@ function toggleCellVisibility(roomId, cellName) {
   const r = roomList.find(x => String(x.id) === String(roomId));
   if (!r) return;
   r.hiddenBeds = r.hiddenBeds || [];
-  if (r.hiddenBeds.includes(cellName)) {
-    r.hiddenBeds = r.hiddenBeds.filter(b => b !== cellName);
-  } else {
+  if (r.hiddenBeds.includes(cellName)) { r.hiddenBeds = r.hiddenBeds.filter(b => b !== cellName); }
+  else {
     if (getPatientInBed(r.name, cellName)) return alert("Không thể ẩn ô đang có bệnh nhân!");
     r.hiddenBeds.push(cellName);
   }
-  lastSaveSource = 'rooms';
-  lastLocalSaveAt = Date.now();
-  syncDataToCloud();
-  renderRoomsGrid();
-  renderCellVisibilityMatrix();
+  lastSaveSource = 'rooms'; lastLocalSaveAt = Date.now();
+  syncDataToCloud(); renderRoomsGrid(); renderCellVisibilityMatrix();
 }
 function renderRoomsGrid() {
   const c = document.getElementById('roomsDynamicContainer');
@@ -1238,13 +1432,13 @@ function handleBedClick(room, bed) {
     ['recordDiagnosis','recordTracking','recordTests','recordImagingText'].forEach(id => document.getElementById(id).value = '');
     formImages = { diag: [], tracking: [], tests: [], imaging: [] };
     ['diag','tracking','tests','imaging'].forEach(renderFormImagePreviews);
-    showView('patientFormView');
-    resizeAllTextareas();
+    showView('patientFormView'); resizeAllTextareas();
   }
 }
 function handleAddNewDayClick() {
   const p = patients.find(x => x.id === currentViewingPatientId);
   if (!p) return;
+  if (p.status !== 'active') return alert("Bệnh nhân đã ra viện, không thể thêm ngày mới!");
   currentEditing = { room: p.room, bed: p.bed, id: p.id, mode: 'add_day', entryIndex: null };
   document.getElementById('formViewTitle').textContent = `Thêm ngày mới: ${p.name}`;
   document.getElementById('crumbPrefix').textContent = `${p.room} - Vị trí ${p.bed}`;
@@ -1256,8 +1450,7 @@ function handleAddNewDayClick() {
   ['recordTracking','recordTests','recordImagingText'].forEach(id => document.getElementById(id).value = '');
   formImages = { diag: [], tracking: [], tests: [], imaging: [] };
   ['diag','tracking','tests','imaging'].forEach(renderFormImagePreviews);
-  showView('patientFormView');
-  resizeAllTextareas();
+  showView('patientFormView'); resizeAllTextareas();
 }
 function handleEditCurrentDayClick() {
   const p = patients.find(x => x.id === currentViewingPatientId);
@@ -1274,14 +1467,11 @@ function handleEditCurrentDayClick() {
   document.getElementById('recordTests').value = entry.tests || '';
   document.getElementById('recordImagingText').value = entry.imaging || '';
   formImages = {
-    diag: [...(entry.images?.diag || [])],
-    tracking: [...(entry.images?.tracking || [])],
-    tests: [...(entry.images?.tests || [])],
-    imaging: [...(entry.images?.imaging || [])]
+    diag: [...(entry.images?.diag || [])], tracking: [...(entry.images?.tracking || [])],
+    tests: [...(entry.images?.tests || [])], imaging: [...(entry.images?.imaging || [])]
   };
   ['diag','tracking','tests','imaging'].forEach(renderFormImagePreviews);
-  showView('patientFormView');
-  resizeAllTextareas();
+  showView('patientFormView'); resizeAllTextareas();
 }
 const handleBackFromForm = () => showView(currentEditing.mode.includes('day') ? 'summaryFullView' : 'roomGridView');
 function saveRecord() {
@@ -1289,63 +1479,45 @@ function saveRecord() {
   if (!name) return alert("Vui lòng nhập tên bệnh nhân!");
   const rawTime = document.getElementById('recordDateTimeInput').value || getNowForInput();
   const entry = {
-    timestamp: new Date(rawTime).getTime() || Date.now(),
-    isoTime: rawTime,
+    timestamp: new Date(rawTime).getTime() || Date.now(), isoTime: rawTime,
     diag: document.getElementById('recordDiagnosis').value.trim(),
     tracking: document.getElementById('recordTracking').value.trim(),
     tests: document.getElementById('recordTests').value.trim(),
     imaging: document.getElementById('recordImagingText').value.trim(),
-    images: {
-      diag: [...formImages.diag], tracking: [...formImages.tracking],
-      tests: [...formImages.tests], imaging: [...formImages.imaging]
-    }
+    images: { diag: [...formImages.diag], tracking: [...formImages.tracking], tests: [...formImages.tests], imaging: [...formImages.imaging] }
   };
   if (currentEditing.id) {
     const p = patients.find(x => x.id === currentEditing.id);
     if (p) {
-      p.name = name;
-      p.updatedAt = Date.now();
+      p.name = name; p.updatedAt = Date.now();
       if (currentEditing.mode === 'edit_day') p.entries[currentEditing.entryIndex] = entry;
       else p.entries.push(entry);
       p.entries.sort((a, b) => a.timestamp - b.timestamp);
-      lastSaveSource = 'patients';
-      lastLocalSaveAt = Date.now();
-      syncDataToCloud();
-      currentActiveIndex = currentEditing.mode === 'edit_day' ? currentEditing.entryIndex : p.entries.length - 1;
-      openSummaryView(p.id);
+      let newIdx = p.entries.findIndex(e => e.timestamp === entry.timestamp && e.isoTime === entry.isoTime);
+      if (newIdx < 0) newIdx = p.entries.length - 1;
+      currentActiveIndex = newIdx;
+      lastSaveSource = 'patients'; lastLocalSaveAt = Date.now();
+      syncDataToCloud(); openSummaryView(p.id);
     }
   } else {
-    const newP = {
-      id: makeId(),
-      room: currentEditing.room,
-      bed: currentEditing.bed,
-      name,
-      initialDiag: entry.diag,
-      status: 'active',
-      entries: [entry],
-      updatedAt: Date.now()
-    };
+    const newP = { id: makeId(), room: currentEditing.room, bed: currentEditing.bed, name, initialDiag: entry.diag, status: 'active', entries: [entry], updatedAt: Date.now() };
     patients.unshift(newP);
-    lastSaveSource = 'patients';
-    lastLocalSaveAt = Date.now();
-    syncDataToCloud();
-    currentActiveIndex = 0;
-    openSummaryView(newP.id);
+    lastSaveSource = 'patients'; lastLocalSaveAt = Date.now();
+    syncDataToCloud(); currentActiveIndex = 0; openSummaryView(newP.id);
   }
 }
 function deleteActivePatient() {
   const p = patients.find(x => x.id === currentViewingPatientId);
   if (p && confirm(`XÓA HOÀN TOÀN hồ sơ bệnh nhân "${p.name}"?`)) {
     patients = patients.filter(x => x.id !== p.id);
-    lastSaveSource = 'patients';
-    lastLocalSaveAt = Date.now();
-    syncDataToCloud();
-    showView('roomGridView');
+    lastSaveSource = 'patients'; lastLocalSaveAt = Date.now();
+    syncDataToCloud(); showView('roomGridView');
   }
 }
 function openTransferBedModal() {
   const p = patients.find(x => x.id === currentViewingPatientId);
   if (!p) return;
+  if (p.status !== 'active') return alert("Bệnh nhân đã ra viện!");
   document.getElementById('transferBedSubtitle').textContent = `Đang chuyển: ${p.name} (Hiện tại: ${p.room} - ${p.bed}). Chọn vị trí trống:`;
   const container = document.getElementById('transferRoomMatrixContainer');
   container.innerHTML = roomList.map(r => {
@@ -1359,13 +1531,9 @@ function openTransferBedModal() {
         if (r.hiddenBeds.includes(cellName)) continue;
         const occupant = getPatientInBed(r.name, cellName);
         const isCurrent = (String(r.name).trim() === String(p.room).trim() && String(cellName).trim() === String(p.bed).trim());
-        if (isCurrent) {
-          roomCellsHtml += `<div style="background:#e0f2fe;border:1px solid #0284c7;border-radius:6px;padding:6px;text-align:center;"><span style="font-size:11px;font-weight:700;color:#0369a1;">${cellName} (Hiện tại)</span></div>`;
-        } else if (occupant) {
-          roomCellsHtml += `<div style="background:#f1f5f9;border:1px solid var(--border);border-radius:6px;padding:6px;text-align:center;opacity:.4;"><span style="font-size:11px;font-weight:700;color:#64748b;display:block;">${cellName}</span><span style="font-size:10px;color:#64748b;">${esc(occupant.name)}</span></div>`;
-        } else {
-          roomCellsHtml += `<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:6px;text-align:center;cursor:pointer;" onclick="executeTransferBed('${esc(r.name)}','${cellName}')"><span style="font-size:11px;font-weight:700;color:#15803d;display:block;">${cellName}</span><span style="font-size:10px;font-weight:600;color:#16a34a;">+ Chọn</span></div>`;
-        }
+        if (isCurrent) { roomCellsHtml += `<div style="background:#e0f2fe;border:1px solid #0284c7;border-radius:6px;padding:6px;text-align:center;"><span style="font-size:11px;font-weight:700;color:#0369a1;">${cellName} (Hiện tại)</span></div>`; }
+        else if (occupant) { roomCellsHtml += `<div style="background:#f1f5f9;border:1px solid var(--border);border-radius:6px;padding:6px;text-align:center;opacity:.4;"><span style="font-size:11px;font-weight:700;color:#64748b;display:block;">${cellName}</span><span style="font-size:10px;color:#64748b;">${esc(occupant.name)}</span></div>`; }
+        else { roomCellsHtml += `<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:6px;text-align:center;cursor:pointer;" onclick="executeTransferBed('${esc(r.name)}','${cellName}')"><span style="font-size:11px;font-weight:700;color:#15803d;display:block;">${cellName}</span><span style="font-size:10px;font-weight:600;color:#16a34a;">+ Chọn</span></div>`; }
       }
     }
     return `<div style="border-bottom:1px solid var(--border-light);padding-bottom:8px;"><div style="font-size:13px;font-weight:700;color:var(--primary);margin-bottom:6px;">🚪 ${esc(r.name)}</div><div style="display:grid;grid-template-columns:repeat(${colCount},1fr);gap:6px;">${roomCellsHtml}</div></div>`;
@@ -1375,34 +1543,45 @@ function openTransferBedModal() {
 const closeTransferBedModal = () => { document.getElementById('transferBedModal').style.display = 'none'; };
 function executeTransferBed(targetRoom, targetBed) {
   const p = patients.find(x => x.id === currentViewingPatientId);
-  if (p && confirm(`Chuyển "${p.name}" sang [${targetRoom} - ${targetBed}]?`)) {
-    p.room = targetRoom;
-    p.bed = targetBed;
-    p.updatedAt = Date.now();
-    lastSaveSource = 'patients';
-    lastLocalSaveAt = Date.now();
-    syncDataToCloud();
+  if (!p) return;
+  if (String(p.room).trim() === String(targetRoom).trim() && String(p.bed).trim() === String(targetBed).trim()) {
+    return alert("Bệnh nhân đang ở vị trí này rồi!");
+  }
+  const occupant = getPatientInBed(targetRoom, targetBed);
+  if (occupant && occupant.id !== p.id) {
+    alert(`Vị trí [${targetRoom} - ${targetBed}] đã có bệnh nhân "${occupant.name}"!\n\nĐang tải lại dữ liệu mới nhất.`);
     closeTransferBedModal();
-    openSummaryView(p.id);
+    loadDataFromCloud(true);
+    return;
+  }
+  if (confirm(`Chuyển "${p.name}" sang [${targetRoom} - ${targetBed}]?`)) {
+    p.room = targetRoom; p.bed = targetBed; p.updatedAt = Date.now();
+    lastSaveSource = 'patients'; lastLocalSaveAt = Date.now();
+    syncDataToCloud(); closeTransferBedModal(); openSummaryView(p.id);
   }
 }
 function finishCurrentTreatment() {
   const p = patients.find(x => x.id === currentViewingPatientId);
-  if (p && confirm("Cho bệnh nhân ra viện?")) {
-    p.status = 'discharged';
-    p.dateOut = formatDisplayTime(new Date().toISOString());
-    p.updatedAt = Date.now();
-    lastSaveSource = 'patients';
-    lastLocalSaveAt = Date.now();
-    syncDataToCloud();
-    showView('roomGridView');
-  }
+  if (!p) return;
+  if (p.status === 'discharged') return alert("Bệnh nhân này đã ra viện rồi!");
+  if (!confirm(`Cho bệnh nhân "${p.name}" ra viện?\n\nBệnh nhân sẽ được chuyển sang mục "Ra viện".`)) return;
+  p.status = 'discharged';
+  p.dateOut = formatDisplayTime(new Date().toISOString());
+  p.updatedAt = Date.now();
+  lastSaveSource = 'patients'; lastLocalSaveAt = Date.now();
+  currentViewingPatientId = null;
+  currentActiveIndex = 0;
+  currentEditing = { room:null, bed:null, id:null, mode:'create', entryIndex:null };
+  syncDataToCloud(); renderDashboardCounts(); showView('roomGridView');
+  alert(`Bệnh nhân "${p.name}" đã ra viện.`);
 }
 function openSummaryView(id) {
   currentViewingPatientId = id;
   const p = patients.find(x => x.id === id);
   if (!p) return;
+  if (!Array.isArray(p.entries)) p.entries = [];
   p.entries.sort((a, b) => a.timestamp - b.timestamp);
+  if (currentActiveIndex < 0 || currentActiveIndex >= p.entries.length) currentActiveIndex = Math.max(0, p.entries.length - 1);
   document.getElementById('summaryBedBadge').textContent = `${p.room} - Vị trí ${p.bed}`;
   document.getElementById('summaryPatientTitle').textContent = p.name;
   document.getElementById('dayTabsContainer').innerHTML = p.entries.map((item, idx) => `<button class="day-tab-btn ${idx === currentActiveIndex ? 'active' : ''}" onclick="currentActiveIndex=${idx};openSummaryView('${esc(id)}')">Ngày ${idx + 1} (${formatDisplayTime(item.isoTime)})</button>`).join('');
@@ -1415,11 +1594,7 @@ function openSummaryView(id) {
     <div class="section-block-box"><div class="section-block-head-bar"><span class="section-block-tag">Hình ảnh</span></div><div class="section-block-body">${esc(entry.imaging) || '—'}</div>${imgHtml(entry.images?.imaging)}</div>`;
   showView('summaryFullView');
 }
-function exportPatientPDF(id) {
-  const p = patients.find(x => x.id === id);
-  if (!p) return;
-  openPrintWindow([p], `Bệnh Án - ${p.name}`);
-}
+function exportPatientPDF(id) { const p = patients.find(x => x.id === id); if (!p) return; openPrintWindow([p], `Bệnh Án - ${p.name}`); }
 function exportAllPatientsPDF() {
   const list = patients.filter(p => p.status === 'discharged');
   if (!list.length) return alert("Chưa có hồ sơ ra viện!");
@@ -1445,9 +1620,7 @@ function openPrintWindow(list, title) {
         </div>`).join('')}
     </div>`).join('');
   win.document.write(`<!DOCTYPE html><html><head><title>${esc(title)}</title><style>body{font-family:sans-serif;padding:20px;color:#1e293b;font-size:13px;line-height:1.4}@media print{body{padding:0}}</style></head><body><h2 style="text-align:center;color:#0284c7;">${esc(title.toUpperCase())}</h2>${body}</body></html>`);
-  win.document.close();
-  win.focus();
-  setTimeout(() => win.print(), 400);
+  win.document.close(); win.focus(); setTimeout(() => win.print(), 400);
 }
 function renderDashboardCounts() {
   let count = 0;
@@ -1487,10 +1660,8 @@ function renderDashboardCounts() {
 function deleteDischarged(id) {
   if (!confirm("Xóa vĩnh viễn hồ sơ này?")) return;
   patients = patients.filter(p => p.id !== id);
-  lastSaveSource = 'patients';
-  lastLocalSaveAt = Date.now();
-  syncDataToCloud();
-  renderDashboardCounts();
+  lastSaveSource = 'patients'; lastLocalSaveAt = Date.now();
+  syncDataToCloud(); renderDashboardCounts();
 }
 
 /* ============================================================
@@ -1502,9 +1673,7 @@ window.addEventListener('load', () => {
   renderRoomsGrid();
   renderDashboardCounts();
   if (initSupabase()) {
-    loadDataFromCloud().then(() => {
-      setupRealtime();
-    });
+    loadDataFromCloud().then(() => { setupRealtime(); });
   } else {
     updateSyncUI('error', 'Không khởi tạo được Supabase');
   }

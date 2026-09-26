@@ -214,7 +214,13 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 @supports(padding:max(0px)){
   body{padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right));padding-bottom:max(100px,env(safe-area-inset-bottom))}
 }
-</style>
+/* Modal Sửa phòng - tabs Hàng/Cột/Ô */
+.mode-tab-group{display:flex;gap:8px;margin-bottom:16px}
+.btn-mode-tab{flex:1;padding:10px 12px;background:#f1f5f9;border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:700;color:var(--text-muted);cursor:pointer;text-align:center;transition:var(--transition)}
+.btn-mode-tab:hover{background:#e2e8f0}
+.btn-mode-tab.active{background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);color:#fff;border-color:transparent;box-shadow:0 3px 10px rgba(14,165,233,.3)}
+.mode-panel{display:none;flex-direction:column;gap:10px;margin-bottom:8px;text-align:left}
+.mode-panel.active{display:flex}</style>
 </head>
 <body>
 

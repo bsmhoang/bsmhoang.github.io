@@ -1323,7 +1323,7 @@ function exportMedicationPDF() {
   win.document.write(`<!DOCTYPE html><html><head><title>Danh Mục Thuốc</title><style>body{font-family:sans-serif;padding:20px;color:#0f172a}@media print{body{padding:0}}</style></head><body><h2 style="text-align:center;color:#0284c7;">DANH MỤC THUỐC ĐIỀU TRỊ</h2>${bodyHtml}</body></html>`);
   win.document.close(); win.focus(); setTimeout(() => win.print(), 400);
 }
-</script>/* ============================================================
+/* ============================================================
    PHÒNG
    ============================================================ */
 function openRoomSettingsModal() { renderRoomSettingsList(); document.getElementById('roomSettingsModal').style.display = 'flex'; }

@@ -145,6 +145,7 @@ input,textarea,select{font-family:inherit}
 .mode-panel{display:none;flex-direction:column;gap:10px;margin-bottom:8px;text-align:left}
 .mode-panel.active{display:flex}
 .header-right-group{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
+.header-left-group{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 @media (max-width:768px){
   body{padding:48px 12px 90px}
   .view-header h3{font-size:16px}
@@ -259,12 +260,12 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 
 <div id="medicationView" class="view-section">
   <div class="view-header">
-    <button type="button" class="btn-back" onclick="showView('homeView')">⬅️ Trang chủ</button>
-    <h3>Danh Mục Thuốc</h3>
-    <div class="header-right-group">
+    <div class="header-left-group">
+      <button type="button" class="btn-back" onclick="showView('homeView')">⬅️ Trang chủ</button>
       <button type="button" class="btn-top" style="background:#f0fdf4;border-color:#86efac;color:#15803d;" onclick="exportMedicationPDF()">📄 Xuất PDF</button>
-      <button type="button" class="btn-top" onclick="openAddMedCategoryModal()">➕ Thêm danh mục</button>
     </div>
+    <h3>Danh Mục Thuốc</h3>
+    <button type="button" class="btn-top" onclick="openAddMedCategoryModal()">➕ Thêm danh mục</button>
   </div>
   <div id="medCategoryContainer" style="display:flex;flex-direction:column;gap:14px;margin-top:10px;"></div>
 </div>
@@ -664,52 +665,47 @@ function rowToPatient(row) { return { id: row.id, room: row.room || '', bed: row
 function patientToRow(p) { return { id: p.id, room: p.room || '', bed: p.bed || '', ho_ten: p.name || '', initial_diag: p.initialDiag || '', status: p.status || 'active', date_out: p.dateOut || '', entries: p.entries || [], updated_at: new Date().toISOString() }; }
 
 /* ============================================================
-   TẢI DỮ LIỆU
+   TẢI DỮ LIỆU — SERVER LÀ CHÂN LÝ DUY NHẤT
    ============================================================ */
 async function loadDataFromCloud(silent, isRealtime) {
   if (!supabaseClient) return;
   if (Date.now() - lastLocalSaveAt < 3000) { console.log('Bỏ qua load — vừa lưu gần đây'); return; }
   if (!silent) updateSyncUI('syncing', 'Đang tải dữ liệu từ Supabase...');
   try {
+    // ====== BỆNH NHÂN — SERVER LÀ CHÂN LÝ ======
     const { data: patientRows, error: pErr } = await supabaseClient.from('patients').select('*');
     if (pErr) throw pErr;
     if (Array.isArray(patientRows)) {
-      if (isRealtime) {
-        patients = patientRows.map(rowToPatient);
-      } else {
-        const serverMap = {};
-        patientRows.forEach(r => { serverMap[String(r.id)] = rowToPatient(r); });
-        const localMap = {};
-        patients.forEach(p => { if (p && p.id) localMap[String(p.id)] = p; });
-        const merged = [];
-        Object.keys(serverMap).forEach(id => {
-          const srv = serverMap[id]; const loc = localMap[id];
-          if (loc && (loc.updatedAt || 0) > (srv.updatedAt || 0)) merged.push(loc); else merged.push(srv);
-        });
-        Object.keys(localMap).forEach(id => { if (!serverMap[id]) merged.push(localMap[id]); });
-        patients = merged;
-      }
+      patients = patientRows.map(rowToPatient);
       safeSetLocal('bs_patients_scroll_v3', patients);
     }
+
+    // ====== THUỐC — SERVER LÀ CHÂN LÝ ======
     if (lastSaveSource !== 'meds' || Date.now() - lastLocalSaveAt > 3000) {
       const { data: medRows, error: mErr } = await supabaseClient.from('med_categories').select('*').order('id').limit(1);
-      if (!mErr && medRows && medRows.length > 0 && Array.isArray(medRows[0].groups) && medRows[0].groups.length > 0) {
+      if (!mErr && medRows && medRows.length > 0 && Array.isArray(medRows[0].groups)) {
         medCategories = medRows[0].groups;
         safeSetLocal('bs_med_categories_v14', medCategories);
       }
     }
+
+    // ====== PHÒNG — SERVER LÀ CHÂN LÝ ======
     if (lastSaveSource !== 'rooms' || Date.now() - lastLocalSaveAt > 3000) {
       const { data: roomRows, error: rErr } = await supabaseClient.from('rooms_config').select('*').order('id').limit(1);
-      if (!rErr && roomRows && roomRows.length > 0 && Array.isArray(roomRows[0].config) && roomRows[0].config.length > 0) {
+      if (!rErr && roomRows && roomRows.length > 0 && Array.isArray(roomRows[0].config)) {
         roomList = roomRows[0].config;
         safeSetLocal('bs_room_configs_v21', roomList);
       }
     }
+
     if (!silent) updateSyncUI('success');
     renderDashboardCounts();
     renderMedCategoriesUI();
     renderRoomsGrid();
-  } catch (err) { console.error('Lỗi tải:', err); updateSyncUI('error', 'Lỗi tải: ' + (err.message || 'không xác định')); }
+  } catch (err) {
+    console.error('Lỗi tải:', err);
+    updateSyncUI('error', 'Lỗi tải: ' + (err.message || 'không xác định'));
+  }
 }
 async function forceReloadFromCloud() {
   if (!confirm('Tải lại toàn bộ dữ liệu mới nhất từ Supabase?\n\nDữ liệu chưa đồng bộ có thể bị mất.')) return;
@@ -752,9 +748,7 @@ async function doSyncToCloud() {
       const { error: pErr } = await supabaseClient.from('patients').upsert(rows, { onConflict: 'id' });
       if (pErr) throw pErr;
     }
-    const idsToKeep = patients.map(p => Number(p.id)).filter(n => !isNaN(n));
-    if (idsToKeep.length > 0) { const { error: dErr } = await supabaseClient.from('patients').delete().not('id', 'in', `(${idsToKeep.join(',')})`); if (dErr) console.warn('Lỗi xóa:', dErr); }
-    else { await supabaseClient.from('patients').delete().neq('id', 0); }
+    // KHÔNG xóa hàng loạt — chỉ upsert. Xóa sẽ gọi riêng trong deleteActivePatient/deleteDischarged.
     const { data: medExisting } = await supabaseClient.from('med_categories').select('id').order('id').limit(1);
     if (medExisting && medExisting.length > 0) { await supabaseClient.from('med_categories').update({ groups: medCategories, updated_at: new Date().toISOString() }).eq('id', medExisting[0].id); }
     else { await supabaseClient.from('med_categories').insert({ name: 'all', groups: medCategories }); }
@@ -1059,7 +1053,7 @@ function renderMedTable(medicines) {
 
 /* ============================================================
    THUỐC — Màn hình chính danh mục
-   LƯU Ý: Tên nhóm KHÔNG có onclick đổi tên — chỉ hiển thị
+   Tên nhóm KHÔNG có onclick đổi tên — chỉ hiển thị
    ============================================================ */
 function renderMedCategoriesUI() {
   const container = document.getElementById('medCategoryContainer');
@@ -1655,14 +1649,27 @@ function saveRecord() {
     syncDataToCloud(); currentActiveIndex = 0; openSummaryView(newP.id);
   }
 }
-function deleteActivePatient() {
+
+/* FIX: Xóa ca bệnh trực tiếp trên server */
+async function deleteActivePatient() {
   const p = patients.find(x => String(x.id) === String(currentViewingPatientId));
-  if (p && confirm(`XÓA HOÀN TOÀN hồ sơ bệnh nhân "${p.name}"?`)) {
-    patients = patients.filter(x => String(x.id) !== String(p.id));
-    lastSaveSource = 'patients'; lastLocalSaveAt = Date.now();
-    syncDataToCloud(); showView('roomGridView');
+  if (!p) return;
+  if (!confirm(`XÓA HOÀN TOÀN hồ sơ bệnh nhân "${p.name}"?\n\nHành động này không thể hoàn tác!`)) return;
+  patients = patients.filter(x => String(x.id) !== String(p.id));
+  safeSetLocal('bs_patients_scroll_v3', patients);
+  try {
+    updateSyncUI('syncing', 'Đang xóa...');
+    const { error } = await supabaseClient.from('patients').delete().eq('id', p.id);
+    if (error) throw error;
+    updateSyncUI('success');
+    showView('roomGridView');
+  } catch (err) {
+    console.error('Lỗi xóa:', err);
+    updateSyncUI('error', 'Lỗi xóa: ' + err.message);
+    await loadDataFromCloud(true);
   }
 }
+
 function openTransferBedModal() {
   const p = patients.find(x => String(x.id) === String(currentViewingPatientId));
   if (!p) return;
@@ -1806,11 +1813,25 @@ function renderDashboardCounts() {
       </div>`).join('') : '<p style="text-align:center;color:var(--text-soft);padding:28px;font-size:13.5px;">Chưa có hồ sơ ra viện.</p>';
   }
 }
-function deleteDischarged(id) {
+
+/* FIX: Xóa bệnh nhân ra viện trực tiếp trên server */
+async function deleteDischarged(id) {
   if (!confirm("Xóa vĩnh viễn hồ sơ này?")) return;
+  const removed = patients.find(p => String(p.id) === String(id));
   patients = patients.filter(p => String(p.id) !== String(id));
-  lastSaveSource = 'patients'; lastLocalSaveAt = Date.now();
-  syncDataToCloud(); renderDashboardCounts();
+  safeSetLocal('bs_patients_scroll_v3', patients);
+  try {
+    updateSyncUI('syncing', 'Đang xóa...');
+    const { error } = await supabaseClient.from('patients').delete().eq('id', id);
+    if (error) throw error;
+    updateSyncUI('success');
+    renderDashboardCounts();
+  } catch (err) {
+    console.error('Lỗi xóa:', err);
+    updateSyncUI('error', 'Lỗi xóa: ' + err.message);
+    if (removed) patients.push(removed);
+    renderDashboardCounts();
+  }
 }
 
 /* ============================================================

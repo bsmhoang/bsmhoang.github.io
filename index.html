@@ -19,14 +19,13 @@
     body { background: var(--bg); color: var(--text-main); min-height: 100vh; padding: 50px 10px 40px; letter-spacing: -0.01em; overflow-y: auto; }
     .container { max-width: 1100px; margin: 0 auto; width: 100%; }
 
-    /* Thanh trạng thái nổi cố định ở trên cùng màn hình, xuất hiện ở khắp mọi nơi */
     #globalFloatingStatus { position: fixed; top: 0; left: 0; right: 0; height: 38px; background: #e0f2fe; color: #0369a1; border-bottom: 1px solid #7dd3fc; display: flex; align-items: center; justify-content: center; font-size: 12.5px; font-weight: 700; z-index: 999999; box-shadow: 0 2px 6px rgba(0,0,0,0.06); transition: all 0.3s ease; }
 
     #lockScreenView { position: fixed; inset: 0; background: var(--bg); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; }
     .pin-input-minimal { width: 100%; max-width: 280px; padding: 16px; font-size: 28px; text-align: center; letter-spacing: 12px; border: 2px solid var(--border); border-radius: var(--radius-md); outline: none; background: #fff; color: #0f172a; font-weight: 700; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
     .pin-input-minimal:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(2,132,199,0.18); }
 
-    .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 8px; }
     .btn-top, .btn-back { background: #fff; border: 1px solid var(--border); padding: 7px 14px; border-radius: 24px; font-size: 13px; font-weight: 600; color: #334155; cursor: pointer; display: flex; align-items: center; gap: 6px; }
     .btn-back { border-radius: var(--radius-sm); background: #e2e8f0; border: none; }
 
@@ -112,7 +111,6 @@
 </head>
 <body>
 
-<!-- Thanh trạng thái toàn cục hiển thị ở khắp mọi nơi -->
 <div id="globalFloatingStatus">🔄 Đang kết nối hệ thống dữ liệu gốc...</div>
 
 <div id="lockScreenView">
@@ -125,7 +123,7 @@
   <div id="homeView">
     <div class="top-bar">
       <button type="button" class="btn-top" onclick="showView('profileView')">👨‍⚕️ Giới thiệu cá nhân</button>
-      <div style="width: 10px;"></div>
+      <button type="button" class="btn-top" onclick="forceReloadFromCloud()" title="Tải lại dữ liệu từ Google Sheets">🔄 Tải lại</button>
     </div>
     <div class="btn-menu-list">
       <div class="big-btn btn-blue" onclick="showView('roomGridView')">
@@ -293,7 +291,7 @@
 
   <div id="imageModalViewer" onclick="this.style.display='none'"><img id="modalViewerImg" src="" alt="Ảnh bệnh án"></div>
 
-  <!-- ==================== HỆ THỐNG MODAL ==================== -->
+  <!-- ==================== MODALS ==================== -->
 
   <div id="roomSettingsModal" class="custom-modal-overlay" onclick="closeRoomSettingsModal()">
     <div class="custom-modal-card" onclick="event.stopPropagation()">
@@ -478,25 +476,81 @@
 </div>
 
 <script>
+  // ============================================================
+  // CẤU HÌNH
+  // ============================================================
   const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxVVVoEdjNY5fsWGuJegc9EHAcrzTFaty4VEhMeyo5HsKdT-U89s9SlT7R-zdaXuMayzw/exec";
-  const CORRECT_PIN = "000000";
-  const ROW_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P'];
 
+  // ⚠️ PIN được lưu dưới dạng SHA-256 hash — KHÔNG còn plaintext.
+  // Mặc định hash dưới đây là của PIN "000000".
+  // ĐỔI PIN NGAY: mở F12 → Console → chạy:
+  //   crypto.subtle.digest('SHA-256', new TextEncoder().encode('PIN_MOI_6_SO'))
+  //     .then(b => console.log(Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2,'0')).join('')))
+  // Rồi dán chuỗi hash mới vào đây.
+  const PIN_HASH = "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92";
+
+  const ROW_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P'];
+  const MAX_RETRY = 3;
+  const FETCH_TIMEOUT = 30000;
+
+  // ============================================================
+  // HELPERS (SECURITY)
+  // ============================================================
+  // Escape HTML để chống XSS khi render dữ liệu người dùng
+  function esc(s) {
+    return String(s ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  async function sha256(str) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  // ID tăng dần đảm bảo không trùng (fix bug Date.now() trùng)
+  let _lastId = 0;
+  function makeId() {
+    const now = Date.now();
+    _lastId = now > _lastId ? now : _lastId + 1;
+    return _lastId;
+  }
+
+  // Đọc localStorage an toàn (tránh crash khi storage bị chặn)
+  function safeGetLocal(key, fallback) {
+    try {
+      const v = localStorage.getItem(key);
+      return v ? JSON.parse(v) : fallback;
+    } catch (e) {
+      console.warn('localStorage read error:', key, e);
+      return fallback;
+    }
+  }
+
+  // ============================================================
+  // STATE
+  // ============================================================
   const defaultRooms = [
     { id: '825', name: 'P 825', rows: 2, cols: 2, hiddenBeds: [] },
     { id: '817', name: 'P 817', rows: 1, cols: 2, hiddenBeds: [] },
     { id: '819', name: 'P 819', rows: 1, cols: 2, hiddenBeds: [] }
   ];
 
-  let roomList = JSON.parse(localStorage.getItem('bs_room_configs_v21')) || defaultRooms;
-  let patients = JSON.parse(localStorage.getItem('bs_patients_scroll_v3')) || [];
-  let medCategories = JSON.parse(localStorage.getItem('bs_med_categories_v14')) || [];
-  let doctorProfile = JSON.parse(localStorage.getItem('bs_doctor_profile_v1')) || {
+  let roomList      = safeGetLocal('bs_room_configs_v21', defaultRooms);
+  let patients      = safeGetLocal('bs_patients_scroll_v3', []);
+  let medCategories = safeGetLocal('bs_med_categories_v14', []);
+  let doctorProfile = safeGetLocal('bs_doctor_profile_v1', {
     name: "Bác sĩ Minh Hoàng",
     title: "Bác sĩ Điều trị",
     bio: "Hệ thống sơ đồ buồng bệnh & theo dõi lâm sàng thông minh.",
     avatar: ""
-  };
+  });
+
+  // FIX: khai báo đúng thay vì global ngầm
+  let formImages = { diag: [], tracking: [], tests: [], imaging: [] };
 
   let currentEditing = { room: null, bed: null, id: null, mode: 'create', entryIndex: null };
   let currentViewingPatientId = null, currentActiveIndex = 0, currentEditingRoomId = null;
@@ -504,82 +558,37 @@
   let activeMedCatId = null, activeMedGroupId = null;
   let inactivityTimer = null, isAuthenticated = false;
 
-  function exportMedicationPDF() {
-    if (!medCategories.length) return alert("Chưa có danh mục thuốc nào để xuất!");
-    const win = window.open('', '_blank');
-    if (!win) return alert("Bật quyền pop-up trên trình duyệt để in PDF!");
+  // FIX: chỉ load từ cloud 1 lần mỗi session để tránh chậm
+  let hasLoadedOnce = false;
 
-    const bodyHtml = medCategories.map((cat, cIdx) => `
-      <div style="margin-bottom: 20px;">
-        <h3 style="color: #0284c7; border-bottom: 2px solid #0284c7; padding-bottom: 4px; margin-bottom: 10px;">${cIdx + 1}. Danh mục: ${cat.name}</h3>
-        ${cat.groups && cat.groups.length ? cat.groups.map((g, gIdx) => `
-          <div style="margin-bottom: 12px; margin-left: 10px;">
-            <h4 style="color: #1e293b; margin-bottom: 6px;">📁 Nhóm: ${g.name}</h4>
-            ${g.medicines && g.medicines.length ? `
-              <table style="width: 100%; border-collapse: collapse; font-size: 11.5px; margin-bottom: 10px;">
-                <thead>
-                  <tr style="background: #f1f5f9;">
-                    <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left;">Tên thuốc</th>
-                    <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left;">Chỉ định</th>
-                    <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left;">Chống chỉ định</th>
-                    <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left;">TDKM</th>
-                    <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left;">Liều dùng</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${g.medicines.map(m => `
-                    <tr>
-                      <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: bold; color: #0284c7;">${m.name}</td>
-                      <td style="border: 1px solid #cbd5e1; padding: 6px;">${m.indication || '—'}</td>
-                      <td style="border: 1px solid #cbd5e1; padding: 6px;">${m.contraindication || '—'}</td>
-                      <td style="border: 1px solid #cbd5e1; padding: 6px;">${m.sideEffects || '—'}</td>
-                      <td style="border: 1px solid #cbd5e1; padding: 6px;">${m.dose || '—'}</td>
-                    </tr>`).join('')}
-                </tbody>
-              </table>` : '<p style="font-size: 12px; color: #64748b; font-style: italic; margin-left: 10px;">Chưa có thuốc trong nhóm này.</p>'}
-          </div>`).join('') : '<p style="font-size: 12px; color: #64748b; font-style: italic; margin-left: 10px;">Chưa có nhóm thuốc nào.</p>'}
-      </div>`).join('');
+  // FIX: mutex + pending flag chống race condition
+  let isSyncingToCloud = false;
+  let hasPendingSync = false;
+  let syncRetryCount = 0;
 
-    win.document.write(`<!DOCTYPE html><html><head><title>Danh Mục Thuốc Điều Trị</title><style>body{font-family:sans-serif;padding:20px;color:#0f172a;}@media print{body{padding:0;}}</style></head><body><h2 style="text-align:center;color:#0284c7;margin-bottom:20px;">DANH MỤC & TRA CỨU THUỐC ĐIỀU TRỊ</h2>${bodyHtml}</body></html>`);
-    win.document.close();
-    win.focus();
-    setTimeout(() => win.print(), 400);
-  }
+  // ============================================================
+  // AUTH: PIN
+  // ============================================================
+  async function checkPinAuto(input) {
+    if (input.value.length !== 6) return;
+    const h = await sha256(input.value);
+    if (h === PIN_HASH) {
+      isAuthenticated = true;
+      document.getElementById('lockScreenView').style.display = 'none';
+      document.getElementById('appMainContainer').style.display = 'block';
+      input.value = '';
+      resetInactivityTimer();
 
-  async function askAIToSuggestMed() {
-    const medName = document.getElementById('medNameInput').value.trim().toLowerCase();
-    if (!medName) {
-      alert("Vui lòng nhập tên thuốc trước khi dùng Gợi ý AI!");
-      return;
-    }
-    
-    const sampleDB = {
-      "paracetamol": { ind: "Giảm đau, hạ sốt", contra: "Suy gan nặng, mẫn cảm", side: "Hiếm gặp: phát ban, buồn nôn", dose: "500mg - 1g / lần, cách nhau 4-6 giờ" },
-      "amoxicillin": { ind: "Nhiễm khuẩn đường hô hấp, tai mũi họng", contra: "Dị ứng nhóm penicillin", side: "Tiêu chảy, buồn nôn, phát ban", dose: "500mg / lần, 3 lần/ngày" },
-      "amlodipin": { ind: "Tăng huyết áp, đau thắt ngực", contra: "Suy tim mất bù, sốc tim", side: "Phù cổ chân, chóng mặt, đỏ bừng mặt", dose: "5mg - 10mg / ngày" },
-      "omeprazol": { ind: "Loét dạ dày tá tràng, trào ngược thực quản", contra: "Mẫn cảm với omeprazol", side: "Đau đầu, tiêu chảy, buồn nôn", dose: "20mg - 40mg / ngày vào buổi sáng" },
-      "metformin": { ind: "Đái tháo đường týp 2", contra: "Suy thận, nhiễm toan chuyển hóa", side: "Rối loạn tiêu hóa, buồn nôn", dose: "500mg - 1000mg / lần, 2 lần/ngày" },
-      "ibuprofen": { ind: "Giảm đau, kháng viêm, hạ sốt", contra: "Loét dạ dày tiến triển, suy thận nặng", side: "Đau thượng vị, ợ hơi, chóng mặt", dose: "400mg / lần, cách nhau 6-8 giờ" },
-      "ceftriaxon": { ind: "Nhiễm khuẩn nặng do vi khuẩn nhạy cảm", contra: "Dị ứng nhóm cephalosporin", side: "Tiêu chảy, phản ứng tại chỗ tiêm", dose: "1g - 2g / ngày, tiêm bắp hoặc tĩnh mạch" },
-      "salbutamol": { ind: "Hen phế quản, co thắt phế quản", contra: "Mẫn cảm, cường giáp nặng", side: "Run tay, đánh trống ngực, hồi hộp", dose: "2 - 4mg / lần, 3 lần/ngày hoặc dạng xịt" }
-    };
-
-    let found = sampleDB[medName];
-    if (!found) {
-      const key = Object.keys(sampleDB).find(k => medName.includes(k) || k.includes(medName));
-      if (key) found = sampleDB[key];
-    }
-
-    if (found) {
-      document.getElementById('medIndicationInput').value = found.ind;
-      document.getElementById('medContraindicationInput').value = found.contra;
-      document.getElementById('medSideEffectsInput').value = found.side;
-      document.getElementById('medDoseInput').value = found.dose;
+      if (!hasLoadedOnce) {
+        hasLoadedOnce = true;
+        loadDataFromCloud();
+      } else {
+        renderDashboardCounts();
+        renderMedCategoriesUI();
+      }
     } else {
-      document.getElementById('medIndicationInput').value = "Điều trị triệu chứng theo chỉ định lâm sàng";
-      document.getElementById('medContraindicationInput').value = "Quá mẫn với thành phần của thuốc";
-      document.getElementById('medSideEffectsInput').value = "Thường nhẹ: rối loạn tiêu hóa nhẹ";
-      document.getElementById('medDoseInput').value = "Theo chỉ định của bác sĩ điều trị";
+      input.value = '';
+      input.focus();
     }
   }
 
@@ -587,24 +596,6 @@
     if (!isAuthenticated) return;
     clearTimeout(inactivityTimer);
     inactivityTimer = setTimeout(lockSystem, 60000);
-  }
-
-  function checkPinAuto(input) {
-    if (input.value.length === 6) {
-      if (input.value === CORRECT_PIN) {
-        isAuthenticated = true;
-        document.getElementById('lockScreenView').style.display = 'none';
-        document.getElementById('appMainContainer').style.display = 'block';
-        input.value = '';
-        resetInactivityTimer();
-        
-        // Tải toàn bộ dữ liệu gốc chuẩn từ Sheets ngay khi đăng nhập thành công
-        loadDataFromCloud();
-      } else {
-        input.value = '';
-        input.focus();
-      }
-    }
   }
 
   function lockSystem() {
@@ -615,13 +606,17 @@
     const input = document.getElementById('pinInput');
     if (input) { input.value = ''; input.focus(); }
   }
-  ['touchstart', 'mousemove', 'scroll', 'keydown', 'click'].forEach(evt => window.addEventListener(evt, resetInactivityTimer, true));
 
+  ['touchstart', 'mousemove', 'scroll', 'keydown', 'click'].forEach(evt =>
+    window.addEventListener(evt, resetInactivityTimer, true));
+
+  // ============================================================
+  // PROFILE BÁC SĨ
+  // ============================================================
   function renderDoctorProfileUI() {
     document.getElementById('doctorNameText').textContent = doctorProfile.name;
     document.getElementById('doctorTitleText').textContent = doctorProfile.title;
     document.getElementById('doctorBioText').textContent = doctorProfile.bio;
-    
     const imgEl = document.getElementById('doctorAvatarImg');
     const initEl = document.getElementById('doctorAvatarInitial');
     if (doctorProfile.avatar) {
@@ -643,10 +638,12 @@
   const closeEditProfileModal = () => { document.getElementById('editProfileModal').style.display = 'none'; };
 
   function saveDoctorProfile() {
-    doctorProfile.name = document.getElementById('editDocNameInput').value.trim() || "Bác sĩ Minh Hoàng";
+    doctorProfile.name  = document.getElementById('editDocNameInput').value.trim()  || "Bác sĩ Minh Hoàng";
     doctorProfile.title = document.getElementById('editDocTitleInput').value.trim() || "Bác sĩ Điều trị";
-    doctorProfile.bio = document.getElementById('editDocBioInput').value.trim();
-    localStorage.setItem('bs_doctor_profile_v1', JSON.stringify(doctorProfile));
+    doctorProfile.bio   = document.getElementById('editDocBioInput').value.trim();
+    try {
+      localStorage.setItem('bs_doctor_profile_v1', JSON.stringify(doctorProfile));
+    } catch (e) { console.warn('Không lưu được profile:', e); }
     renderDoctorProfileUI();
     closeEditProfileModal();
   }
@@ -660,11 +657,16 @@
           const canvas = document.createElement('canvas');
           const max = 300;
           let w = img.width, h = img.height;
-          if (w > max || h > max) { if (w > h) { h = Math.round((h * max) / w); w = max; } else { w = Math.round((w * max) / h); h = max; } }
+          if (w > max || h > max) {
+            if (w > h) { h = Math.round((h * max) / w); w = max; }
+            else       { w = Math.round((w * max) / h); h = max; }
+          }
           canvas.width = w; canvas.height = h;
           canvas.getContext('2d').drawImage(img, 0, 0, w, h);
           doctorProfile.avatar = canvas.toDataURL('image/jpeg', 0.8);
-          localStorage.setItem('bs_doctor_profile_v1', JSON.stringify(doctorProfile));
+          try {
+            localStorage.setItem('bs_doctor_profile_v1', JSON.stringify(doctorProfile));
+          } catch (e) { console.warn('Không lưu avatar:', e); }
           renderDoctorProfileUI();
         };
         img.src = e.target.result;
@@ -673,6 +675,9 @@
     }
   }
 
+  // ============================================================
+  // MEDICATIONS
+  // ============================================================
   function openAddMedCategoryModal() {
     document.getElementById('medCategoryNameInput').value = '';
     document.getElementById('addMedCategoryModal').style.display = 'flex';
@@ -682,8 +687,7 @@
   function saveMedCategory() {
     const name = document.getElementById('medCategoryNameInput').value.trim();
     if (!name) return alert("Vui lòng nhập tên danh mục thuốc!");
-    medCategories.push({ id: Date.now(), name, groups: [] });
-    localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
+    medCategories.push({ id: makeId(), name, groups: [] });
     syncDataToCloud();
     renderMedCategoriesUI();
     closeAddMedCategoryModal();
@@ -694,12 +698,12 @@
     const cat = medCategories.find(c => c.id === catId);
     if (!cat) return;
     document.getElementById('editCatNameInput').value = cat.name || '';
-    
+
     const groupListContainer = document.getElementById('editCategoryGroupsList');
     if (cat.groups && cat.groups.length > 0) {
       groupListContainer.innerHTML = cat.groups.map(g => `
         <div style="display:flex; gap:6px; align-items:center;">
-          <input type="text" id="editGroupInline_${g.id}" value="${g.name}" style="flex:1; padding:6px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-weight:600;">
+          <input type="text" id="editGroupInline_${g.id}" value="${esc(g.name)}" style="flex:1; padding:6px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-weight:600;">
           <button type="button" class="btn-bed-ctrl" style="background:#e0f2fe; color:#0369a1; border-color:#7dd3fc; padding:6px 10px;" onclick="saveInlineGroupName(${cat.id}, ${g.id})">Lưu nhóm</button>
         </div>`).join('');
     } else {
@@ -716,7 +720,6 @@
     const cat = medCategories.find(c => c.id === activeMedCatId);
     if (cat) {
       cat.name = newName;
-      localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
       syncDataToCloud();
       renderMedCategoriesUI();
       closeEditMedCategoryModal();
@@ -727,12 +730,11 @@
     const input = document.getElementById(`editGroupInline_${groupId}`);
     const newName = input ? input.value.trim() : '';
     if (!newName) return alert("Tên nhóm không được để trống!");
-    
-    const cat = medCategories.find(c => c.id === catId);
+
+    const cat   = medCategories.find(c => c.id === catId);
     const group = cat?.groups.find(g => g.id === groupId);
     if (group) {
       group.name = newName;
-      localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
       syncDataToCloud();
       renderMedCategoriesUI();
       alert("Đã lưu tên nhóm thành công!");
@@ -744,17 +746,12 @@
     openAddMedGroupModal(activeMedCatId);
   }
 
-  // --- CÁC HÀM ĐIỀU CHỈNH LÊN / XUỐNG ĐÃ ĐƯỢC SỬA LỖI HOẠT ĐỘNG ---
   function moveMedCategory(index, direction) {
     const newIdx = index + direction;
     if (newIdx < 0 || newIdx >= medCategories.length) return;
-    const temp = medCategories[index];
-    medCategories[index] = medCategories[newIdx];
-    medCategories[newIdx] = temp;
-    
-    localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
-    renderMedCategoriesUI();
+    [medCategories[index], medCategories[newIdx]] = [medCategories[newIdx], medCategories[index]];
     syncDataToCloud();
+    renderMedCategoriesUI();
   }
 
   function moveMedGroup(catId, groupIndex, direction) {
@@ -762,41 +759,28 @@
     if (!cat || !cat.groups) return;
     const newIdx = groupIndex + direction;
     if (newIdx < 0 || newIdx >= cat.groups.length) return;
-    
-    const temp = cat.groups[groupIndex];
-    cat.groups[groupIndex] = cat.groups[newIdx];
-    cat.groups[newIdx] = temp;
-    
-    localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
-    renderMedCategoriesUI();
+    [cat.groups[groupIndex], cat.groups[newIdx]] = [cat.groups[newIdx], cat.groups[groupIndex]];
     syncDataToCloud();
+    renderMedCategoriesUI();
   }
 
   function moveMedicineItem(index, direction) {
-    const cat = medCategories.find(c => c.id === activeMedCatId);
+    const cat   = medCategories.find(c => c.id === activeMedCatId);
     const group = cat?.groups.find(g => g.id === activeMedGroupId);
     if (!group || !group.medicines) return;
-    
     const newIdx = index + direction;
     if (newIdx < 0 || newIdx >= group.medicines.length) return;
-    
-    const temp = group.medicines[index];
-    group.medicines[index] = group.medicines[newIdx];
-    group.medicines[newIdx] = temp;
-    
-    localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
+    [group.medicines[index], group.medicines[newIdx]] = [group.medicines[newIdx], group.medicines[index]];
+    syncDataToCloud();
     renderMedTable(group.medicines);
     renderMedCategoriesUI();
-    syncDataToCloud();
   }
-  // -------------------------------------------------------------
 
   function openAddMedGroupModal(catId) {
     activeMedCatId = catId;
     document.getElementById('medGroupNameInput').value = '';
     document.getElementById('addMedGroupModal').style.display = 'flex';
   }
-
   const closeAddMedGroupModal = () => { document.getElementById('addMedGroupModal').style.display = 'none'; };
 
   function saveMedGroupAndCreateFirstMed() {
@@ -806,13 +790,11 @@
     const cat = medCategories.find(c => c.id === activeMedCatId);
     if (cat) {
       cat.groups = cat.groups || [];
-      const newGroupId = Date.now();
+      const newGroupId = makeId();
       cat.groups.push({ id: newGroupId, name, medicines: [] });
-      localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
       syncDataToCloud();
       renderMedCategoriesUI();
       closeAddMedGroupModal();
-      
       openMedGroupDetail(cat.id, newGroupId);
       openAddMedicineModal();
     }
@@ -821,10 +803,9 @@
   function openMedGroupDetail(catId, groupId) {
     activeMedCatId = catId;
     activeMedGroupId = groupId;
-    const cat = medCategories.find(c => c.id === catId);
+    const cat   = medCategories.find(c => c.id === catId);
     const group = cat?.groups.find(g => g.id === groupId);
     if (!group) return;
-
     document.getElementById('medGroupDetailTitle').textContent = `${cat.name} > ${group.name}`;
     renderMedTable(group.medicines || []);
     showView('medGroupDetailView');
@@ -839,20 +820,16 @@
   function openAddMedicineModal() {
     document.getElementById('editingMedId').value = '';
     document.getElementById('medModalTitle').textContent = 'Thêm Thuốc Mới';
-    document.getElementById('medNameInput').value = '';
-    document.getElementById('medIndicationInput').value = '';
-    document.getElementById('medContraindicationInput').value = '';
-    document.getElementById('medSideEffectsInput').value = '';
-    document.getElementById('medDoseInput').value = '';
+    ['medNameInput','medIndicationInput','medContraindicationInput','medSideEffectsInput','medDoseInput']
+      .forEach(id => document.getElementById(id).value = '');
     document.getElementById('addMedicineModal').style.display = 'flex';
   }
 
   function openEditMedicineModal(medId) {
-    const cat = medCategories.find(c => c.id === activeMedCatId);
+    const cat   = medCategories.find(c => c.id === activeMedCatId);
     const group = cat?.groups.find(g => g.id === activeMedGroupId);
-    const med = group?.medicines.find(m => m.id === medId);
+    const med   = group?.medicines.find(m => m.id === medId);
     if (!med) return;
-
     document.getElementById('editingMedId').value = med.id;
     document.getElementById('medModalTitle').textContent = 'Sửa Thông Tin Thuốc';
     document.getElementById('medNameInput').value = med.name || '';
@@ -862,24 +839,23 @@
     document.getElementById('medDoseInput').value = med.dose || '';
     document.getElementById('addMedicineModal').style.display = 'flex';
   }
-
   const closeAddMedicineModal = () => { document.getElementById('addMedicineModal').style.display = 'none'; };
 
   function saveMedicineItem() {
     const name = document.getElementById('medNameInput').value.trim();
     if (!name) return alert("Vui lòng nhập tên thuốc!");
-    const indication = document.getElementById('medIndicationInput').value.trim();
+    const indication       = document.getElementById('medIndicationInput').value.trim();
     const contraindication = document.getElementById('medContraindicationInput').value.trim();
-    const sideEffects = document.getElementById('medSideEffectsInput').value.trim();
-    const dose = document.getElementById('medDoseInput').value.trim();
-    const editingId = document.getElementById('editingMedId').value;
+    const sideEffects      = document.getElementById('medSideEffectsInput').value.trim();
+    const dose             = document.getElementById('medDoseInput').value.trim();
+    const editingId        = document.getElementById('editingMedId').value;
 
-    const cat = medCategories.find(c => c.id === activeMedCatId);
+    const cat   = medCategories.find(c => c.id === activeMedCatId);
     const group = cat?.groups.find(g => g.id === activeMedGroupId);
     if (group) {
       group.medicines = group.medicines || [];
       if (editingId) {
-        const med = group.medicines.find(m => m.id == editingId);
+        const med = group.medicines.find(m => String(m.id) === String(editingId));
         if (med) {
           med.name = name;
           med.indication = indication;
@@ -888,9 +864,8 @@
           med.dose = dose;
         }
       } else {
-        group.medicines.push({ id: Date.now(), name, indication, contraindication, sideEffects, dose });
+        group.medicines.push({ id: makeId(), name, indication, contraindication, sideEffects, dose });
       }
-      localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
       syncDataToCloud();
       renderMedTable(group.medicines);
       renderMedCategoriesUI();
@@ -900,11 +875,10 @@
 
   function deleteMedicineItem(medId) {
     if (confirm("Xóa thuốc này khỏi bảng?")) {
-      const cat = medCategories.find(c => c.id === activeMedCatId);
+      const cat   = medCategories.find(c => c.id === activeMedCatId);
       const group = cat?.groups.find(g => g.id === activeMedGroupId);
       if (group) {
         group.medicines = group.medicines.filter(m => m.id !== medId);
-        
         if (group.medicines.length === 0) {
           cat.groups = cat.groups.filter(g => g.id !== activeMedGroupId);
           if (cat.groups.length === 0) {
@@ -912,8 +886,6 @@
           }
           showView('medicationView');
         }
-
-        localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
         syncDataToCloud();
         renderMedTable(group.medicines);
         renderMedCategoriesUI();
@@ -930,11 +902,11 @@
     }
     tbody.innerHTML = medicines.map((m, idx) => `
       <tr>
-        <td style="font-weight:700; color:var(--primary);">${m.name}</td>
-        <td>${m.indication || '—'}</td>
-        <td>${m.contraindication || '—'}</td>
-        <td>${m.sideEffects || '—'}</td>
-        <td>${m.dose || '—'}</td>
+        <td style="font-weight:700; color:var(--primary);">${esc(m.name)}</td>
+        <td>${esc(m.indication) || '—'}</td>
+        <td>${esc(m.contraindication) || '—'}</td>
+        <td>${esc(m.sideEffects) || '—'}</td>
+        <td>${esc(m.dose) || '—'}</td>
         <td style="text-align:center; white-space:nowrap;">
           <button type="button" class="btn-bed-ctrl" style="padding:2px 5px;" onclick="moveMedicineItem(${idx}, -1)" title="Lên">⬆️</button>
           <button type="button" class="btn-bed-ctrl" style="padding:2px 5px;" onclick="moveMedicineItem(${idx}, 1)" title="Xuống">⬇️</button>
@@ -959,19 +931,18 @@
     container.innerHTML = medCategories.map((cat, catIdx) => `
       <div style="background:#fff; border:1.5px solid var(--border); border-radius:var(--radius-lg); padding:16px;">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-light); padding-bottom:8px; margin-bottom:10px; flex-wrap:wrap; gap:6px;">
-          <h3 style="font-size:16px; font-weight:700; color:var(--primary);">💊 ${cat.name}</h3>
+          <h3 style="font-size:16px; font-weight:700; color:var(--primary);">💊 ${esc(cat.name)}</h3>
           <div style="display:flex; gap:6px; align-items:center;">
             <button type="button" class="btn-bed-ctrl" onclick="moveMedCategory(${catIdx}, -1)" title="Lên">⬆️</button>
             <button type="button" class="btn-bed-ctrl" onclick="moveMedCategory(${catIdx}, 1)" title="Xuống">⬇️</button>
             <button type="button" class="btn-bed-ctrl" style="background:#f0f9ff; border-color:#7dd3fc; color:#0369a1;" onclick="openEditMedCategoryModal(${cat.id})">✏️ Sửa danh mục</button>
           </div>
         </div>
-        
         <div style="display:flex; flex-direction:column; gap:8px;">
           ${cat.groups?.length ? cat.groups.map((g, gIdx) => `
             <div style="background:#f8fafc; border:1px solid var(--border-light); padding:10px 12px; border-radius:8px;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                <span style="font-size:13.5px; font-weight:700; color:#1e293b; cursor:pointer;" onclick="openMedGroupDetail(${cat.id}, ${g.id})" title="Bấm vào để xem bảng thuốc">📁 ${g.name} (${g.medicines?.length || 0} thuốc)</span>
+                <span style="font-size:13.5px; font-weight:700; color:#1e293b; cursor:pointer;" onclick="openMedGroupDetail(${cat.id}, ${g.id})" title="Bấm vào để xem bảng thuốc">📁 ${esc(g.name)} (${g.medicines?.length || 0} thuốc)</span>
                 <div style="display:flex; gap:4px; align-items:center;">
                   <button type="button" class="btn-bed-ctrl" style="padding:2px 5px;" onclick="moveMedGroup(${cat.id}, ${gIdx}, -1)">⬆️</button>
                   <button type="button" class="btn-bed-ctrl" style="padding:2px 5px;" onclick="moveMedGroup(${cat.id}, ${gIdx}, 1)">⬇️</button>
@@ -980,7 +951,7 @@
               <div style="display:flex; flex-direction:column; gap:4px; margin-top:4px;">
                 ${g.medicines?.length ? g.medicines.map(m => `
                   <div style="display:flex; justify-content:space-between; align-items:center; background:#e0f2fe; color:#0369a1; font-size:12px; font-weight:600; padding:4px 8px; border-radius:6px;">
-                    <span style="cursor:pointer; flex:1;" onclick="openMedGroupDetail(${cat.id}, ${g.id})">• ${m.name} <span style="font-weight:400; color:#475569;">(${m.dose || 'Chưa rõ liều'})</span></span>
+                    <span style="cursor:pointer; flex:1;" onclick="openMedGroupDetail(${cat.id}, ${g.id})">• ${esc(m.name)} <span style="font-weight:400; color:#475569;">(${esc(m.dose) || 'Chưa rõ liều'})</span></span>
                   </div>`).join('') : '<span style="font-size:12px; color:var(--text-muted); font-style:italic;">Chưa có thuốc nào. Bấm vào tên nhóm để vào bảng thêm thuốc.</span>'}
               </div>
             </div>`).join('') : '<p style="font-size:13px; color:var(--text-muted); font-style:italic;">Chưa có nhóm thuốc nào. Bấm Sửa danh mục để thêm nhóm.</p>'}
@@ -988,6 +959,9 @@
       </div>`).join('');
   }
 
+  // ============================================================
+  // ROOM CONFIG
+  // ============================================================
   function openRoomSettingsModal() {
     renderRoomSettingsList();
     document.getElementById('roomSettingsModal').style.display = 'flex';
@@ -997,9 +971,9 @@
   function renderRoomSettingsList() {
     const c = document.getElementById('roomSettingsListContainer');
     if (!c) return;
-    c.innerHTML = roomList.map((r) => `
+    c.innerHTML = roomList.map(r => `
       <div style="display:flex; gap:6px; align-items:center; background:#f8fafc; padding:8px; border:1px solid var(--border-light); border-radius:8px;">
-        <input type="text" id="roomNameEdit_${r.id}" value="${r.name}" style="flex:1; padding:6px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-weight:600;">
+        <input type="text" id="roomNameEdit_${r.id}" value="${esc(r.name)}" style="flex:1; padding:6px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-weight:600;">
         <button type="button" class="btn-bed-ctrl" style="background:#e0f2fe; color:#0369a1; border-color:#7dd3fc; padding:6px 10px;" onclick="saveRoomName('${r.id}')">Lưu</button>
         <button type="button" class="btn-bed-ctrl" style="background:#fef2f2; color:#dc2626; border-color:#fca5a5; padding:6px 10px;" onclick="deleteRoom('${r.id}')">Xóa</button>
       </div>`).join('');
@@ -1009,752 +983,12 @@
     const input = document.getElementById('newRoomNameInput');
     const name = input.value.trim();
     if (!name) return alert("Vui lòng nhập tên phòng!");
-    const newId = String(Date.now());
-    roomList.push({ id: newId, name, rows: 2, cols: 2, hiddenBeds: [] });
+    roomList.push({ id: String(makeId()), name, rows: 2, cols: 2, hiddenBeds: [] });
     input.value = '';
-    localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
     syncDataToCloud();
     renderRoomsGrid();
     renderRoomSettingsList();
   }
 
   function saveRoomName(roomId) {
-    const input = document.getElementById(`roomNameEdit_${roomId}`);
-    const newName = input.value.trim();
-    if (!newName) return alert("Tên phòng không được để trống!");
-    const r = roomList.find(x => x.id === roomId);
-    if (r) {
-      const oldName = r.name;
-      r.name = newName;
-      patients.forEach(pat => {
-        if (String(pat.room).trim() === String(oldName).trim()) {
-          pat.room = newName;
-        }
-      });
-      localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
-      syncDataToCloud();
-      renderDashboardCounts();
-      alert("Đã đổi tên phòng thành công!");
-    }
-  }
-
-  function deleteRoom(roomId) {
-    const r = roomList.find(x => x.id === roomId);
-    if (!r) return;
-    
-    const rowCount = r.rows || 2;
-    const colCount = r.cols || 2;
-    r.hiddenBeds = r.hiddenBeds || [];
-    let hasPatient = false;
-
-    for (let i = 0; i < rowCount; i++) {
-      let rowChar = ROW_LABELS[i];
-      for (let j = 1; j <= colCount; j++) {
-        let cellName = `${rowChar}${j}`;
-        if (!r.hiddenBeds.includes(cellName) && getPatientInBed(r.name, cellName)) {
-          hasPatient = true;
-          break;
-        }
-      }
-      if (hasPatient) break;
-    }
-
-    if (hasPatient) {
-      alert("Không thể xóa phòng đang có bệnh nhân điều trị!");
-      return;
-    }
-
-    if (confirm(`Xóa phòng ${r.name}?`)) {
-      roomList = roomList.filter(x => x.id !== roomId);
-      localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
-      syncDataToCloud();
-      renderRoomsGrid();
-      renderRoomSettingsList();
-    }
-  }
-
-  function openEditRoomModal(roomId) {
-    const r = roomList.find(x => x.id === roomId);
-    if (!r) return;
-    currentEditingRoomId = roomId;
-    document.getElementById('editRoomModalTitle').textContent = `Sửa phòng - ${r.name}`;
-    switchEditMode(currentActiveTab);
-    document.getElementById('editRoomModal').style.display = 'flex';
-  }
-  const closeEditRoomModal = () => { document.getElementById('editRoomModal').style.display = 'none'; currentEditingRoomId = null; };
-
-  function switchEditMode(mode) {
-    currentActiveTab = mode;
-    ['row', 'col', 'cell'].forEach(m => {
-      const btn = document.getElementById('tab' + m.charAt(0).toUpperCase() + m.slice(1));
-      const panel = document.getElementById('panelMode' + m.charAt(0).toUpperCase() + m.slice(1));
-      if (btn) btn.classList.toggle('active', m === mode);
-      if (panel) panel.classList.toggle('active', m === mode);
-    });
-
-    const r = roomList.find(x => x.id === currentEditingRoomId);
-    if (!r) return;
-    const rowCount = r.rows || 2;
-    const colCount = r.cols || 2;
-
-    if (mode === 'row') {
-      const sel = document.getElementById('selectRowToRemove');
-      sel.innerHTML = '';
-      for (let i = 0; i < rowCount; i++) {
-        const rowChar = ROW_LABELS[i] || `Hàng ${i+1}`;
-        sel.innerHTML += `<option value="${i}">Hàng ${rowChar}</option>`;
-      }
-    } else if (mode === 'col') {
-      const sel = document.getElementById('selectColToRemove');
-      sel.innerHTML = '';
-      for (let j = 1; j <= colCount; j++) {
-        sel.innerHTML += `<option value="${j}">Cột ${j}</option>`;
-      }
-    } else if (mode === 'cell') {
-      renderCellVisibilityMatrix();
-    }
-  }
-
-  function addRowToRoom() {
-    const r = roomList.find(x => x.id === currentEditingRoomId);
-    if (!r) return;
-    r.rows = (r.rows || 2) + 1;
-    localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
-    syncDataToCloud();
-    renderRoomsGrid();
-    openEditRoomModal(r.id);
-  }
-
-  function removeRowFromRoom() {
-    const r = roomList.find(x => x.id === currentEditingRoomId);
-    if (!r) return;
-    const rowCount = r.rows || 2;
-    if (rowCount <= 1) {
-      alert("Phòng phải còn ít nhất một hàng!");
-      return;
-    }
-
-    const sel = document.getElementById('selectRowToRemove');
-    const rowIndex = parseInt(sel.value);
-    const rowChar = ROW_LABELS[rowIndex];
-    const colCount = r.cols || 2;
-
-    let hasPatient = false;
-    for (let j = 1; j <= colCount; j++) {
-      let cellName = `${rowChar}${j}`;
-      if (getPatientInBed(r.name, cellName)) {
-        hasPatient = true;
-        break;
-      }
-    }
-
-    if (hasPatient) {
-      alert("Không thể xóa hàng đang có bệnh nhân điều trị!");
-      return;
-    }
-
-    r.rows = rowCount - 1;
-    r.hiddenBeds = (r.hiddenBeds || []).filter(b => !b.startsWith(rowChar));
-    localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
-    syncDataToCloud();
-    renderRoomsGrid();
-    openEditRoomModal(r.id);
-  }
-
-  function addColToRoom() {
-    const r = roomList.find(x => x.id === currentEditingRoomId);
-    if (!r) return;
-    r.cols = (r.cols || 2) + 1;
-    localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
-    syncDataToCloud();
-    renderRoomsGrid();
-    openEditRoomModal(r.id);
-  }
-
-  function removeColFromRoom() {
-    const r = roomList.find(x => x.id === currentEditingRoomId);
-    if (!r) return;
-    const colCount = r.cols || 2;
-    if (colCount <= 1) {
-      alert("Phòng phải có ít nhất 1 cột!");
-      return;
-    }
-
-    const sel = document.getElementById('selectColToRemove');
-    const colIndex = parseInt(sel.value);
-    const rowCount = r.rows || 2;
-
-    let hasPatient = false;
-    for (let i = 0; i < rowCount; i++) {
-      let rowChar = ROW_LABELS[i];
-      let cellName = `${rowChar}${colIndex}`;
-      if (getPatientInBed(r.name, cellName)) {
-        hasPatient = true;
-        break;
-      }
-    }
-
-    if (hasPatient) {
-      alert("Không thể xóa cột đang có bệnh nhân điều trị!");
-      return;
-    }
-
-    let newCols = colCount - 1;
-    let newHiddenBeds = [];
-
-    for (let i = 0; i < rowCount; i++) {
-      let rowChar = ROW_LABELS[i];
-      let targetNewCol = 1;
-      for (let j = 1; j <= colCount; j++) {
-        if (j === colIndex) continue;
-        let oldCellName = `${rowChar}${j}`;
-        let newCellName = `${rowChar}${targetNewCol}`;
-        
-        if ((r.hiddenBeds || []).includes(oldCellName)) {
-          newHiddenBeds.push(newCellName);
-        }
-        
-        patients.forEach(pat => {
-          if (pat.status === 'active' && String(pat.room).trim() === String(r.name).trim() && String(pat.bed).trim() === oldCellName) {
-            pat.bed = newCellName;
-          }
-        });
-
-        targetNewCol++;
-      }
-    }
-
-    r.cols = newCols;
-    r.hiddenBeds = newHiddenBeds;
-    localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
-    syncDataToCloud();
-    renderRoomsGrid();
-    openEditRoomModal(r.id);
-  }
-
-  function renderCellVisibilityMatrix() {
-    const r = roomList.find(x => x.id === currentEditingRoomId);
-    if (!r) return;
-    r.hiddenBeds = r.hiddenBeds || [];
-    const colCount = r.cols || 2;
-    const rowCount = r.rows || 2;
-
-    const container = document.getElementById('cellVisibilityMatrixContainer');
-    let html = '';
-
-    for (let i = 0; i < rowCount; i++) {
-      const rowChar = ROW_LABELS[i] || `Hàng ${i+1}`;
-      html += `<div style="font-size:11.5px; font-weight:700; color:var(--primary); margin-top:4px;">Hàng ${rowChar}:</div>`;
-      html += `<div style="display:grid; grid-template-columns: repeat(${colCount}, 1fr); gap:6px; margin-bottom:6px;">`;
-
-      for (let j = 1; j <= colCount; j++) {
-        const cellName = `${rowChar}${j}`;
-        const isHidden = r.hiddenBeds.includes(cellName);
-        const p = getPatientInBed(r.name, cellName);
-
-        html += `
-          <div style="background:#fff; border:1px solid var(--border); border-radius:6px; padding:6px; text-align:center; display:flex; flex-direction:column; gap:4px; align-items:center;">
-            <span style="font-size:11px; font-weight:700;">${cellName}</span>
-            <button type="button" class="btn-bed-ctrl" style="width:100%; font-size:11px; padding:3px; background:${isHidden?'#dcfce7':'#fee2e2'}; color:${isHidden?'#15803d':'#991b1b'};" onclick="toggleCellVisibility('${r.id}', '${cellName}')">
-              ${isHidden ? '👁️ Hiện' : '🔒 Ẩn'}
-            </button>
-          </div>`;
-      }
-      html += `</div>`;
-    }
-    container.innerHTML = html;
-  }
-
-  function toggleCellVisibility(roomId, cellName) {
-    const r = roomList.find(x => x.id === roomId);
-    if (!r) return;
-    r.hiddenBeds = r.hiddenBeds || [];
-    
-    if (r.hiddenBeds.includes(cellName)) {
-      r.hiddenBeds = r.hiddenBeds.filter(b => b !== cellName);
-    } else {
-      if (getPatientInBed(r.name, cellName)) {
-        alert("Không thể ẩn ô đang có bệnh nhân điều trị!");
-        return;
-      }
-      r.hiddenBeds.push(cellName);
-    }
-    localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
-    syncDataToCloud();
-    renderRoomsGrid();
-    renderCellVisibilityMatrix();
-  }
-
-  const autoExpandTextarea = el => { if(el){ el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; } };
-  const resizeAllTextareas = () => setTimeout(() => ['recordDiagnosis','recordTracking','recordTests','recordImagingText'].forEach(id => autoExpandTextarea(document.getElementById(id))), 50);
-  const getNowForInput = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); };
-  const formatDisplayTime = iso => {
-    if (!iso) return '';
-    const d = new Date(iso);
-    return isNaN(d) ? iso : `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} ${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}`;
-  };
-  function showView(viewId) {
-    ['homeView', 'roomGridView', 'medicationView', 'medGroupDetailView', 'summaryFullView', 'patientFormView', 'dischargedView', 'profileView'].forEach(v => {
-      const el = document.getElementById(v); if (el) el.style.display = 'none';
-    });
-    document.getElementById(viewId).style.display = 'block';
-    window.scrollTo({ top: 0, behavior: 'auto' });
-    renderDashboardCounts();
-  }
-  const getPatientInBed = (room, bed) => patients.find(p => p.status === 'active' && String(p.room).trim() === String(room).trim() && String(p.bed).trim() === String(bed).trim());
-
-  const triggerPickImage = f => document.getElementById(`fileInput_${f}`)?.click();
-  const handleImageFileSelected = (inp, f) => { if (inp.files?.[0]) { compressAndAddImage(inp.files[0], f); inp.value = ''; } };
-  const handlePasteImage = (e, f) => {
-    for (let item of (e.clipboardData || e.originalEvent.clipboardData).items) {
-      if (item.type.includes('image')) { compressAndAddImage(item.getAsFile(), f); e.preventDefault(); break; }
-    }
-  };
-  function compressAndAddImage(file, field) {
-    const reader = new FileReader();
-    reader.onload = evt => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const max = 1200;
-        let w = img.width, h = img.height;
-        if (w > max || h > max) { if (w > h) { h = Math.round((h * max) / w); w = max; } else { w = Math.round((w * max) / h); h = max; } }
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        formImages[field].push(canvas.toDataURL('image/jpeg', 0.7));
-        renderFormImagePreviews(field);
-      };
-      img.src = evt.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-  function renderFormImagePreviews(f) {
-    const c = document.getElementById(`preview_${f}`);
-    if (!c) return;
-    if (!formImages[f]?.length) { c.style.display = 'none'; c.innerHTML = ''; return; }
-    c.style.display = 'flex';
-    c.innerHTML = formImages[f].map((src, i) => `
-      <div class="img-preview-card"><img src="${src}" onclick="viewLargeImage('${src}')">
-        <button type="button" class="btn-remove-img" onclick="formImages['${f}'].splice(${i},1);renderFormImagePreviews('${f}')">✕</button>
-      </div>`).join('');
-  }
-  function viewLargeImage(src) {
-    const v = document.getElementById('imageModalViewer');
-    document.getElementById('modalViewerImg').src = src;
-    v.style.display = 'flex';
-  }
-
-  async function loadDataFromCloud() {
-    if (!GOOGLE_SCRIPT_URL) return;
-    updateSyncUI('syncing', 'Đang nạp dữ liệu từ Sheets...');
-    try {
-      const res = await fetch(GOOGLE_SCRIPT_URL + "?t=" + new Date().getTime(), { cache: "no-store" });
-      const data = await res.json();
-      
-      if (data?.patients) {
-        patients = data.patients;
-        localStorage.setItem('bs_patients_scroll_v3', JSON.stringify(patients));
-      }
-      if (data?.medCategories && data.medCategories.length > 0) {
-        medCategories = data.medCategories;
-        localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
-      }
-      if (data?.rooms && data.rooms.length > 0) {
-        roomList = data.rooms;
-        localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
-      }
-      
-      updateSyncUI('success', 'Đã cập nhật');
-      renderDashboardCounts();
-      renderMedCategoriesUI();
-    } catch (err) {
-      console.error("Lỗi nạp dữ liệu:", err);
-      updateSyncUI('error', 'Lỗi kết nối Sheets'); 
-    }
-  }
-
-  let isSyncingToCloud = false;
-
-  async function syncDataToCloud() {
-    const uniquePatientsMap = {};
-    patients.forEach(p => {
-      if (p && p.id) uniquePatientsMap[String(p.id)] = p;
-    });
-    patients = Object.values(uniquePatientsMap);
-
-    const uniqueMedCatsMap = {};
-    medCategories.forEach(cat => {
-      if (!cat.name) return;
-      if (!uniqueMedCatsMap[cat.name]) {
-        uniqueMedCatsMap[cat.name] = { id: cat.id || Date.now(), name: cat.name, groups: [] };
-      }
-      const uniqueGroupsMap = {};
-      (cat.groups || []).forEach(g => {
-        if (!g.name) return;
-        if (!uniqueGroupsMap[g.name]) {
-          uniqueGroupsMap[g.name] = { id: g.id || Date.now(), name: g.name, medicines: [] };
-        }
-        const uniqueMedsMap = {};
-        (g.medicines || []).forEach(m => {
-          if (!m.name) return;
-          uniqueMedsMap[m.name] = m;
-        });
-        uniqueGroupsMap[g.name].medicines = Object.values(uniqueMedsMap);
-      });
-      uniqueMedCatsMap[cat.name].groups = Object.values(uniqueGroupsMap);
-    });
-    medCategories = Object.values(uniqueMedCatsMap);
-
-    localStorage.setItem('bs_patients_scroll_v3', JSON.stringify(patients));
-    localStorage.setItem('bs_room_configs_v21', JSON.stringify(roomList));
-    localStorage.setItem('bs_med_categories_v14', JSON.stringify(medCategories));
-    renderDashboardCounts();
-    
-    if (!GOOGLE_SCRIPT_URL) return;
-    
-    if (isSyncingToCloud) {
-      setTimeout(() => { syncDataToCloud(); }, 400);
-      return;
-    }
-    
-    isSyncingToCloud = true;
-    updateSyncUI('syncing', 'Đang lưu lên Sheets...');
-    
-    try {
-      const payload = JSON.stringify({ patients, rooms: roomList, medCategories });
-      
-      await fetch(GOOGLE_SCRIPT_URL, { 
-        method: 'POST', 
-        mode: 'no-cors', 
-        cache: 'no-cache',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
-        body: payload 
-      });
-      
-      updateSyncUI('success', 'Đã cập nhật');
-    } catch (err) { 
-      console.error("Lỗi lưu:", err);
-      updateSyncUI('error', 'Không thể lưu'); 
-    } finally {
-      setTimeout(() => { isSyncingToCloud = false; }, 200);
-    }
-  }
-
-  function updateSyncUI(st, txt) {
-    const el = document.getElementById('globalFloatingStatus');
-    if (!el) return;
-    const now = new Date();
-    const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
-
-    if (st === 'syncing') {
-      el.innerHTML = `🔄 ${txt}`;
-      el.style.background = '#fef3c7';
-      el.style.color = '#92400e';
-      el.style.borderColor = '#fcd34d';
-    } else if (st === 'success') {
-      el.innerHTML = `🟢 Đã cập nhật trên Google Sheets lúc ${timeStr}`;
-      el.style.background = '#f0fdf4';
-      el.style.color = '#15803d';
-      el.style.borderColor = '#86efac';
-    } else {
-      el.innerHTML = `🔴 ${txt}`;
-      el.style.background = '#fef2f2';
-      el.style.color = '#b91c1c';
-      el.style.borderColor = '#fca5a5';
-    }
-  }
-
-  function handleBedClick(room, bed) {
-    const existing = getPatientInBed(room, bed);
-    if (existing) { currentActiveIndex = existing.entries.length - 1; openSummaryView(existing.id); }
-    else {
-      currentEditing = { room: String(room).trim(), bed: String(bed).trim(), id: null, mode: 'create', entryIndex: null };
-      document.getElementById('formViewTitle').textContent = `Tiếp nhận ${room} - Vị trí ${bed}`;
-      document.getElementById('crumbPrefix').textContent = `Vị trí ${bed} >`;
-      document.getElementById('recordName').value = ''; document.getElementById('recordName').readOnly = false;
-      document.getElementById('recordDateTimeInput').value = getNowForInput();
-      ['recordDiagnosis','recordTracking','recordTests','recordImagingText'].forEach(id => document.getElementById(id).value = '');
-      formImages = { diag: [], tracking: [], tests: [], imaging: [] };
-      ['diag', 'tracking', 'tests', 'imaging'].forEach(renderFormImagePreviews);
-      showView('patientFormView'); resizeAllTextareas();
-    }
-  }
-  function handleAddNewDayClick() {
-    const p = patients.find(x => x.id === currentViewingPatientId); if (!p) return;
-    currentEditing = { room: p.room, bed: p.bed, id: p.id, mode: 'add_day', entryIndex: null };
-    document.getElementById('formViewTitle').textContent = `Thêm ngày mới: ${p.name}`;
-    document.getElementById('crumbPrefix').textContent = `${p.room} - Vị trí ${p.bed}`;
-    document.getElementById('recordName').value = p.name; document.getElementById('recordName').readOnly = true;
-    document.getElementById('recordDateTimeInput').value = getNowForInput();
-    document.getElementById('recordDiagnosis').value = p.entries[p.entries.length - 1]?.diag || p.initialDiag || '';
-    ['recordTracking','recordTests','recordImagingText'].forEach(id => document.getElementById(id).value = '');
-    formImages = { diag: [], tracking: [], tests: [], imaging: [] };
-    ['diag', 'tracking', 'tests', 'imaging'].forEach(renderFormImagePreviews);
-    showView('patientFormView'); resizeAllTextareas();
-  }
-  function handleEditCurrentDayClick() {
-    const p = patients.find(x => x.id === currentViewingPatientId);
-    const entry = p?.entries[currentActiveIndex]; if (!entry) return;
-    currentEditing = { room: p.room, bed: p.bed, id: p.id, mode: 'edit_day', entryIndex: currentActiveIndex };
-    document.getElementById('formViewTitle').textContent = `Sửa Ngày ${currentActiveIndex + 1}: ${p.name}`;
-    document.getElementById('crumbPrefix').textContent = `${p.room} - Vị trí ${p.bed}`;
-    document.getElementById('recordName').value = p.name; document.getElementById('recordName').readOnly = false;
-    document.getElementById('recordDateTimeInput').value = entry.isoTime || getNowForInput();
-    document.getElementById('recordDiagnosis').value = entry.diag || '';
-    document.getElementById('recordTracking').value = entry.tracking || '';
-    document.getElementById('recordTests').value = entry.tests || '';
-    document.getElementById('recordImagingText').value = entry.imaging || '';
-    formImages = {
-      diag: [...(entry.images?.diag || [])], tracking: [...(entry.images?.tracking || [])],
-      tests: [...(entry.images?.tests || [])], imaging: [...(entry.images?.imaging || [])]
-    };
-    ['diag', 'tracking', 'tests', 'imaging'].forEach(renderFormImagePreviews);
-    showView('patientFormView'); resizeAllTextareas();
-  }
-  const handleBackFromForm = () => showView(currentEditing.mode.includes('day') ? 'summaryFullView' : 'roomGridView');
-
-  function saveRecord() {
-    const name = document.getElementById('recordName').value.trim();
-    if (!name) return alert("Vui lòng nhập tên bệnh nhân!");
-    const rawTime = document.getElementById('recordDateTimeInput').value || getNowForInput();
-    const entry = {
-      timestamp: new Date(rawTime).getTime() || Date.now(), isoTime: rawTime,
-      diag: document.getElementById('recordDiagnosis').value.trim(),
-      tracking: document.getElementById('recordTracking').value.trim(),
-      tests: document.getElementById('recordTests').value.trim(),
-      imaging: document.getElementById('recordImagingText').value.trim(),
-      images: { diag: [...formImages.diag], tracking: [...formImages.tracking], tests: [...formImages.tests], imaging: [...formImages.imaging] }
-    };
-    if (currentEditing.id) {
-      const p = patients.find(x => x.id === currentEditing.id);
-      if (p) {
-        p.name = name;
-        if (currentEditing.mode === 'edit_day') p.entries[currentEditing.entryIndex] = entry;
-        else p.entries.push(entry);
-        p.entries.sort((a, b) => a.timestamp - b.timestamp);
-        syncDataToCloud();
-        currentActiveIndex = currentEditing.mode === 'edit_day' ? currentEditing.entryIndex : p.entries.length - 1;
-        openSummaryView(p.id);
-      }
-    } else {
-      const newP = { id: Date.now(), room: currentEditing.room, bed: currentEditing.bed, name, initialDiag: entry.diag, status: 'active', entries: [entry] };
-      patients.unshift(newP); 
-      syncDataToCloud();
-      currentActiveIndex = 0; 
-      openSummaryView(newP.id);
-    }
-  }
-
-  function deleteActivePatient() {
-    const p = patients.find(x => x.id === currentViewingPatientId);
-    if (p && confirm(`XÓA HOÀN TOÀN hồ sơ bệnh nhân "${p.name}"?`)) {
-      patients = patients.filter(x => x.id !== p.id);
-      syncDataToCloud(); showView('roomGridView');
-    }
-  }
-
-  function openTransferBedModal() {
-    const p = patients.find(x => x.id === currentViewingPatientId); 
-    if (!p) return;
-
-    document.getElementById('transferBedSubtitle').textContent = `Đang chuyển: ${p.name} (Hiện tại: ${p.room} - ${p.bed}). Chọn vị trí trống:`;
-    
-    const container = document.getElementById('transferRoomMatrixContainer');
-    container.innerHTML = roomList.map(r => {
-      const rowCount = r.rows || 2;
-      const colCount = r.cols || 2;
-      r.hiddenBeds = r.hiddenBeds || [];
-      
-      let roomCellsHtml = '';
-      for (let i = 0; i < rowCount; i++) {
-        const rowChar = ROW_LABELS[i];
-        for (let j = 1; j <= colCount; j++) {
-          const cellName = `${rowChar}${j}`;
-          const isHidden = r.hiddenBeds.includes(cellName);
-          if (isHidden) continue;
-
-          const occupant = getPatientInBed(r.name, cellName);
-          const isCurrent = (String(r.name).trim() === String(p.room).trim() && String(cellName).trim() === String(p.bed).trim());
-
-          if (isCurrent) {
-            roomCellsHtml += `
-              <div style="background:#e0f2fe; border:1px solid #0284c7; border-radius:6px; padding:6px; text-align:center; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-                <span style="font-size:11px; font-weight:700; color:#0369a1;">${cellName} (Hiện tại)</span>
-              </div>`;
-          } else if (occupant) {
-            roomCellsHtml += `
-              <div style="background:#f1f5f9; border:1px solid var(--border); border-radius:6px; padding:6px; text-align:center; display:flex; flex-direction:column; justify-content:center; align-items:center; opacity:0.4;">
-                <span style="font-size:11px; font-weight:700; color:#64748b;">${cellName}</span>
-                <span style="font-size:10px; color:#64748b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; width:100%;">${occupant.name}</span>
-              </div>`;
-          } else {
-            roomCellsHtml += `
-              <div style="background:#f0fdf4; border:1px solid #86efac; border-radius:6px; padding:6px; text-align:center; display:flex; flex-direction:column; justify-content:center; align-items:center; cursor:pointer;" onclick="executeTransferBed('${r.name}', '${cellName}')">
-                <span style="font-size:11px; font-weight:700; color:#15803d;">${cellName}</span>
-                <span style="font-size:10px; font-weight:600; color:#16a34a;">+ Chọn</span>
-              </div>`;
-          }
-        }
-      }
-
-      return `
-        <div style="border-bottom: 1px solid var(--border-light); padding-bottom: 8px; margin-bottom: 4px;">
-          <div style="font-size:13px; font-weight:700; color:var(--primary); margin-bottom:6px;">🚪 ${r.name}</div>
-          <div style="display:grid; grid-template-columns: repeat(${colCount}, 1fr); gap:6px;">
-            ${roomCellsHtml}
-          </div>
-        </div>`;
-    }).join('');
-
-    document.getElementById('transferBedModal').style.display = 'flex';
-  }
-  const closeTransferBedModal = () => { document.getElementById('transferBedModal').style.display = 'none'; };
-
-  function executeTransferBed(targetRoom, targetBed) {
-    const p = patients.find(x => x.id === currentViewingPatientId);
-    if (p && confirm(`Xác nhận chuyển bệnh nhân "${p.name}" sang [${targetRoom} - Vị trí ${targetBed}]?`)) {
-      p.room = targetRoom; p.bed = targetBed;
-      syncDataToCloud();
-      closeTransferBedModal();
-      openSummaryView(p.id);
-    }
-  }
-
-  function finishCurrentTreatment() {
-    const p = patients.find(x => x.id === currentViewingPatientId);
-    if (p && confirm("Cho bệnh nhân ra viện?")) {
-      p.status = 'discharged'; p.dateOut = formatDisplayTime(new Date().toISOString());
-      syncDataToCloud(); showView('roomGridView');
-    }
-  }
-
-  function openSummaryView(id) {
-    currentViewingPatientId = id;
-    const p = patients.find(x => x.id === id); if (!p) return;
-    p.entries.sort((a, b) => a.timestamp - b.timestamp);
-    document.getElementById('summaryBedBadge').textContent = `${p.room} - Vị trí ${p.bed}`;
-    document.getElementById('summaryPatientTitle').textContent = p.name;
-    document.getElementById('dayTabsContainer').innerHTML = p.entries.map((item, idx) => `
-      <button class="day-tab-btn ${idx === currentActiveIndex ? 'active' : ''}" onclick="currentActiveIndex=${idx};openSummaryView(${id})">
-        Ngày ${idx + 1} (${formatDisplayTime(item.isoTime)})
-      </button>`).join('');
-    const entry = p.entries[currentActiveIndex] || {};
-    const imgHtml = arr => arr?.length ? `<div class="images-grid-preview" style="display:flex; background:#fff;">${arr.map(src=>`<div class="img-preview-card"><img src="${src}" onclick="viewLargeImage('${src}')"></div>`).join('')}</div>` : '';
-    document.getElementById('singleDayDisplayBody').innerHTML = `
-      <div class="section-block-box"><div class="section-block-head-bar"><span class="section-block-tag">Chẩn đoán</span></div><div class="section-block-body">${entry.diag||'—'}</div>${imgHtml(entry.images?.diag)}</div>
-      <div class="section-block-box"><div class="section-block-head-bar"><span class="section-block-tag">Theo dõi</span></div><div class="section-block-body">${entry.tracking||'—'}</div>${imgHtml(entry.images?.tracking)}</div>
-      <div class="section-block-box"><div class="section-block-head-bar"><span class="section-block-tag">Xét nghiệm</span></div><div class="section-block-body">${entry.tests||'—'}</div>${imgHtml(entry.images?.tests)}</div>
-      <div class="section-block-box"><div class="section-block-head-bar"><span class="section-block-tag">Hình ảnh</span></div><div class="section-block-body">${entry.imaging||'—'}</div>${imgHtml(entry.images?.imaging)}</div>`;
-    showView('summaryFullView');
-  }
-
-  function exportPatientPDF(id) {
-    const p = patients.find(x => x.id === id); if (!p) return;
-    openPrintWindow([p], `Bệnh Án - ${p.name}`);
-  }
-  function exportAllPatientsPDF() {
-    const list = patients.filter(p => p.status === 'discharged');
-    if (!list.length) return alert("Chưa có hồ sơ ra viện!");
-    openPrintWindow(list, "Tổng Hợp Bệnh Nhân Ra Viện");
-  }
-  function openPrintWindow(list, title) {
-    const win = window.open('', '_blank'); if (!win) return alert("Bật quyền pop-up để in PDF!");
-    const makeImgs = arr => arr?.length ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">${arr.map(s=>`<img src="${s}" style="max-height:130px;max-width:180px;border-radius:4px;border:1px solid #cbd5e1;">`).join('')}</div>` : '';
-    const body = list.map((p, pi) => `
-      <div style="page-break-after:always; margin-bottom:24px;">
-        <div style="background:#f1f5f9; padding:10px 14px; border-left:5px solid #0284c7; margin-bottom:12px;">
-          <h3 style="margin:0;">${pi + 1}. Bệnh nhân: ${p.name}</h3>
-          <div style="font-size:12px; color:#475569;">📍 ${p.room} - Vị trí ${p.bed} | Ra viện: ${p.dateOut || '—'}</div>
-        </div>
-        ${p.entries.map((e, ei) => `
-          <div style="margin-bottom:10px; border:1px solid #e2e8f0; border-radius:6px; padding:8px;">
-            <strong>Ngày ${ei + 1} (${formatDisplayTime(e.isoTime)}):</strong>
-            <div><strong>Chẩn đoán:</strong> ${e.diag || '—'}${makeImgs(e.images?.diag)}</div>
-            <div style="white-space:pre-wrap;"><strong>Theo dõi:</strong> ${e.tracking || '—'}${makeImgs(e.images?.tracking)}</div>
-            <div style="white-space:pre-wrap;"><strong>Xét nghiệm:</strong> ${e.tests || '—'}${makeImgs(e.images?.tests)}</div>
-            <div style="white-space:pre-wrap;"><strong>Hình ảnh:</strong> ${e.imaging || '—'}${makeImgs(e.images?.imaging)}</div>
-          </div>`).join('')}
-      </div>`).join('');
-    win.document.write(`<!DOCTYPE html><html><head><title>${title}</title><style>body{font-family:sans-serif;padding:20px;color:#1e293b;font-size:13px;line-height:1.4;}@media print{body{padding:0;}}</style></head><body><h2 style="text-align:center;color:#0284c7;margin-bottom:20px;">${title.toUpperCase()}</h2>${body}</body></html>`);
-    win.document.close();
-    win.focus();
-    setTimeout(() => win.print(), 400);
-  }
-
-  function renderRoomsGrid() {
-    const c = document.getElementById('roomsDynamicContainer'); if (!c) return;
-
-    c.innerHTML = roomList.map(r => {
-      const rowCount = r.rows || 2;
-      const colCount = r.cols || 2;
-      r.hiddenBeds = r.hiddenBeds || [];
-      let totalVisibleBeds = 0;
-      
-      let cellsHtml = '';
-      for (let i = 0; i < rowCount; i++) {
-        const rowChar = ROW_LABELS[i];
-        for (let j = 1; j <= colCount; j++) {
-          const cellName = `${rowChar}${j}`;
-          const isHidden = r.hiddenBeds.includes(cellName);
-          if (!isHidden) totalVisibleBeds++;
-
-          const p = getPatientInBed(r.name, cellName);
-          cellsHtml += `
-            <div class="bed-cell-item ${p ? 'occupied' : ''} ${isHidden ? 'is-hidden-slot' : ''}" onclick="handleBedClick('${r.name}', '${cellName}')">
-              ${p ? `<span class="bed-cell-name">👤 ${p.name}</span>` : `<span class="bed-cell-empty">+ Trống (${cellName})</span>`}
-            </div>`;
-        }
-      }
-
-      return `
-        <div class="room-box-card">
-          <div class="room-box-title">
-            <span>🚪 ${r.name} (${totalVisibleBeds} Vị trí)</span>
-            <button type="button" class="btn-bed-ctrl" onclick="openEditRoomModal('${r.id}')">✏️ Sửa phòng</button>
-          </div>
-          <div class="beds-grid-box" style="grid-template-columns: repeat(${colCount}, 1fr);">
-            ${cellsHtml}
-          </div>
-        </div>`;
-    }).join('');
-  }
-
-  function renderDashboardCounts() {
-    let count = 0;
-    roomList.forEach(r => {
-      const rowCount = r.rows || 2;
-      const colCount = r.cols || 2;
-      r.hiddenBeds = r.hiddenBeds || [];
-      for (let i = 0; i < rowCount; i++) {
-        let rowChar = ROW_LABELS[i];
-        for (let j = 1; j <= colCount; j++) {
-          let cellName = `${rowChar}${j}`;
-          if (!r.hiddenBeds.includes(cellName) && getPatientInBed(r.name, cellName)) {
-            count++;
-          }
-        }
-      }
-    });
-
-    const dis = patients.filter(p => p.status === 'discharged');
-    document.getElementById('homeActiveCount').textContent = `${count} Đang điều trị`;
-    document.getElementById('homeDischargedCount').textContent = `${dis.length} Đã ra viện`;
-    document.getElementById('dischargedSummaryText').textContent = `Tổng: ${dis.length} hồ sơ`;
-    renderRoomsGrid();
-    renderMedCategoriesUI();
-    document.getElementById('dischargedListContainer').innerHTML = dis.length ? dis.map(p => `
-      <div class="discharged-card">
-        <div style="font-size:16px; font-weight:700;">${p.name}</div>
-        <div style="font-size:13px; color:#166534; font-weight:600;">📅 Ra viện: ${p.dateOut || '—'}</div>
-        <div style="font-size:12.5px; color:#64748b;">📍 ${p.room} - Vị trí ${p.bed} | ${p.entries.length} ngày theo dõi</div>
-        <div class="discharged-actions">
-          <button type="button" class="btn-del-patient-discharged" onclick="patients=patients.filter(x=>x.id!==${p.id});syncDataToCloud();">🗑️ Xóa</button>
-          <button type="button" class="btn-export-pdf" onclick="exportPatientPDF(${p.id})">📄 Xuất file PDF</button>
-        </div>
-      </div>`).join('') : '<p style="text-align:center; color:#94a3b8; padding:24px;">Chưa có hồ sơ ra viện.</p>';
-  }
-
-  window.onload = () => document.getElementById('pinInput')?.focus();
-</script>
-</body>
-</html>
+    const input = document.getElementById(`

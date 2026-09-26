@@ -84,7 +84,6 @@ input,textarea,select{font-family:inherit}
 .custom-modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.7);z-index:100000;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:fadeIn .2s ease}
 .custom-modal-card{background:#fff;border-radius:var(--radius-xl);padding:26px;width:100%;max-width:460px;box-shadow:var(--shadow-xl);text-align:center;max-height:90vh;overflow-y:auto;animation:slideUp .3s cubic-bezier(.4,0,.2,1)}
 @keyframes slideUp{from{opacity:0;transform:translateY(20px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
-@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
 .summary-page-container,.form-fullpage-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-xl);box-shadow:var(--shadow-lg);overflow:hidden;margin-bottom:20px}
 .summary-page-header,.form-fullpage-header{padding:18px;border-bottom:1px solid var(--border)}
 .header-action-group{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -273,8 +272,13 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 <div id="medGroupDetailView" class="view-section">
   <div class="view-header">
     <button type="button" class="btn-back" onclick="showView('medicationView')">⬅️ Danh mục thuốc</button>
-    <div style="background:#fff;border:1.5px solid var(--border);padding:6px 14px;border-radius:10px;">
+    <div style="background:#fff;border:1.5px solid var(--border);padding:8px 16px;border-radius:10px;cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;gap:6px;" 
+         onclick="promptRenameCurrentGroup()" 
+         onmouseover="this.style.background='var(--primary-light)';this.style.borderColor='#7dd3fc';this.style.transform='translateY(-1px)'" 
+         onmouseout="this.style.background='#fff';this.style.borderColor='var(--border)';this.style.transform=''" 
+         title="Bấm để đổi tên nhóm thuốc">
       <span style="font-size:13.5px;font-weight:700;color:var(--primary);" id="medGroupDetailTitle">Nhóm Thuốc</span>
+      <span style="font-size:12px;color:var(--text-muted);">✏️</span>
     </div>
     <button type="button" class="btn-top" onclick="openAddMedicineModal()">➕ Thêm thuốc</button>
   </div>
@@ -287,9 +291,6 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
       </tr></thead>
       <tbody id="medTableBody"></tbody>
     </table>
-  </div>
-  <div style="display:flex;justify-content:flex-end;">
-    <button type="button" class="btn-top" style="background:#f0f9ff;border-color:#7dd3fc;color:#0369a1;" onclick="openEditFromDetailTitle()">✏️ Đổi tên nhóm thuốc</button>
   </div>
 </div>
 
@@ -465,9 +466,6 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
         <input type="text" id="editCatNameInput" style="flex:1;padding:11px 14px;border:1px solid var(--border);border-radius:10px;font-size:14px;font-weight:600;">
         <button type="button" class="btn-confirm-submit" style="padding:11px 16px;font-size:13px;" onclick="saveCatNameOnly()">Lưu tên</button>
       </div>
-    </div>
-    <div style="font-size:12.5px;color:var(--text-muted);text-align:left;margin-bottom:14px;padding:10px 12px;background:#f8fafc;border-radius:10px;border:1px solid var(--border);line-height:1.5;">
-      💡 <strong>Mẹo:</strong> Để đổi tên nhóm thuốc, bấm vào <strong>tên nhóm</strong> trong danh mục thuốc.
     </div>
     <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:14px;">
       <button type="button" class="btn-confirm-submit" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;width:100%;" onclick="openAddMedGroupFromEdit()">➕ Thêm nhóm thuốc mới</button>
@@ -812,7 +810,7 @@ function handleDoctorAvatarSelected(input) {
 }
 
 /* ============================================================
-   THUỐC — Danh mục & Nhóm
+   THUỐC — Danh mục
    ============================================================ */
 function openAddMedCategoryModal() { document.getElementById('medCategoryNameInput').value = ''; document.getElementById('addMedCategoryModal').style.display = 'flex'; }
 const closeAddMedCategoryModal = () => { document.getElementById('addMedCategoryModal').style.display = 'none'; };
@@ -850,26 +848,6 @@ function deleteMedCategory(catId) {
   syncDataToCloud(); renderMedCategoriesUI(); closeEditMedCategoryModal();
   alert("Đã xóa danh mục!");
 }
-
-/* Đổi tên nhóm nhanh qua prompt */
-function promptRenameGroup(catId, groupId) {
-  const cat = medCategories.find(c => String(c.id) === String(catId));
-  if (!cat) return;
-  const group = cat.groups.find(g => String(g.id) === String(groupId));
-  if (!group) return;
-  const newName = prompt('Đổi tên nhóm thuốc:', group.name);
-  if (newName === null) return;
-  const trimmed = newName.trim();
-  if (!trimmed) return alert("Tên nhóm không được để trống!");
-  if (trimmed === group.name) return;
-  group.name = trimmed;
-  lastSaveSource = 'meds';
-  lastLocalSaveAt = Date.now();
-  syncDataToCloud();
-  renderMedCategoriesUI();
-  alert("Đã đổi tên nhóm!");
-}
-
 function openAddMedGroupFromEdit() { closeEditMedCategoryModal(); openAddMedGroupModal(activeMedCatId); }
 function moveMedCategory(index, direction) {
   const newIdx = index + direction;
@@ -878,26 +856,10 @@ function moveMedCategory(index, direction) {
   lastSaveSource = 'meds'; lastLocalSaveAt = Date.now();
   syncDataToCloud(); renderMedCategoriesUI();
 }
-function moveMedGroup(catId, groupIndex, direction) {
-  const cat = medCategories.find(c => String(c.id) === String(catId));
-  if (!cat || !cat.groups) return;
-  const newIdx = groupIndex + direction;
-  if (newIdx < 0 || newIdx >= cat.groups.length) return;
-  [cat.groups[groupIndex], cat.groups[newIdx]] = [cat.groups[newIdx], cat.groups[groupIndex]];
-  lastSaveSource = 'meds'; lastLocalSaveAt = Date.now();
-  syncDataToCloud(); renderMedCategoriesUI();
-}
-function moveMedicineItem(index, direction) {
-  const cat = medCategories.find(c => String(c.id) === String(activeMedCatId));
-  const group = cat?.groups.find(g => String(g.id) === String(activeMedGroupId));
-  if (!group || !group.medicines) return;
-  const newIdx = index + direction;
-  if (newIdx < 0 || newIdx >= group.medicines.length) return;
-  [group.medicines[index], group.medicines[newIdx]] = [group.medicines[newIdx], group.medicines[index]];
-  lastSaveSource = 'meds'; lastLocalSaveAt = Date.now();
-  syncDataToCloud(); renderMedTable(group.medicines); renderMedCategoriesUI();
-}
 
+/* ============================================================
+   THUỐC — Nhóm thuốc
+   ============================================================ */
 function openAddMedGroupModal(catId) { activeMedCatId = catId; document.getElementById('medGroupNameInput').value = ''; document.getElementById('addMedGroupModal').style.display = 'flex'; }
 const closeAddMedGroupModal = () => { document.getElementById('addMedGroupModal').style.display = 'none'; };
 function saveMedGroupAndCreateFirstMed() {
@@ -913,6 +875,40 @@ function saveMedGroupAndCreateFirstMed() {
     openMedGroupDetail(cat.id, newGroupId); openAddMedicineModal();
   }
 }
+function moveMedGroup(catId, groupIndex, direction) {
+  const cat = medCategories.find(c => String(c.id) === String(catId));
+  if (!cat || !cat.groups) return;
+  const newIdx = groupIndex + direction;
+  if (newIdx < 0 || newIdx >= cat.groups.length) return;
+  [cat.groups[groupIndex], cat.groups[newIdx]] = [cat.groups[newIdx], cat.groups[groupIndex]];
+  lastSaveSource = 'meds'; lastLocalSaveAt = Date.now();
+  syncDataToCloud(); renderMedCategoriesUI();
+}
+
+/* Đổi tên nhóm — CHỈ gọi từ bảng chi tiết nhóm */
+function promptRenameCurrentGroup() {
+  if (!activeMedCatId || !activeMedGroupId) return;
+  const cat = medCategories.find(c => String(c.id) === String(activeMedCatId));
+  if (!cat) return;
+  const group = cat.groups.find(g => String(g.id) === String(activeMedGroupId));
+  if (!group) return;
+  const newName = prompt('Đổi tên nhóm thuốc:', group.name);
+  if (newName === null) return;
+  const trimmed = newName.trim();
+  if (!trimmed) return alert("Tên nhóm không được để trống!");
+  if (trimmed === group.name) return;
+  group.name = trimmed;
+  lastSaveSource = 'meds';
+  lastLocalSaveAt = Date.now();
+  syncDataToCloud();
+  renderMedCategoriesUI();
+  document.getElementById('medGroupDetailTitle').textContent = `${cat.name} > ${group.name}`;
+  alert("Đã đổi tên nhóm!");
+}
+
+/* ============================================================
+   THUỐC — Chi tiết nhóm
+   ============================================================ */
 function openMedGroupDetail(catId, groupId) {
   activeMedCatId = catId; activeMedGroupId = groupId;
   const cat = medCategories.find(c => String(c.id) === String(catId));
@@ -922,32 +918,6 @@ function openMedGroupDetail(catId, groupId) {
   renderMedTable(group.medicines || []);
   showView('medGroupDetailView');
 }
-function openEditFromDetailTitle() { const cat = medCategories.find(c => String(c.id) === String(activeMedCatId)); if (cat) openEditMedCategoryModal(cat.id); }
-
-/* ============================================================
-   THUỐC — Ẩn / Hiện
-   ============================================================ */
-function toggleShowHiddenMeds() {
-  window._showHiddenMeds = !window._showHiddenMeds;
-  renderMedCategoriesUI();
-}
-function toggleMedHidden(catId, groupId, medId) {
-  const cat = medCategories.find(c => String(c.id) === String(catId));
-  const group = cat?.groups.find(g => String(g.id) === String(groupId));
-  const med = group?.medicines.find(m => String(m.id) === String(medId));
-  if (!med) return;
-  med.hidden = !med.hidden;
-  lastSaveSource = 'meds'; lastLocalSaveAt = Date.now();
-  syncDataToCloud();
-  renderMedCategoriesUI();
-  if (String(activeMedCatId) === String(catId) && String(activeMedGroupId) === String(groupId)) {
-    renderMedTable(group.medicines);
-  }
-}
-
-/* ============================================================
-   THUỐC — Chi tiết
-   ============================================================ */
 function openAddMedicineModal() {
   document.getElementById('editingMedId').value = '';
   document.getElementById('medModalTitle').textContent = 'Thêm Thuốc Mới';
@@ -1000,6 +970,41 @@ function deleteMedicineItem(medId) {
   syncDataToCloud();
   renderMedTable(group.medicines); renderMedCategoriesUI();
 }
+function moveMedicineItem(index, direction) {
+  const cat = medCategories.find(c => String(c.id) === String(activeMedCatId));
+  const group = cat?.groups.find(g => String(g.id) === String(activeMedGroupId));
+  if (!group || !group.medicines) return;
+  const newIdx = index + direction;
+  if (newIdx < 0 || newIdx >= group.medicines.length) return;
+  [group.medicines[index], group.medicines[newIdx]] = [group.medicines[newIdx], group.medicines[index]];
+  lastSaveSource = 'meds'; lastLocalSaveAt = Date.now();
+  syncDataToCloud(); renderMedTable(group.medicines); renderMedCategoriesUI();
+}
+
+/* ============================================================
+   THUỐC — Ẩn / Hiện
+   ============================================================ */
+function toggleShowHiddenMeds() {
+  window._showHiddenMeds = !window._showHiddenMeds;
+  renderMedCategoriesUI();
+}
+function toggleMedHidden(catId, groupId, medId) {
+  const cat = medCategories.find(c => String(c.id) === String(catId));
+  const group = cat?.groups.find(g => String(g.id) === String(groupId));
+  const med = group?.medicines.find(m => String(m.id) === String(medId));
+  if (!med) return;
+  med.hidden = !med.hidden;
+  lastSaveSource = 'meds'; lastLocalSaveAt = Date.now();
+  syncDataToCloud();
+  renderMedCategoriesUI();
+  if (String(activeMedCatId) === String(catId) && String(activeMedGroupId) === String(groupId)) {
+    renderMedTable(group.medicines);
+  }
+}
+
+/* ============================================================
+   THUỐC — Bảng chi tiết
+   ============================================================ */
 function renderMedTable(medicines) {
   const tbody = document.getElementById('medTableBody'); if (!tbody) return;
   if (!medicines.length) {
@@ -1022,6 +1027,11 @@ function renderMedTable(medicines) {
       </td>
     </tr>`).join('');
 }
+
+/* ============================================================
+   THUỐC — Màn hình chính danh mục
+   LƯU Ý: Tên nhóm KHÔNG có onclick đổi tên — chỉ hiển thị
+   ============================================================ */
 function renderMedCategoriesUI() {
   const container = document.getElementById('medCategoryContainer');
   let totalGroups = 0, totalMeds = 0, totalHidden = 0;
@@ -1066,9 +1076,7 @@ function renderMedCategoriesUI() {
           if (visibleMeds.length === 0 && !showHidden) return '';
           return `<div style="background:#f8fafc;border:1px solid var(--border);padding:12px 14px;border-radius:12px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:6px;">
-              <span style="font-size:13.5px;font-weight:700;color:var(--text);cursor:pointer;flex:1;line-height:1.4;" 
-                    onclick="promptRenameGroup('${esc(cat.id)}','${esc(g.id)}')" 
-                    title="Bấm để đổi tên nhóm">📁 ${esc(g.name)}</span>
+              <span style="font-size:13.5px;font-weight:700;color:var(--text);flex:1;line-height:1.4;">📁 ${esc(g.name)}</span>
               <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
                 <button type="button" class="btn-bed-ctrl" style="padding:4px 9px;background:var(--primary-light);color:var(--primary-dark);border-color:#7dd3fc;font-weight:700;" 
                         onclick="openMedGroupDetail('${esc(cat.id)}','${esc(g.id)}')" 
